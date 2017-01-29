@@ -1,3 +1,8 @@
 /tmp
+*.aux
+*.toc
+*.lof
+*.brf
+*.out
 thesis.log
 thesis.pdf
