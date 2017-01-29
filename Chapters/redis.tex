@@ -1,0 +1,177 @@
+\chapter{Redis: un veloce database in memoria}
+
+\section{I database NoSQL}
+
+Per database NoSQL, si intende ogni software atto alla memorizzazione
+strutturata dell'informazione che, in rottura con l'usanza predominante già dagli anni
+'70, non utilizza lo \emph{Structured Markup Langage} (SQL) per la manipolazione
+dei dati ivi contenuti. Nella maggioranza dei casi, l'assenza del linguaggio SQL in
+realtà è solamente un sintomo di una importante differenza architetturale: l'allontanamento
+dal paradigma di strutturazione in tabelle, record e relazione, e, se vogliamo, anche dal modello E-R.
+Da questo punto di vista, il modo più corretto per identificare l'insieme di questi
+software sarebbe quindi l'uso della locuzione "database non relazionali".
+
+Il termine si è diffuso nel linguaggio popolare informatico dal 2010; si suole far
+coincidere questa improvvisa attenzione con un omonimo workshop organizzato dalla società
+californiana Rackspace (un fornitore di servizi cloud) in cui vennero analizzate
+queste tecnologie a seguito del crescente interesse nell'ambiente della cosiddetta
+\emph{Silicon Valley}.
+
+I database NoSQL coprono quindi un ampio spettro di software completamente eterogenei
+tra loro, adatti a scopi e situazioni diverse, con l'unico tratto a comune di non
+utilizzare il modello relazionale.
+
+\subsection{Tipologie di database}
+
+Posto che una tassonomia esaustiva dei database NoSQL sarebbe impossibile in virtù
+dell'ampiezza della definizione, ne proponiamo una \cite{corbellini} sufficiente a coprire le
+principali tipologie e sottolinearne le differenze:
+
+\begin{itemize}
+	\medskip
+	\item
+	\textbf{Database Chiave-valore}: questi database si comportano come giganteschi array
+	associativi distribuiti, nei quali dunque è possibile risalire ad un valore data la
+	sua chiave univoca di riferimento. Vengono spessi offerti più spazi di chiavi
+	a disposizione, e l'obiettivo di scala è molto elavato (fino a petabyte di dati
+	e milioni di operazioni al secondo).
+
+	\item
+	\textbf{Database a famiglie di colonne}: questi database memorizzano i dati in un formato
+	tabellare, ma senza garantire uno schema; in altre parole, ciascuna riga contiene
+	una tupla in cui non tutte le colonne sono valorizzate (e, a seconda dei casi, la
+	valorizzazione di una colonna può anche non avere un tipo specifico). In alcuni
+	casi, sono presenti delle colonne speciali per identificatori univoci o timestamp,
+	su cui costruire per lo meno indici parziali.
+
+	\item
+	\textbf{Database orientati al documento}: questi database memorizzano dati organizzati in
+	"documenti", indicizzati con una chiave primaria. Ogni documento ha un suo spazio
+	chiavi, e viene memorizzato secondo uno schema ben definito, ma più flessibile
+	di quello utilizzato nelle tabella dei database relazionali; tipicamente infatti,
+	è possibile aggiungere liberamenti dati ad un documento, sebbene con determinati
+	vincoli.
+
+	\item
+	\textbf{Database orientati ai grafi}: questi database sono pensati per memorizzare dati
+	in formato tabellare, ma con relazioni multiple tra loro codificate in modo
+	strutturato e preciso, in modo da formare dei grafi di relazioni, e con operazioni
+	efficienti per effettuare l'analisi di questi grafi. I tipici casi d'uso sono
+	quelli dove i dati presentano numerose relazioni di interconnessione, quali per
+	esempio i dati di un social network.
+\end{itemize}
+
+Poiché Redis, oggetto di questa tesi, rientra pienamente nella prima categoria, sarà
+questa che andremo ad analizzare con maggior dettaglio.
+
+
+\subsection{I database chiave-valore}
+
+Nei database chiave-valore, sia l'inserimento che la ricerca avviene tramite
+la chiave primaria. Su questa chiave (tipicamente una stringa o array di byte),
+viene applicata internamente una funzione di hash che consente poi una strutturazione
+in tabella dei dati con ricerca e inserimento efficiente. Per gestire il partizionamento
+dei dato su più nodi, si utilizza normalmente una funzione di hash consistente.
+
+Per effettuare una ulteriore analisi più approfondita, è necessario suddividere
+questi database in due grossi gruppi:
+
+\begin{itemize}
+	\medskip
+	\item
+	\textbf{Database chiave-valore in RAM}. Si tratta di database in cui l'intero dataset
+	deve essere necessariamente contenuto nella RAM dei nodi del database
+	(con eventuale distribuzione in più nodi). In questi database, dunque, tutte
+	le operazioni principali vengono effettuate direttamente in RAM, e la persistenza
+	su disco a volte è addirittura opzionale o eventuale (cioè non sempre consistente).
+	Anche laddove viene richiesta una persistenza consistente, il database mantiene
+	tutti i dati in RAM. Redis rientra in questa categoria.
+
+	\item
+	\textbf{Database chiave-valore su disco}. Al contrario dei precedenti, questi
+	database seguono una struttura più classica. I dati vengono memorizzati infatti
+	su disco fisso, mentre la RAM viene usata come memoria volatile per memorizzare
+	parti di dati più frequentemente utilizzati, o indici sui dati stessi per un
+	accesso rapido.
+\end{itemize}
+
+\section{Nascita dei database chiave-valore in RAM}
+
+I database chiave-valore in RAM sono anche chiamati "cache distribuite", una sineddoche
+che rimanda al tipo d'uso più comune, nato intorno alla metà degli anni 2000.
+
+Con l'avvento dell'adozione di massa delle connessioni Internet in banda larga nei primi
+anni 2000, i servizi su Internet hanno iniziato a sperimentare dei problemi di stabilità,
+quando si trovavano a gestire alti picchi di traffico. Tali servizi, infatti, erano
+comunemente implementati come un semplice servizio di tipo CGI, ospitato all'interno
+del processo del webserver; in caso di traffico troppo elevato, l'unica soluzione possibile
+era quella della cosidetta ``scalabilità verticale'', cioè eseguire il servizio su un
+server più potente.
+
+Il tema dei picchi di traffico, così alti e improvvisi da mettere fuori uso i siti,
+era così dibattuto da avere anche un nome preciso: era comunemente chiamato ``Slashdot
+effect'', dal nome del famoso portale Slashdot che, all'epoca, era molto visitato dagli
+informatici di tutto il mondo. Il sito, ancora oggi operativo (sebbene non più così
+visitato), pubblica una raccolta curata di notizie e link dedicati al mondo della tecnologia
+e delle scienza. Accadeva spesso che alcuni siti, quando venivano pubblicati su Slashdot,
+ricevessero una mole di visite troppo elevate che di fatto li mandava fuori uso; da qui
+il nome.
+
+In ottica di pura scalabilità verticale, uno dei modi più comuni per ottimizzare il software
+applicativo è quello di aggiungere uno strato di cache in RAM, anteposta quindi al database,
+per diminuire il numero di query che vengono fatte. Un esempio classico è la gestione delle
+sessioni: quando un client comunica via HTTP con il server, inserisce sempre nelle richieste
+un cookie che identifica univocamente la sessione dell'utente; tramite il cookie, il server
+può quindi riconoscere la sessione e l'utente stesso. Tantissime richieste HTTP contengono un
+cookie di sessione, e di conseguenza il server applicativo deve sempre risalire alla sessione
+prima ancora di entrare nel merito della richiesta. Nei primi anni 2000, era normale memorizzare
+le sessioni nel database, ed era dunque necessaria una query per ogni richiesta per recuperarla.
+Per ottimizzare la velocità del software, era quindi opportuno cercare di limitare queste query, per esempio inserendo in una cache in RAM le sessioni usate più di recente.
+
+Il dibattito sulle soluzioni da adottare per ottenere la cosiddetta ``scalabilità orizzontale'',
+cioè l'utilizzo di più di un server in parallelo come modo per aumentare le performance,
+si orientò velocemente verso la replica indipendente dei server database
+e dei server applicativi, anteponendo a questi ultimi dei bilanciatori di carico, che
+si occupassero di distribuire le connessioni ingresso. Con questa architettura però,
+non era più possibile operare semplicemente una cache in RAM dentro il server applicativo, poiché di bilanciatori di carico (a meno di complesse implementazioni) non potevano facilmente garantire
+che ogni richiesta di una stessa sessione arrivasse allo stesso server.
+
+Per ovviare a questo inconveniente, nel 2003 nasce Memcached, scritto da Brad Fitzpatrick per implementare la scalabilità orizzontale nel suo popolare gestore di blog LiveJournal.
+Memcached è di fatto una semplice tabella hash chiave-valore, raggiungibile via TCP con un
+semplice protocollo testuale. Le operazioni sono stanzialmente due: GET e SET. È sufficiente
+qundi collegare tutti i server applicativi ad un unico server Memcached (possibilmente
+sulla stessa rete fisica, beneficiando quindi di una latenza molto bassa) perché possano
+condividere la stessa cache, aggiornando il codice che prima utilizzava una tabella in RAM
+dentro il processo con una libreria che acceda alla stessa tabella tramite chiamate TCP.
+
+Memcached è il primo database NoSQL chiave-valore, ante-litteram, ed è oggi in uso presso alcuni
+dei più popolari siti al mondo quali YouTube, Reddit, Facebook, Twitter, Tumblr, Wikipedia.
+
+
+\section{Nascita di Redis}
+
+Redis (acronimo di Remote Dictionary Service) è un database chiave-valore in RAM scritto
+da Salvatore Sanfilippo e rilasciato nel 2008 sotto licenza BSD.
+
+Redis nasce come costola di un progetto (ora defunto) chiamato "lloogg", un servizio di
+analisi in tempo reale di log di siti. Originariamente, Salvatore aveva progettato
+questo servizio per utilizzare MySQL come database primario per la memorizzazione dei
+dati, ma presto questa scelta si era dimostrata errata, perché MySQL non raggiungeva le
+performance desiderata in un contesto particolarmente intensivo dal punto di vista delle
+scrittura come quello degli aggregatori di log \cite{nascita}.
+
+Salvatore aveva necessità di memorizzare velocemente i dati in arrivo, e di eseguire
+delle semplice query strutturate tipo "estrai gli ultimi N dati inseriti". Questo genere
+di struttura non si applica bene al modello relazionale, in particolare perché l'ordine
+di inserimento dei dati non viene preservato, e richiede quindi un'operazione di ordinamento
+(o aggiornamento di un indice di ordinamento) ogni volta che un dato viene eseguito.
+Abbandonando il modello relazionale, invece, operazioni di questo genere si eseguono
+in modo naturale ed efficiente con strutture dati quali le liste concatenate, ed è
+proprio questa impedenza fondamentale tra modello relazionale e strutture dati in RAM
+alla base dell'architettura di Redis.
+
+\section{Architettura}
+
+
+
+
