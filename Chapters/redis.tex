@@ -137,7 +137,7 @@ non era più possibile operare semplicemente una cache in RAM dentro il server a
 che ogni richiesta di una stessa sessione arrivasse allo stesso server.
 
 Per ovviare a questo inconveniente, nel 2003 nasce Memcached, scritto da Brad Fitzpatrick per implementare la scalabilità orizzontale nel suo popolare gestore di blog LiveJournal.
-Memcached è di fatto una semplice tabella hash chiave-valore, raggiungibile via TCP con un
+Memcached è di fatto una tabella hash chiave-valore, raggiungibile via TCP con un
 semplice protocollo testuale. Le operazioni sono stanzialmente due: GET e SET. È sufficiente
 qundi collegare tutti i server applicativi ad un unico server Memcached (possibilmente
 sulla stessa rete fisica, beneficiando quindi di una latenza molto bassa) perché possano
@@ -151,26 +151,208 @@ dei più popolari siti al mondo quali YouTube, Reddit, Facebook, Twitter, Tumblr
 \section{Nascita di Redis}
 
 Redis (acronimo di Remote Dictionary Service) è un database chiave-valore in RAM scritto
-da Salvatore Sanfilippo e rilasciato nel 2008 sotto licenza BSD.
+da Salvatore Sanfilippo e rilasciato per la prima volta nel 2008 sotto licenza BSD.
 
 Redis nasce come costola di un progetto (ora defunto) chiamato "lloogg", un servizio di
-analisi in tempo reale di log di siti. Originariamente, Salvatore aveva progettato
-questo servizio per utilizzare MySQL come database primario per la memorizzazione dei
+analisi in tempo reale di log di siti. Originariamente, Sanfilippo aveva progettato
+questo servizio  utilizzando MySQL come database primario per la memorizzazione dei
 dati, ma presto questa scelta si era dimostrata errata, perché MySQL non raggiungeva le
 performance desiderata in un contesto particolarmente intensivo dal punto di vista delle
 scrittura come quello degli aggregatori di log \cite{nascita}.
 
-Salvatore aveva necessità di memorizzare velocemente i dati in arrivo, e di eseguire
+Sanfilippo aveva necessità di memorizzare velocemente i dati in arrivo, e di eseguire
 delle semplice query strutturate tipo "estrai gli ultimi N dati inseriti". Questo genere
 di struttura non si applica bene al modello relazionale, in particolare perché l'ordine
 di inserimento dei dati non viene preservato, e richiede quindi un'operazione di ordinamento
-(o aggiornamento di un indice di ordinamento) ogni volta che un dato viene eseguito.
+(o aggiornamento di un indice di ordinamento) ogni volta che un dato viene inserito.
 Abbandonando il modello relazionale, invece, operazioni di questo genere si eseguono
 in modo naturale ed efficiente con strutture dati quali le liste concatenate, ed è
-proprio questa impedenza fondamentale tra modello relazionale e strutture dati in RAM
+proprio questa impedenza fondamentale tra modello relazionale e strutture dati primarie
 alla base dell'architettura di Redis.
 
+\section{Principali casi d'uso}
+
 \section{Architettura}
+
+Redis implementa un array associativo (tramite tabella hash) in cui le chiavi sono
+stringhe, e i valori associati sono oggetti di vari tipi (stringhe o strutture dati).
+Per comunicare con Redis, un client si deve connettere via TCP (la porta di default è la 6379) e
+comunicare tramite un protocollo testuale di tipo master/slave. È possibile utilizzare
+anche semplicemente \verb|telnet| per sperimentare, sebbene sia più comodo utilizzare il
+client dedicato \verb|redis-cli| che offre il completamento intelligente dei comandi, la
+storia dei comandi inseriti, e la formattazione leggibile dei risultati.
+
+Come esempio, la seguente sessione mostra come scrivere e leggere un valore di tipo
+stringa:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> SET abc provavalore
+OK
+127.0.0.1:6379> GET abc
+"provavalore"
+127.0.0.1:6379> GET abcd
+(nil)
+\end{lstlisting}
+
+Il valore di ritorno visualizzato dalla console è fortemente tipizzato nel protocollo;
+nei precedenti casi, il valore di ritorno è sempre una stringa (compreso l'ultimo
+caso in cui la stringa è vuota).
+
+Il comando \verb|DEL| può essere utilizzato per cancellare un oggetto di tipo
+arbitrario:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> DEL abc
+(integer) 1
+127.0.0.1:6379> DEL notexisting
+(integer) 0
+\end{lstlisting}
+
+In questo caso, il valore di ritorno è un intero, dal quale si può desumere se il comando
+ha effettivamente cancellato un oggetto o meno. Gli errori sono anch'essi tipizzati in
+modo separato. Per esempio, un comando inesistente torna un codice di errore:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> MYSQL
+(error) ERR unknown command 'MYSQL'
+\end{lstlisting}
+
+Ogni chiave in Redis è una stringa (sequenza di byte) di lunghezza arbitraria; non è
+necessario che sia stampabile, sebbene questo sia consigliabile per facilitare il
+debugging. La funzione hash con la quale la stringa viene convertita in indice è
+una semplice funziona polinomiale con base un numero primo, comunemente chiamata
+djb2 \cite{djbhash}, dal nome del suo ideatore (Daniel J. Bernestein).
+
+\section{Tipi di oggetti memorizzabili}
+
+Ogni oggetto memorizzato in Redis deve avere un tipo specifico, che viene serializzato
+nella tabella e controllato ad ogni accesso. A livello di protocollo di comunicazione,
+ogni comando opera su oggetti di uno specifico tipo; per esempio, i comandi \verb|SET|
+e \verb|GET| visti nell'esempio precedente operano solamente su stringhe.
+
+\subsection{Stringhe}
+
+Si tratta di sequenze di byte di lunghezza arbitraria. I comandi
+più comuni per manipolarle sono, come visto, \verb|SET| e \verb|GET|, ma anche \verb|APPEND|
+per concatenare, \verb|STRLEN| per leggere la lunghezza, o \verb|GETRANGE| per estrarre una
+sottostringa.
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> SET foo abcd
+OK
+127.0.0.1:6379> GET foo
+"abcd"
+127.0.0.1:6379> APPEND foo ef
+(integer) 6
+127.0.0.1:6379> STRLEN foo
+(integer) 6
+127.0.0.1:6379> GETRANGE foo 2 3
+"cd"
+\end{lstlisting}
+
+Si noti come \verb|APPEND| ha ritornato la nuova lunghezza della stringa, sfruttando
+la disponibilità nel protocollo del valore di ritorno come modo per veicolare una
+informazione possibilmente utile.
+
+Le stringhe sono l'unico tipo primario supportato da Redis, ma vengono spesso usate come tipo
+debole, cioè è possibile manipolarle come se fossero oggetti di altri tipi. Infatti,
+i comandi \verb|INCR|, \verb|DECR|,  \verb|INCRBY| e \verb|DECRBY| ci permettono
+di interagire con oggetti di tipo stringa che rappresentano degli interi in base 10:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> SET foo 123
+OK
+127.0.0.1:6379> STRLEN foo
+(integer) 3
+127.0.0.1:6379> INCR foo
+(integer) 124
+127.0.0.1:6379> STRLEN foo
+(integer) 3
+127.0.0.1:6379> DECRBY foo 24
+(integer) 100
+127.0.0.1:6379> GET foo
+"100"
+\end{lstlisting}
+
+In questo esempio, alla chiave \verb|foo| è stato associato una stringa che contiene
+la rappresentazione di un numero in base 10; il comando \verb|STRLEN| ci rassicura
+che si tratta di una stringa di lunghezza 3. Nonostante questo, i comandi \verb|INCR|
+e \verb|DECRBY| sono in grado di manipolare la stringa come se fosse un intero (e il
+loro valore di ritorno infatti è di tipo intero). Al termine di queste operazioni
+matematiche, il comando \verb|GET| conferma che si tratta sempre di una stringa.
+
+Allo stesso modo, viene fornito un supporto molto blando per i numeri in virgola
+mobile tramite il comando \verb|INCRBYFLOAT|.
+
+Una possibilità più avanzata è quella di considera la stringa come un array di bit
+utilizzando i comandi \verb|BITCOUNT|, \verb|SETBIT| e \verb|GETBIT| per lavorare
+su ciascun bit.
+
+\subsection{Liste}
+
+In Redis, le liste sono strutture dati assimilabili per complessità alle normali
+liste con puntatore doppio; i valori contenuti nella lista sono stringhe.
+L'accesso al primo e all'ultimo elemento ha una complessità di O(1), mentre
+l'accesso all'elemento N richiede O(n). I comandi principali per manipolare una
+lista sono i seguenti:
+
+\begin{itemize}
+	\medskip
+	\item \textbf{LPUSH}. Aggiunge un elemnto in cima alla lista.
+	\item \textbf{RPUSH}. Aggiunge un elemnto in fondo alla lista.
+	\item \textbf{LPOP}. Rimuove un elemnto dalla cima della lista.
+	\item \textbf{RPOP}. Rimuove un elemnto dal fondo della lista.
+	\item \textbf{LLEN}. Ritorna la lunghezza della lista.
+	\item \textbf{LINDEX}. Ritorna l'elemento K-esimo della lista.
+	\item \textbf{LRANGE}. Ritorna tutti gli elementi all'interno di un range di indici.
+	\item \textbf{LSET}. Modifica l'elemento K-esimo della lista.
+	\item \textbf{LINSERT}. Inserisce un elemento prima o dopo un elemento pivot.
+\end{itemize}
+
+Qui si può vedere una sessione interattiva di esempio di uso di una lista:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> RPUSH mylist mickey minnie goofy donald
+(integer) 4
+127.0.0.1:6379> LINDEX mylist 0
+"mickey"
+127.0.0.1:6379> LINDEX mylist 1
+"minnie"
+127.0.0.1:6379> LPOP mylist
+"mickey"
+127.0.0.1:6379> LLEN mylist
+(integer) 3
+127.0.0.1:6379> LINSERT mylist AFTER goofy walt
+(integer) 4
+127.0.0.1:6379> LRANGE mylist 0 5
+1) "minnie"
+2) "goofy"
+3) "walt"
+4) "donald"
+\end{lstlisting}
+
+\subsection{Tabelle hash}
+
+\subsection{Insiemi}
+
+\subsection{Insiemi ordinati}
+
+\subsection{HyperLogLog}
+
+\section{Utilizzo come cache}
+
+\section{Concorrenza}
+
+\section{Persistenza}
+
+
+
 
 
 
