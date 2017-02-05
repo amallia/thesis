@@ -4,5 +4,6 @@
 *.lof
 *.brf
 *.out
+*.dvi
 thesis.log
 thesis.pdf
