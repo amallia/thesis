@@ -2,14 +2,13 @@
 
 \section{I database NoSQL}
 
-Per database NoSQL, si intende ogni software atto alla memorizzazione
-strutturata dell'informazione che, in rottura con l'usanza predominante già dagli anni
-'70, non utilizza lo \emph{Structured Markup Langage} (SQL) per la manipolazione
-dei dati ivi contenuti. Nella maggioranza dei casi, l'assenza del linguaggio SQL in
-realtà è solamente un sintomo di una importante differenza architetturale: l'allontanamento
-dal paradigma di strutturazione in tabelle, record e relazione, e, se vogliamo, anche dal modello E-R.
-Da questo punto di vista, il modo più corretto per identificare l'insieme di questi
-software sarebbe quindi l'uso della locuzione "database non relazionali".
+Per database NoSQL, si intende ogni software atto alla memorizzazione strutturata dell'informazione
+che, in rottura con l'usanza predominante già dagli anni '70, non utilizza lo \emph{Structured
+Markup Langage} (SQL) per la manipolazione dei dati ivi contenuti. Nella maggioranza dei casi,
+l'assenza del linguaggio SQL in realtà è solamente un sintomo di una importante differenza
+architetturale: l'allontanamento dal paradigma di strutturazione in tabelle, record e relazione, e,
+se vogliamo, anche dal modello E-R. Da questo punto di vista, il modo più corretto per identificare
+l'insieme di questi software sarebbe quindi l'uso della locuzione "database non relazionali".
 
 Il termine si è diffuso nel linguaggio popolare informatico dal 2010; si suole far
 coincidere questa improvvisa attenzione con un omonimo workshop organizzato dalla società
@@ -118,31 +117,34 @@ ricevessero una mole di visite troppo elevate che di fatto li mandava fuori uso;
 il nome.
 
 In ottica di pura scalabilità verticale, uno dei modi più comuni per ottimizzare il software
-applicativo è quello di aggiungere uno strato di cache in RAM, anteposta quindi al database,
-per diminuire il numero di query che vengono fatte. Un esempio classico è la gestione delle
-sessioni: quando un client comunica via HTTP con il server, inserisce sempre nelle richieste
-un cookie che identifica univocamente la sessione dell'utente; tramite il cookie, il server
-può quindi riconoscere la sessione e l'utente stesso. Tantissime richieste HTTP contengono un
-cookie di sessione, e di conseguenza il server applicativo deve sempre risalire alla sessione
-prima ancora di entrare nel merito della richiesta. Nei primi anni 2000, era normale memorizzare
-le sessioni nel database, ed era dunque necessaria una query per ogni richiesta per recuperarla.
-Per ottimizzare la velocità del software, era quindi opportuno cercare di limitare queste query, per esempio inserendo in una cache in RAM le sessioni usate più di recente.
+applicativo è quello di aggiungere uno strato di cache in RAM, anteposta quindi al database, per
+diminuire il numero di query che vengono fatte. Un esempio classico è la gestione delle sessioni:
+quando un client comunica via HTTP con il server, inserisce sempre nelle richieste un cookie che
+identifica univocamente la sessione dell'utente; tramite il cookie, il server può quindi riconoscere
+la sessione e l'utente stesso. Tantissime richieste HTTP contengono un cookie di sessione, e di
+conseguenza il server applicativo deve sempre risalire alla sessione prima ancora di entrare nel
+merito della richiesta. Nei primi anni 2000, era normale memorizzare le sessioni nel database, ed
+era dunque necessaria una query per ogni richiesta per recuperarla. Per ottimizzare la velocità del
+software, era quindi opportuno cercare di limitare queste query, per esempio inserendo in una cache
+in RAM le sessioni usate più di recente.
 
 Il dibattito sulle soluzioni da adottare per ottenere la cosiddetta ``scalabilità orizzontale'',
-cioè l'utilizzo di più di un server in parallelo come modo per aumentare le performance,
-si orientò velocemente verso la replica indipendente dei server database
-e dei server applicativi, anteponendo a questi ultimi dei bilanciatori di carico, che
-si occupassero di distribuire le connessioni ingresso. Con questa architettura però,
-non era più possibile operare semplicemente una cache in RAM dentro il server applicativo, poiché i bilanciatori di carico (a meno di complesse implementazioni) non potevano facilmente garantire
-che ogni richiesta di una stessa sessione arrivasse allo stesso server.
+cioè l'utilizzo di più di un server in parallelo come modo per aumentare le performance, si orientò
+velocemente verso la replica indipendente dei server database e dei server applicativi, anteponendo
+a questi ultimi dei bilanciatori di carico, che si occupassero di distribuire le connessioni
+ingresso. Con questa architettura però, non era più possibile operare semplicemente una cache in RAM
+dentro il server applicativo, poiché i bilanciatori di carico (a meno di complesse implementazioni)
+non potevano facilmente garantire che ogni richiesta di una stessa sessione arrivasse allo stesso
+server.
 
-Per ovviare a questo inconveniente, nel 2003 nasce Memcached, scritto da Brad Fitzpatrick per implementare la scalabilità orizzontale nel suo popolare gestore di blog LiveJournal.
-Memcached è di fatto una tabella hash chiave-valore, raggiungibile via TCP con un
-semplice protocollo testuale. Le operazioni sono stanzialmente due: GET e SET. È sufficiente
-qundi collegare tutti i server applicativi ad un unico server Memcached (possibilmente
-sulla stessa rete fisica, beneficiando quindi di una latenza molto bassa) perché possano
-condividere la stessa cache, aggiornando il codice che prima utilizzava una tabella in RAM
-dentro il processo con una libreria che acceda alla stessa tabella tramite chiamate TCP.
+Per ovviare a questo inconveniente, nel 2003 nasce Memcached, scritto da Brad Fitzpatrick per
+implementare la scalabilità orizzontale nel suo popolare gestore di blog LiveJournal. Memcached è di
+fatto una tabella hash chiave-valore, raggiungibile via TCP con un semplice protocollo testuale. Le
+operazioni sono stanzialmente due: GET e SET. È sufficiente qundi collegare tutti i server
+applicativi ad un unico server Memcached (possibilmente sulla stessa rete fisica, beneficiando
+quindi di una latenza molto bassa) perché possano condividere la stessa cache, aggiornando il codice
+che prima utilizzava una tabella in RAM dentro il processo con una libreria che acceda alla stessa
+tabella tramite chiamate TCP.
 
 Memcached è il primo database NoSQL chiave-valore, ante-litteram, ed è oggi in uso presso alcuni
 dei più popolari siti al mondo quali YouTube, Reddit, Facebook, Twitter, Tumblr, Wikipedia.
@@ -307,10 +309,10 @@ Si noti come \verb|APPEND| ha restituito la nuova lunghezza della stringa, sfrut
 la disponibilità nel protocollo del valore di ritorno come modo per veicolare una
 informazione possibilmente utile.
 
-Le stringhe sono in realtà l'unico tipo primario supportato da Redis, ma vengono spesso usate come tipo
-debole, cioè è possibile manipolarle come se fossero oggetti di altri tipi. Infatti,
-i comandi \verb|INCR|, \verb|DECR|,  \verb|INCRBY| e \verb|DECRBY| ci permettono
-di interagire con oggetti di tipo stringa che rappresentano degli interi in base 10:
+Le stringhe sono in realtà l'unico tipo primario supportato da Redis, ma vengono spesso usate come
+tipo debole, cioè è possibile manipolarle come se fossero oggetti di altri tipi. Infatti, i comandi
+\verb|INCR|, \verb|DECR|,  \verb|INCRBY| e \verb|DECRBY| ci permettono di interagire con oggetti di
+tipo stringa che rappresentano degli interi in base 10:
 
 \medskip
 \begin{lstlisting}
@@ -392,20 +394,22 @@ per creare dinamicamente l'oggetto di tipo giusto.
 
 \subsection{Tabelle hash}
 
-Una tabella hash consente di memorizzare una serie di coppie di stringhe (denominate ``campo'' e ``valore''),
-associandole ad una chiave del database; questo consente quindi di serializzare dei semplici oggetti, sebbene
-non sia possibile avere tipologie più complesse di dati.
+Una tabella hash consente di memorizzare una serie di coppie di stringhe (denominate ``campo'' e
+``valore''), associandole ad una chiave del database; questo consente quindi di serializzare dei
+semplici oggetti, sebbene non sia possibile avere tipologie più complesse di dati.
 
-Un esempio di uso di tabella hash è la memorizzazione delle informazioni sugli utenti di un applicativo; è
-possibile infatti utilizzare come chiave una stringa composta da un prefisso (per esempio \verb|user|), seguito
-dall'ID univoco (chiave primaria) dell'utente, per esempio un intero progressivo, opzionalmente divis da un
-separatore per leggibilità (\verb|user:88|). All'interno della tabella, i campi sono i nomi degli attributi che
-si vuole memorizzare (\verb|nome|, \verb|cognome|, ecc.), associati ai relativi valori. 
+Un esempio di uso di tabella hash è la memorizzazione delle informazioni sugli utenti di un
+applicativo; è possibile infatti utilizzare come chiave una stringa composta da un prefisso (per
+esempio \verb|user|), seguito dall'ID univoco (chiave primaria) dell'utente, per esempio un intero
+progressivo, opzionalmente divis da un separatore per leggibilità (\verb|user:88|). All'interno
+della tabella, i campi sono i nomi degli attributi che si vuole memorizzare (\verb|nome|,
+\verb|cognome|, ecc.), associati ai relativi valori.
 
-Si noti che non esiste nessun controllo d'integrità che ci assicuri che le tabelle associate a tutti gli utenti
-(tutte le chiavi con prefisso \verb|user|, nel nostro esempio) siano consistenti tra loro e dunque popolate dai
-medesimi campi; così come non è possibile verificare la tipizzazione dei campi, poiché i valori sono esclusivamente
-di tipo stringa e dunque senza tipo. Se dunque è necessaria uniformità, l'onere è lasciato al client.
+Si noti che non esiste nessun controllo d'integrità che ci assicuri che le tabelle associate a tutti
+gli utenti (tutte le chiavi con prefisso \verb|user|, nel nostro esempio) siano consistenti tra loro
+e dunque popolate dai medesimi campi; così come non è possibile verificare la tipizzazione dei
+campi, poiché i valori sono esclusivamente di tipo stringa e dunque senza tipo. Se dunque è
+necessaria uniformità, l'onere è lasciato al client.
 
 I comandi principali sono i seguenti, caratterizzata dal prefisso \verb|H|:
 
@@ -417,8 +421,10 @@ I comandi principali sono i seguenti, caratterizzata dal prefisso \verb|H|:
 	\item \textbf{HEXISTS}. Verifica se un campo è presente nella tabella.
 	\item \textbf{HLEN}. Restituisce il numero di campi presenti nella tabella.
 	\item \textbf{HGETALL}. Restituisce tutte i campi e tutti i valori nella tabella.
-	\item \textbf{HMGET} e \textbf{HMSET}. Rispettivamente come \verb|HGET| e \verb|HSET| ma operano su campi multipli.
-	\item \textbf{HKEYS} e \textbf{HVALS}. Restituiscono rispettivamente tutti i campi e tutti i valori nella tabella.
+	\item \textbf{HMGET} e \textbf{HMSET}. Rispettivamente come \verb|HGET| e \verb|HSET| ma operano
+	su campi multipli.
+	\item \textbf{HKEYS} e \textbf{HVALS}. Restituiscono rispettivamente tutti i campi e tutti i
+	valori nella tabella.
 \end{itemize}
 
 Qui si può vedere una sessione interattiva di esempio di uso di una tabella hash:
@@ -454,31 +460,35 @@ OK
 (integer) 0
 \end{lstlisting}
 
-Come si può vedere, la tabella hash è creata dinamicamente al primo uso, e non è necessario dimensionarla in alcun
-modo; Redis implementa in modo efficiente le tabelle hash e le ridimensiona automaticamente al crescere degli
-elementi contenuti, mantentendo un fattore massimo di riempimento che garantisce una buona velocità di accesso.
+Come si può vedere, la tabella hash è creata dinamicamente al primo uso, e non è necessario
+dimensionarla in alcun modo; Redis implementa in modo efficiente le tabelle hash e le ridimensiona
+automaticamente al crescere degli elementi contenuti, mantentendo un fattore massimo di riempimento
+che garantisce una buona velocità di accesso.
 
 \subsection{Insiemi}
 
-Un insieme in Redis è una sequenza non ordinata di stringhe univoche, associate ad una chiave del database. È
-possibile compiere le operazioni base quali l'aggiunta di una stringa, la rimozione di una stringa, il conteggio
-della cardinalità, la verifica della presenza di una stringa, l'estrazione di una stringa scelta casualmente
-tra quelle presenti. Inoltre, sono previste anche operazioni che coinvolgono più di un insieme, quali il 
-calcolo dell'intersezione, dell'unione, della differenza.
+Un insieme in Redis è una sequenza non ordinata di stringhe univoche, associate ad una chiave del
+database. È possibile compiere le operazioni base quali l'aggiunta di una stringa, la rimozione di
+una stringa, il conteggio della cardinalità, la verifica della presenza di una stringa, l'estrazione
+di una stringa scelta casualmente tra quelle presenti. Inoltre, sono previste anche operazioni che
+coinvolgono più di un insieme, quali il calcolo dell'intersezione, dell'unione, della differenza.
 
-Riprendendo il precedente esempio di tabella hash contenente gli utenti, un applicativo potrebbe voler memorizzare
-all'interno di un insieme l'elenco degli utenti che soddisfano una determinata proprietà, per esempio tutti
-coloro che hanno effettuato almeno un pagamento, o coloro che hanno aggiornato all'ultima versione dell'applicativo. 
-In questo caso, si potrebbe quindi creare due insiemi, associati alle chiavi \verb|paying_users| e \verb|updated_users|,
-e inserirvi gli ID degli utenti (\verb|88|, \verb|4|, \verb|37|, ecc.). Sarebbe poi possibile effettuare rapide operazioni
-di controllo di appartenenza, oppure di differenza (ottenendo quindi l'elenco degli utenti paganti che non hanno
-aggiornato all'ultima versione, in modo da poter per esempio inviare loro una email di sollecito).
+Riprendendo il precedente esempio di tabella hash contenente gli utenti, un applicativo potrebbe
+voler memorizzare all'interno di un insieme l'elenco degli utenti che soddisfano una determinata
+proprietà, per esempio tutti coloro che hanno effettuato almeno un pagamento, o coloro che hanno
+aggiornato all'ultima versione dell'applicativo. In questo caso, si potrebbe quindi creare due
+insiemi, associati alle chiavi \verb|paying_users| e \verb|updated_users|, e inserirvi gli ID degli
+utenti (\verb|88|, \verb|4|, \verb|37|, ecc.). Sarebbe poi possibile effettuare rapide operazioni di
+controllo di appartenenza, oppure di differenza (ottenendo quindi l'elenco degli utenti paganti che
+non hanno aggiornato all'ultima versione, in modo da poter per esempio inviare loro una email di
+sollecito).
 
-Nei database relazionali, queste operazioni sono tipicamente possibile tramite delle query SQL, che il database
-rende efficente tramite indici. Allo stesso modo, in questo esempio abbiamo utilizzato un insieme come indice 
-esterno di una tabella, dovendolo però aggiornare manualmente. 
+Nei database relazionali, queste operazioni sono tipicamente possibile tramite delle query SQL, che
+il database rende efficente tramite indici. Allo stesso modo, in questo esempio abbiamo utilizzato
+un insieme come indice esterno di una tabella, dovendolo però aggiornare manualmente.
 
-Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizzati dal prefisso \verb|S|:
+Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizzati dal prefisso
+\verb|S|:
 
 \begin{itemize}
 	\medskip
@@ -486,14 +496,15 @@ Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizza
 	\item \textbf{SREM}. Rimuove una stringa da un insieme.
 	\item \textbf{SISMEMBER}. Controlla se una stringa è presente in un insieme.
 	\item \textbf{SMEMBERS}. Elenca tutte le stringhe contenute nell'insieme.
-	\item \textbf{SRANDMEMBER}. Restituisce una o più stringhe scelte casualmente tra quelle presenti.
+	\item \textbf{SRANDMEMBER}. Restituisce una o più stringhe scelte casualmente tra quelle
+	presenti.
 	\item \textbf{SPOP}. Come ``SRANDMEMBER'', ma rimuove le stringhe scelte dall'insieme.
 	\item \textbf{SUNION}. Restituisce l'unione tra due o più insiemi.
 	\item \textbf{SINTER}. Restituisce l'interesezione tra due o più insiemi.
 	\item \textbf{SDIFF}. Restituisce la differenza tra un insieme e uno o più altri insiemi.
-	\item \textbf{SUNIONSTORE}, \textbf{SINTERSTORE}, \textbf{SDIFFSTORE}: Come i comandi precedenti, ma il risultato
-	dell'operazione viene memorizzato in Redis in una nuova chiave specificata, e viene restituita solo la cardinalità
-	del risultato.
+	\item \textbf{SUNIONSTORE}, \textbf{SINTERSTORE}, \textbf{SDIFFSTORE}: Come i comandi
+	precedenti, ma il risultato dell'operazione viene memorizzato in Redis in una nuova chiave
+	specificata, e viene restituita solo la cardinalità del risultato.
 \end{itemize}
 
 Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
@@ -522,8 +533,139 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
 2) "66"
 \end{lstlisting}
 
+Anche in questo caso, non è stato necessario allocare o dimensionare le strutture dati: al primo
+accesso, esse vengono create automaticamente, e si dimensionano in modo dinamico durante l'uso.
 
 \subsection{Insiemi ordinati}
+
+Un insieme ordinato è una sequenza di stringhe univoche, ordinate secondo un valore associato
+chiamato ``punteggio''. Ogni inserimento di una stringa viene effettuato specificando il suo
+punteggio (aggiornando quindi un eventuale puntegggio già esistente), e la struttura dati effettua
+l'inserimento (o lo spostamento) nel modo giusto per mantenere l'ordinamento. In questo modo, è
+possibile effettuare sia operazioni di tipo insiemistico (controllo appartenenza, aggiunta,
+rimozione, unioni, intersezioni), sia operazioni che lavorano su intervalli di stringhe all'interno
+della sequenza (per esempio, delimitandone gli estremi per punteggio).
+
+Il punteggio deve essere specificato come un valore decimale con virgola, e le stringhe vengono
+ordinate secondo l'ordinamento crescente. In caso due stringhe abbiano lo stesso punteggio, si
+utilizza l'ordinamento lessicografico tra le stringhe stesse per decide l'ordine. In virtù di
+questa proprietà, è comune utilizzare un insieme ordinato in cui tutti i valori hanno un medesimo
+punteggio (di solito 0), utilizzando quindi le stringhe stesse per l'ordinamento, e ottenendo di
+fatto l'equivalente di una lista di stringhe univoche ordinate alfabeticamente.
+
+Come precedentemente accennato, è possibile estrarre sotto-sequenze dell'insieme ordinato tramite
+alcuni comandi che lavorano su intervalli ordinati di stringhe. Secondo il principio di massima
+flessibilità, ci sono tre diversi tipi di intervalli che possono essere specificati: intervallo di
+punteggio (es: estrai tutte le stringhe i cui punteggi sono compresi tra 10 e 20), intervallo di
+posizione (es: estrai le prime 10 stringhe secondo l'ordinamento attuale), oppure intervallo
+lessicografico (es: estrai tutte le stringhe che iniziano con la lettera K); quest'ultimo tipo di
+intervallo è in realtà correttamente definito solo quando il punteggio di tutte le stringhe è lo
+stesso, e cioè quando la struttura dati sta di fatto già ordinando alfabeticamente, ma l'esistenza
+comandi dedicati a questa modalità sottolinea proprio la flessibilità di questa struttura dati.
+
+Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
+
+\begin{itemize}
+	\item \textbf{ZADD}: aggiunge una o più stringhe all'insieme ordinata, associandole ad un
+	punteggio. Se le stringhe esistono già, il punteggio viene aggiornato al valore specificato. Il
+	comando prevede anche una serie di opzioni avanzate per cambiare il comportamento di default in
+	caso di stringa già esistente.
+	\item \textbf{ZINCRBY}: si comporta come \verb|ZADD|, ma in caso di stringa esistente il
+	punteggio viene modificato in modo relativo, sommando cioè il valore specificato invece che
+	sostituirlo.
+	\item \textbf{ZREM}: rimuove una o più stringhe dall'insieme.
+	\item \textbf{ZSCORE}: ritorna il punteggio associato ad una stringa, e può essere usato anche
+	come test di appartanenza.
+	\item \textbf{ZCARD}: ritorna la cardinalità dell'insieme, cioè il numero di stringhe
+	contenute.
+	\item \textbf{ZINTERSTORE}, \textbf{ZUNIONSTORE}: come le controparti per gli insieme,
+	effettuano le operazioni (rispettivamente) di unione e intersezione, memorizzando il risultato
+	in un nuovo insieme ordinato. Il punteggio ottenuto è la somma dei punteggi specificati negli
+	insiemi di origine, ma è possibile specificare una funzione di aggregazione diversa (media,
+	minimo o massimo), oltre che applicare dei pesi (fattori moltiplicativi) ai punteggi.
+	\item \textbf{ZRANGE}: resituisce gli elementi all'interno dell'intervallo specificato come
+	indice di sequenza. Per esempio, specificando come intervallo inclusivo \verb|0 4|, si
+	ottengono i primi 5 elementi, cioè i 5 elementi con minor punteggio attualmente presenti
+	nell'insieme. È possibile usare gli indici negativi per fare riferimento alla fine della
+	sequenza (per esempio, \verb|-1| indica l'elemento con punteggio più alto).
+	\item \textbf{ZRANGEBYSCORE}: restituisce gli elementi all'interno dell'intervallo specificato
+	come punteggi. Per esempio, specificando come intervallo \verb|100.2 100.8|, si ottengono tutti
+	gli elementi i cui punteggi sono compresi tra 100.2 e 100.8. Gli estremi dell'intervallo
+	possono essere specificati come aperti o chiusi. È possibile inoltre specificare un numero
+	massimo di elementi restituiti per evitare trasferimenti troppo pesanti (consentendo quindi la
+	paginazione).
+	\item \textbf{ZRANGEBYLEX}: restituisce gli elementi all'interno dell'intervallo specificato
+	come prefissi lessicografici. Per esempio, specificando come intervallo \verb|AZ C|, si
+	ottengono tutti gli elementi che seguono lessicograficamente la stringa ``AZ'' e precedono la
+	stringa ``C''. Come per il comando precedente, è possibile specificare se gli estremi
+	dell'intervallo sono aperti o chiusi, e indicare un limite massimo agli elementi restituiti.
+	Come già descritto, questo comando funziona correttamente solo con insiemi ordinati in cui
+	tutti gli elementi hanno lo stesso punteggio.
+	\item \textbf{ZREVRANGE}, \textbf{ZREVRANGEBYSCORE}, \textbf{ZREVRANGEBYLEX}: simili ai
+	precedenti comandi, ma considerano l'insieme ordinato al contrario, cioè in ordine decrescente
+	di punteggio.
+	\item \textbf{ZREMRANGEBYRANK}, \textbf{ZREMRANGEBYSCORE}, \textbf{ZREMRANGEBYLEX}: simili ai
+	precedenti comandi, ma rimuovono gli elementi all'interno degli intervalli specificati invece
+	che restituirli.
+\end{itemize}
+
+Anche gli insiemi ordinati, come gli insiemi, si prestano molto bene a creare indici manuali,
+sempre ordinati, su cui effettuare poi operazioni di estrazione e ricerca. Vista la flessibilità
+della struttura dati, indichiamo alcuni possibili scenari applicativi.
+
+\begin{itemize}
+	\medskip
+
+	\item Un esempio di struttura dati facilmente rappresentabile tramite insieme ordinato è una
+	coda con priorità. Supponiamo per esempio di dover memorizzare un elenco di azioni da eseguire
+	nel futuro, assieme con l'istante temporale al quale l'azione deve essere eseguita. Al momento
+	di inserire un'azione, si può creare un nuovo elemento in una tabella hash (\verb|HSET|)
+	utilizzando un ID progressivo conservato in una chiave (\verb|INCR|), memorizzando così tutto
+	il dettaglio dell'azione da eseguire (tipologia, parametri, condizioni di errore). Dopodiché,
+	si inserisce l'ID dell'azione in un insieme ordinato (\verb|ZADD|), utilizzando come punteggio
+	il timestamp UNIX a cui si dovrà eseguire l'azione. Successivamente, in polling, è possibile
+	estrarre tutte le azioni scadute (cioè il cui timestamp è inferiore all'attimo corrente,
+	tramite \verb|ZRANGEBYSCORE|) e processarle; via via che ciascuna azione termina l'esecuzione,
+	può essere rimossa dall'insieme (\verb|ZREM|).
+
+	\item Supponiamo di voler creare un sistema di loyalty per un e-commerce, basato sulla spesa 
+	effettuata da ciascun utente. Ogni volta che un utente effettua un acquisto, possiamo
+	memorizzato nell'insieme ordinato l'ID dell'utente aggiungendo l'importo del carrello
+	(\verb|ZINCR|); non è necessario gestire in modo diverso il primo acquisto, perché \verb|ZINCR|
+	funziona anche se l'elemento non è ancora presente. Se vogliamo contattare tutti gli utenti che
+	hanno speso più di €1000 sul nostro e-commerce, possiamo utilizzare \verb|ZRANGEBYSCORE|
+	specificando l'intervallo \verb|1000.00 +inf| per estrarre gli ID. In alternativa, supponendo
+	di voler premiare i 100 utenti che hanno speso di più, possiamo estrarre i loro ID con
+	\verb|ZREVRANGE| usando l'intervallo \verb|0 99| (essendo l'insieme in ordine crescente,
+	dobbiamo usare \verb|ZREVRANGE| per estrarre facilmente gli elementi con punteggio più grosso).
+\end{itemize}
+
+Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordinati:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> ZADD test 10 a 20 b 30 c
+(integer) 0
+127.0.0.1:6379> ZCARD test
+(integer) 3
+127.0.0.1:6379> ZSCORE test b
+"20"
+127.0.0.1:6379> ZRANGE test 0 0
+1) "a"
+127.0.0.1:6379> ZRANGE test 0 10
+1) "a"
+2) "b"
+3) "c"
+127.0.0.1:6379> ZREVRANGE test 0 0
+1) "c"
+127.0.0.1:6379> ZRANGEBYSCORE test 15 25
+1) "b"
+127.0.0.1:6379> ZINCRBY test 20 b
+"40"
+127.0.0.1:6379> ZRANGEBYSCORE test 15 25
+(empty list or set)
+\end{lstlisting}
+
 
 \subsection{HyperLogLog}
 
@@ -547,28 +689,31 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
 
 \section{Concorrenza}
 
-Coerentemente con la sua archiettura orientata alla semplicità e al minimalismo, Redis ha un supporto primitivo
-ma efficace per la concorrenza, che è basato sulla serializzazione delle operazioni. La scelta è dovuta al fatto che 
-l'esecuzione di ciascun comando è (nella maggior parte dei casi) molto veloce anche con grossi dataset, come
-si è visto, trattandosi di operazioni dirette su specifiche strutture dati completamente conservate in memoria, 
-senza necessità di interrogare o aggioranare indici, né effettuare I/O di alcun tipo.
+Coerentemente con la sua archiettura orientata alla semplicità e al minimalismo, Redis ha un
+supporto primitivo ma efficace per la concorrenza, che è basato sulla serializzazione delle
+operazioni. La scelta è dovuta al fatto che l'esecuzione di ciascun comando è (nella maggior parte
+dei casi) molto veloce anche con grossi dataset, come si è visto, trattandosi di operazioni dirette
+su specifiche strutture dati completamente conservate in memoria, senza necessità di interrogare o
+aggioranare indici, né effettuare I/O di alcun tipo.
 
-All'interno di ciasuna connessione TCP, il protocollo proibisce di eseguire comandi in parallelo, cioè il client 
-deve necessariamente attendere il risultato di un comando prima di poter inviare il comando successivo (con l'unica
-eccezione dell'esecuzione di una transazione, che però come abbiamo visto si configura di fatto come un unico
-comando inviato a livello di protocollo).
+All'interno di ciasuna connessione TCP, il protocollo proibisce di eseguire comandi in parallelo,
+cioè il client deve necessariamente attendere il risultato di un comando prima di poter inviare il
+comando successivo (con l'unica eccezione dell'esecuzione di una transazione, che però come abbiamo
+visto si configura di fatto come un unico comando inviato a livello di protocollo).
 
-Viceversa, per quanto concerne comandi inviati da più clienti (e quindi tramite più connessioni) in parallelo,
-Redis provvede a serializzarli tra loro in automatico poiché il codice del server si basa su un singolo thread
-di esecuzione, e gestisce l'accesso ai socket in parallelo tramite programmazione asincrona e accesso
-I/O non bloccante, appoggiandosi a primitive quali ``select'', ``epoll'' o ``kqueue''. 
+Viceversa, per quanto concerne comandi inviati da più clienti (e quindi tramite più connessioni) in
+parallelo, Redis provvede a serializzarli tra loro in automatico poiché il codice del server si
+basa su un singolo thread di esecuzione, e gestisce l'accesso ai socket in parallelo tramite
+programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive quali ``select'',
+``epoll'' o ``kqueue''.
 
-Questa architettura rende il codice di Redis più semplice e veloce, perché non è 
-necessario acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale per
-serializzare gli accessi tra diversi thread in carico di gestire ciascuna connesione. L'uso di lock quale
-per esempio un ``mutex'' implementato dalla libreria ``pthread'' avrebbe un impatto non solo a livello di semplicità di 
-codice sorgente, ma anche di performance, poiché acquisire un lock impiega un tempo non trascurabile rispetto alla
-reale esecuzione dell'operazioni richiesta, anche nel caso in cui non è conteso.
+Questa architettura rende il codice di Redis più semplice e veloce, perché non è necessario
+acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale
+per serializzare gli accessi tra diversi thread in carico di gestire ciascuna connesione. L'uso di
+lock quale per esempio un ``mutex'' implementato dalla libreria ``pthread'' avrebbe un impatto non
+solo a livello di semplicità di codice sorgente, ma anche di performance, poiché acquisire un lock
+impiega un tempo non trascurabile rispetto alla reale esecuzione dell'operazioni richiesta, anche
+nel caso in cui non è conteso.
 
 \section{Persistenza}
 
