@@ -175,8 +175,31 @@ alla base dell'architettura di Redis.
 
 \section{Installazione}
 
-È
+Redis è stato scritto per funzionare su sistemi UNIX e supporta ufficialmente la
+compilazione sotto Linux, macOS, OpenBSD, NetBSD e FreeBSD. Il codice è stato scritto
+per essere compatibile anche con architetture a 32-bit, sebbene la versione a 64-bit
+sia di gran lunga la più utilizzata in virtù della maggiore capacità di indirizzamento
+di memoria.
 
+La compilazione da codice sorgente è molto semplice: Redis è scritto nel linguaggio
+ANSI C90, e le pochissime dipendenze a livello di librerie sono distribuite con il
+codice sorgente stesso, quindi è sufficiente disporre sul sistema del compilatore GCC.
+Una volta scaricato l'archivio di codice sorgente dalla \cite{pagina di scaricamento ufficiale}
+o tramite \verb|git| dal \cite{repositorio ufficiale su GitHub}, è sufficiente lanciare il
+comando \verb|make|. Questa l'intera sequenza:
+
+\medskip
+\begin{lstlisting}
+$ git clone https://github.com/antirez/redis
+$ cd redis
+$ make
+\end{lstlisting}
+
+In alternativa, è possibile installare Redis da un pacchetto di distribuzione binario
+presente nella maggior parte dei sistemi operativi. Per esempio, in un sistema Debian
+o Ubuntu, è possibile eseguire il comando \verb|apt-get install redis-server|, mentre
+su un sistema macOS si può utilizzare il gestore di pacchetti ``Homebrew'' tramite il
+comando \verb|brew install redis|.
 
 \section{Architettura}
 
@@ -203,7 +226,7 @@ OK
 
 Il valore di ritorno visualizzato dalla console è fortemente tipizzato nel protocollo;
 nei precedenti casi, il valore di ritorno è sempre una stringa (compreso l'ultimo
-caso in cui la stringa è vuota).
+caso in cui la stringa è vuota, e viene dunque visualizzata come ``<nil>``).
 
 Il comando \verb|DEL| può essere utilizzato per cancellare un oggetto di tipo
 arbitrario:
@@ -229,15 +252,35 @@ modo separato. Per esempio, un comando inesistente restituisce un codice di erro
 Ogni chiave in Redis è una stringa (sequenza di byte) di lunghezza arbitraria; non è
 necessario che sia stampabile, sebbene questo sia consigliabile per facilitare il
 debugging. La funzione hash con la quale la stringa viene convertita in indice è
-una semplice funziona polinomiale con base un numero primo, comunemente chiamata
-djb2 \cite{djbhash}, dal nome del suo ideatore (Daniel J. Bernestein).
+una semplice funziona polinomiale utilizzante un numero primo come base, 
+comunemente chiamata djb2 \cite{djbhash}, dal nome del suo ideatore (Daniel J. Bernestein).
 
-\section{Tipi di oggetti memorizzabili}
+\section{Tipologie di oggetti memorizzabili}
 
 Ogni oggetto memorizzato in Redis deve avere un tipo specifico, che viene serializzato
 nella tabella e controllato ad ogni accesso. A livello di protocollo di comunicazione,
 ogni comando opera su oggetti di uno specifico tipo; per esempio, i comandi \verb|SET|
 e \verb|GET| visti nell'esempio precedente operano solamente su stringhe.
+
+Oltre ai tipi base (stringhe, interi, numeri in virgola mobile), gli oggetti memorizzati
+possono essere delle vere e proprio strutture dati quali liste, tabelle hash, insiemi
+ordinati e così via. È proprio questa ricchezza in termini di strutture dati che caratterizza
+Redis rispetto ad altri database della stessa tipologia.
+
+Redis non prevede comandi espliciti di creazione di oggetti; è normalmente sufficiente
+eseguire un comando di modifica di un oggetto (come per esempio il comando per aggiungere
+un elemento ad un insieme) su una chiave non utilizzata per creare automaticamente una
+struttura dati del tipo specificato, associandola alla chiave. Per esempio, il comando
+\verb|SADD| viene utilizzato per aggiungere uno o più elementi ad un insieme; di
+conseguenza, il comando \verb|SADD test1 elem1 elem2| creerà automaticamente un insieme 
+associato alla chiave \verb|test1|, contenente i due elementi \verb|elem1| e \verb|elem2|.
+Se \verb|test1| esistesse già nella base di dati ma fosse di tipo diverso (per esempio,
+una lista), il comando \verb|SADD| ritornerebbe un errore (\verb|WRONGTYPE|).
+
+Viceversa, come già visto nel precedente paragrafo, è previsto un comando di cancellazione
+generale (\verb|DEL|) che rimuove la chiave e l'oggetto ad essa associato dal database,
+qualunque sia il tipo dell'oggetto stesso.
+
 
 \subsection{Stringhe}
 
@@ -264,7 +307,7 @@ Si noti come \verb|APPEND| ha restituito la nuova lunghezza della stringa, sfrut
 la disponibilità nel protocollo del valore di ritorno come modo per veicolare una
 informazione possibilmente utile.
 
-Le stringhe sono l'unico tipo primario supportato da Redis, ma vengono spesso usate come tipo
+Le stringhe sono in realtà l'unico tipo primario supportato da Redis, ma vengono spesso usate come tipo
 debole, cioè è possibile manipolarle come se fossero oggetti di altri tipi. Infatti,
 i comandi \verb|INCR|, \verb|DECR|,  \verb|INCRBY| e \verb|DECRBY| ci permettono
 di interagire con oggetti di tipo stringa che rappresentano degli interi in base 10:
@@ -301,8 +344,8 @@ su ciascun bit.
 
 \subsection{Liste}
 
-In Redis, le liste sono strutture dati assimilabili per complessità alle normali
-liste con puntatore doppio; i valori contenuti nella lista sono stringhe.
+In Redis, le liste sono strutture dati assimilabili, come complessità computazionale,
+alle normali liste con puntatore doppio; i valori contenuti nella lista sono stringhe.
 L'accesso al primo e all'ultimo elemento ha una complessità di O(1), mentre
 l'accesso all'elemento N richiede O(N). I comandi principali per manipolare una
 lista sono i seguenti:
@@ -343,17 +386,189 @@ Qui si può vedere una sessione interattiva di esempio di uso di una lista:
 4) "donald"
 \end{lstlisting}
 
+Si noti che non è necessario inizializzare la lista in nessun modo: il primo riferimento alla chiave
+\verb|mylist| tramite un comando \verb|RPUSH| (che opera esclusivamente su liste) è sufficiente
+per creare dinamicamente l'oggetto di tipo giusto.
+
 \subsection{Tabelle hash}
 
+Una tabella hash consente di memorizzare una serie di coppie di stringhe (denominate ``campo'' e ``valore''),
+associandole ad una chiave del database; questo consente quindi di serializzare dei semplici oggetti, sebbene
+non sia possibile avere tipologie più complesse di dati.
+
+Un esempio di uso di tabella hash è la memorizzazione delle informazioni sugli utenti di un applicativo; è
+possibile infatti utilizzare come chiave una stringa composta da un prefisso (per esempio \verb|user|), seguito
+dall'ID univoco (chiave primaria) dell'utente, per esempio un intero progressivo, opzionalmente divis da un
+separatore per leggibilità (\verb|user:88|). All'interno della tabella, i campi sono i nomi degli attributi che
+si vuole memorizzare (\verb|nome|, \verb|cognome|, ecc.), associati ai relativi valori. 
+
+Si noti che non esiste nessun controllo d'integrità che ci assicuri che le tabelle associate a tutti gli utenti
+(tutte le chiavi con prefisso \verb|user|, nel nostro esempio) siano consistenti tra loro e dunque popolate dai
+medesimi campi; così come non è possibile verificare la tipizzazione dei campi, poiché i valori sono esclusivamente
+di tipo stringa e dunque senza tipo. Se dunque è necessaria uniformità, l'onere è lasciato al client.
+
+I comandi principali sono i seguenti, caratterizzata dal prefisso \verb|H|:
+
+\begin{itemize}
+	\medskip
+	\item \textbf{HSET}. Aggiunge un campo alla tabella.
+	\item \textbf{HGET}. Legge il valore di un campo della tabella.
+	\item \textbf{HDEL}. Cancella un campo dalla tabella.
+	\item \textbf{HEXISTS}. Verifica se un campo è presente nella tabella.
+	\item \textbf{HLEN}. Restituisce il numero di campi presenti nella tabella.
+	\item \textbf{HGETALL}. Restituisce tutte i campi e tutti i valori nella tabella.
+	\item \textbf{HMGET} e \textbf{HMSET}. Rispettivamente come \verb|HGET| e \verb|HSET| ma operano su campi multipli.
+	\item \textbf{HKEYS} e \textbf{HVALS}. Restituiscono rispettivamente tutti i campi e tutti i valori nella tabella.
+\end{itemize}
+
+Qui si può vedere una sessione interattiva di esempio di uso di una tabella hash:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> HSET user:88 name giovanni
+(integer) 1
+127.0.0.1:6379> HMSET user:88 surname bajo age 38
+OK
+127.0.0.1:6379> HLEN user:88
+(integer) 3
+127.0.0.1:6379> HGET user:88 surname
+"bajo"
+127.0.0.1:6379> HGETALL user:88
+1) "name"
+2) "giovanni"
+3) "surname"
+4) "bajo"
+5) "age"
+6) "38"
+127.0.0.1:6379> HKEYS user:88
+1) "name"
+2) "surname"
+3) "age"
+127.0.0.1:6379> HVALS user:88
+1) "giovanni"
+2) "bajo"
+3) "38"
+127.0.0.1:6379> HEXISTS user:88 name
+(integer) 1
+127.0.0.1:6379> HEXISTS user:88 giovanni
+(integer) 0
+\end{lstlisting}
+
+Come si può vedere, la tabella hash è creata dinamicamente al primo uso, e non è necessario dimensionarla in alcun
+modo; Redis implementa in modo efficiente le tabelle hash e le ridimensiona automaticamente al crescere degli
+elementi contenuti, mantentendo un fattore massimo di riempimento che garantisce una buona velocità di accesso.
+
 \subsection{Insiemi}
+
+Un insieme in Redis è una sequenza non ordinata di stringhe univoche, associate ad una chiave del database. È
+possibile compiere le operazioni base quali l'aggiunta di una stringa, la rimozione di una stringa, il conteggio
+della cardinalità, la verifica della presenza di una stringa, l'estrazione di una stringa scelta casualmente
+tra quelle presenti. Inoltre, sono previste anche operazioni che coinvolgono più di un insieme, quali il 
+calcolo dell'intersezione, dell'unione, della differenza.
+
+Riprendendo il precedente esempio di tabella hash contenente gli utenti, un applicativo potrebbe voler memorizzare
+all'interno di un insieme l'elenco degli utenti che soddisfano una determinata proprietà, per esempio tutti
+coloro che hanno effettuato almeno un pagamento, o coloro che hanno aggiornato all'ultima versione dell'applicativo. 
+In questo caso, si potrebbe quindi creare due insiemi, associati alle chiavi \verb|paying_users| e \verb|updated_users|,
+e inserirvi gli ID degli utenti (\verb|88|, \verb|4|, \verb|37|, ecc.). Sarebbe poi possibile effettuare rapide operazioni
+di controllo di appartenenza, oppure di differenza (ottenendo quindi l'elenco degli utenti paganti che non hanno
+aggiornato all'ultima versione, in modo da poter per esempio inviare loro una email di sollecito).
+
+Nei database relazionali, queste operazioni sono tipicamente possibile tramite delle query SQL, che il database
+rende efficente tramite indici. Allo stesso modo, in questo esempio abbiamo utilizzato un insieme come indice 
+esterno di una tabella, dovendolo però aggiornare manualmente. 
+
+Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizzati dal prefisso \verb|S|:
+
+\begin{itemize}
+	\medskip
+	\item \textbf{SADD}. Aggiunge una stringa ad un insieme.
+	\item \textbf{SREM}. Rimuove una stringa da un insieme.
+	\item \textbf{SISMEMBER}. Controlla se una stringa è presente in un insieme.
+	\item \textbf{SMEMBERS}. Elenca tutte le stringhe contenute nell'insieme.
+	\item \textbf{SRANDMEMBER}. Restituisce una o più stringhe scelte casualmente tra quelle presenti.
+	\item \textbf{SPOP}. Come ``SRANDMEMBER'', ma rimuove le stringhe scelte dall'insieme.
+	\item \textbf{SUNION}. Restituisce l'unione tra due o più insiemi.
+	\item \textbf{SINTER}. Restituisce l'interesezione tra due o più insiemi.
+	\item \textbf{SDIFF}. Restituisce la differenza tra un insieme e uno o più altri insiemi.
+	\item \textbf{SUNIONSTORE}, \textbf{SINTERSTORE}, \textbf{SDIFFSTORE}: Come i comandi precedenti, ma il risultato
+	dell'operazione viene memorizzato in Redis in una nuova chiave specificata, e viene restituita solo la cardinalità
+	del risultato.
+\end{itemize}
+
+Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> SADD paying_users 88 37 4 66
+(integer) 4
+127.0.0.1:6379> SADD paying_users 37 111
+(integer) 1
+127.0.0.1:6379> SISMEMBER paying_users 111
+(integer) 1
+127.0.0.1:6379> SREM paying_users 37
+(integer) 1
+127.0.0.1:6379> SCARD paying_users
+(integer) 4
+127.0.0.1:6379> SISMEMBER paying_users 37
+(integer) 0
+127.0.0.1:6379> SADD updated_users 12 4 66
+(integer) 3
+127.0.0.1:6379> SDIFF paying_users updated_users
+1) "88"
+2) "111"
+127.0.0.1:6379> SINTER paying_users updated_users
+1) "4"
+2) "66"
+\end{lstlisting}
+
 
 \subsection{Insiemi ordinati}
 
 \subsection{HyperLogLog}
 
+\section{Stored procedure in LUA}
+
+(performance su comandi singoli, roundtrip di rete)
+
+
+\section{Transazioni}
+
+
 \section{Utilizzo come cache}
 
+(TTL e timeout)
+
+
+\section{Velocita}
+
+(benchmark)
+
+
 \section{Concorrenza}
+
+Coerentemente con la sua archiettura orientata alla semplicità e al minimalismo, Redis ha un supporto primitivo
+ma efficace per la concorrenza, che è basato sulla serializzazione delle operazioni. La scelta è dovuta al fatto che 
+l'esecuzione di ciascun comando è (nella maggior parte dei casi) molto veloce anche con grossi dataset, come
+si è visto, trattandosi di operazioni dirette su specifiche strutture dati completamente conservate in memoria, 
+senza necessità di interrogare o aggioranare indici, né effettuare I/O di alcun tipo.
+
+All'interno di ciasuna connessione TCP, il protocollo proibisce di eseguire comandi in parallelo, cioè il client 
+deve necessariamente attendere il risultato di un comando prima di poter inviare il comando successivo (con l'unica
+eccezione dell'esecuzione di una transazione, che però come abbiamo visto si configura di fatto come un unico
+comando inviato a livello di protocollo).
+
+Viceversa, per quanto concerne comandi inviati da più clienti (e quindi tramite più connessioni) in parallelo,
+Redis provvede a serializzarli tra loro in automatico poiché il codice del server si basa su un singolo thread
+di esecuzione, e gestisce l'accesso ai socket in parallelo tramite programmazione asincrona e accesso
+I/O non bloccante, appoggiandosi a primitive quali ``select'', ``epoll'' o ``kqueue''. 
+
+Questa architettura rende il codice di Redis più semplice e veloce, perché non è 
+necessario acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale per
+serializzare gli accessi tra diversi thread in carico di gestire ciascuna connesione. L'uso di lock quale
+per esempio un ``mutex'' implementato dalla libreria ``pthread'' avrebbe un impatto non solo a livello di semplicità di 
+codice sorgente, ma anche di performance, poiché acquisire un lock impiega un tempo non trascurabile rispetto alla
+reale esecuzione dell'operazioni richiesta, anche nel caso in cui non è conteso.
 
 \section{Persistenza}
 

@@ -1,0 +1,41 @@
+NOTES
+=====
+
+NoSql Google Trend
+https://www.google.it/trends/explore?date=all&q=%2Fm%2F076tfwq
+
+A brief history of NoSQL
+http://blog.knuthaugen.no/2010/03/a-brief-history-of-nosql.html
+
+11 common use cases solved by Redis
+http://highscalability.com/blog/2011/7/6/11-common-web-use-cases-solved-in-redis.html
+
+An interview with Salvatore Sanfilippo, creator of Redis, working out of Sicily
+http://www.eu-startups.com/2011/01/an-interview-with-salvatore-sanfilippo-creator-of-redis-working-out-of-sicily/
+
+scaling, counting, bloom filter library
+https://github.com/bitly/dablooms
+
+
+/*
+ * Perform the actual hashing for `key`
+ *
+ * Only call the hash once to get a pair of initial values (h1 and
+ * h2). Use these values to generate all hashes in a quick loop.
+ *
+ * See paper by Kirsch, Mitzenmacher [2006]
+ * http://www.eecs.harvard.edu/~michaelm/postscripts/rsa2008.pdf
+ */
+void hash_func(counting_bloom_t *bloom, const char *key, size_t key_len, uint32_t *hashes)
+{
+    int i;
+    uint32_t checksum[4];
+
+    MurmurHash3_x64_128(key, key_len, SALT_CONSTANT, checksum);
+    uint32_t h1 = checksum[0];
+    uint32_t h2 = checksum[1];
+
+    for (i = 0; i < bloom->nfuncs; i++) {
+        hashes[i] = (h1 + i * h2) % bloom->counts_per_func;
+    }
+}
