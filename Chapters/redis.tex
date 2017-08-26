@@ -704,21 +704,18 @@ visto si configura di fatto come un unico comando inviato a livello di protocoll
 Viceversa, per quanto concerne comandi inviati da più clienti (e quindi tramite più connessioni) in
 parallelo, Redis provvede a serializzarli tra loro in automatico poiché il codice del server si
 basa su un singolo thread di esecuzione, e gestisce l'accesso ai socket in parallelo tramite
-programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive quali ``select'',
-``epoll'' o ``kqueue''.
+programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive quali \verb|select| 
+\cite{select}, \verb|epoll| \cite{epoll} o \verb|kqueue|.
 
 Questa architettura rende il codice di Redis più semplice e veloce, perché non è necessario
 acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale
 per serializzare gli accessi tra diversi thread in carico di gestire ciascuna connesione. L'uso di
-lock quale per esempio un ``mutex'' implementato dalla libreria ``pthread'' avrebbe un impatto non
+lock quale per esempio un ``mutex'' implementato dalla libreria \verb|pthread| avrebbe un impatto non
 solo a livello di semplicità di codice sorgente, ma anche di performance, poiché acquisire un lock
 impiega un tempo non trascurabile rispetto alla reale esecuzione dell'operazioni richiesta, anche
 nel caso in cui non è conteso.
 
 \section{Persistenza}
-
-
-
 
 
 
