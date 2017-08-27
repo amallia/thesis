@@ -669,12 +669,81 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordi
 
 \subsection{HyperLogLog}
 
-\section{Stored procedure in LUA}
+\section{Velocita}
 
-(performance su comandi singoli, roundtrip di rete)
+(benchmark)
+(segnalare problema del rountrip di rete)
 
 
 \section{Transazioni}
+
+(atomicità, non performance perché sono necessari X roundtrip)
+
+
+\section{Pipelining}
+
+Come dettagliato nella precedente sessione, le prestazioni ottenute nell'utilizzo di Redis sono
+fortemente influenzate dalla velocità di rete. Sebbene le migliori pratiche di installazione in
+ambiente di produzione consigliano di posizionare rete su un server (o gruppi di server) fisicamente
+vicini al server dove girare l'applicazione client, in popolari ambienti cloud come Amazon Web
+Services è possibile misurare latenze anche nell'ordine di 50 ms se si considerano misure al
+99-esimo percentile, sebbene con valori mediani stabilmente sotto il millisecondo \cite{aws-
+latency}.
+
+L'utilizzo di transazioni, sebbene utile per introdurre il concetto di atomocità di esecuzione,
+non migliora la latenza poiché ogni comando viene inviato separatamente e necessita quindi di un 
+roundtrip (ai quali si sommano addirittura i due roundtrip richiesti da \verb|MULTI| e \verb|EXEC|).
+
+Per arginare questo problema, Redis consente il \emph{pipelining}, una tecnica molto comune, 
+utilizzata anche da altri protocolli di tipo master-slave come HTTP, IMAP e POP3. Dopo l'invio 
+di un comando, il client può immediatamente inviarne un secondo senza necessariamente leggere
+la risposta del primo dalla rete; il server infatti è in grado di mantenere memorizzate le risposte
+dei comandi (memoria permettendo) indefinitamente, in attesa che il client le richieda. Dovendo
+quindi eseguire una sequenza predeterminata di comandi, come nel caso di una transazione, il
+pipelining risulta particolarmente comodo perché l'intera transazione (comprensiva dei delimitatori
+\verb|MULTI| e \verb|EXEC|) può essere inviata consecutivamente, praticamente senza attese.
+
+\begin{figure}
+	\centering
+		\includegraphics[width=0.8\textwidth]{pipelining}
+	\caption{Diagramma di protocollo che mostra l'utilizzo del pipelining per diminuire la latenza
+	di rete \emph{(Fonte: Wikipedia)}}
+\end{figure}
+
+Si noti che, se si è interessati ad ottenere la massima performance, è consigliabile anche
+disattivare l'algoritmo di Nagle, ed utilizzare le opzioni \verb|TCP_NODELAY| e \verb|TCP_CORK| per
+gestire manualmente il buffering \cite{tcp-cork}. Molte librerie client Redis per i principali
+linguaggi di programmazione si occupano di questi dettagli automaticamente; si veda a titolo di
+esempio i sorgenti della libreria \verb|redis-py| \cite{tcp-cork-redispy}.
+
+\section{Stored procedure in LUA}
+
+Il \emph{pipelining} non è però in grado di essere sempre utilizzato: per esempio, può essere
+necessario verificare che un comando abbia successo prima di procedere al successivo; oppure
+può essere necessario utilizzare il valore restituito da un comando per definire il parametro 
+di un comando successivo. In questi casi, è necessario quindi introdurre un nuovo roundtrip di
+rete per leggere la risposta, processarla, e inviare il successivo comando.
+
+Esattamente come nel caso dei comuni database SQL, Redis consente di risolvere in modo più completo
+il problema della latenza di rete tramite le cosidette \emph{stored procedure}: il programmatore può
+inviare al database un programma speciale, che viene memorizzato per usi successivi, ed eseguirlo
+poi successivamnete; questo programma può quindi effettuare più operazioni in successione, oltre che
+utilizzare istruzioni per controllo di flusso, pagando, in termini di latenza, un solo roundtrip di
+rete.
+
+Invece che utilizzare un linguaggio di programmazione progettato ad-hoc (come per esempio il
+linguaggio PL/pgSQL \cite{plpgsql} utilizzato dal famoso database PostgreSQL), Redis utilizza un
+linguaggio già esistente: LUA \cite{lua}. LUA è un linguaggio di scripting, tipato dinamicamente,
+normalmente eseguito tramite un interprete molto efficiente e compatto, facilmente adatto
+all'integrazione (embedding). Già dai primi anni 2000, ha ottenuto molto popolarità nell'industria
+videoludica come linguaggio di scripting, proprio in virtù del profilo di performance e compatezza
+che lo rendeva utilizzabile anche all'interno di console con processori non troppo potenti e
+quantitativi di memoria limitati (si pensi per esempio alla Sony Playstation 2, che era comandata da
+un processore MIPS R5900 a 300Mhz con 32Mb di RAM), ed è stato utilizzato all'interno di successi
+quali Angry Birds \cite{lua-angry} o World of Warcraft \cite{lua-wow}.
+
+Supponiamo quindi di voler eseguire un'oparazione 
+
 
 
 \section{Utilizzo come cache}
@@ -682,9 +751,6 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordi
 (TTL e timeout)
 
 
-\section{Velocita}
-
-(benchmark)
 
 
 \section{Concorrenza}
