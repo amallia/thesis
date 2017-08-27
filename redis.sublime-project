@@ -1,0 +1,14 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+	"options": {
+		"root": "thesis.tex",
+	},
+	"settings": {
+		"WrapPlus.break_on_hyphens": "false"
+	}
+}
