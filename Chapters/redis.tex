@@ -687,8 +687,8 @@ fortemente influenzate dalla velocità di rete. Sebbene le migliori pratiche di 
 ambiente di produzione consigliano di posizionare rete su un server (o gruppi di server) fisicamente
 vicini al server dove girare l'applicazione client, in popolari ambienti cloud come Amazon Web
 Services è possibile misurare latenze anche nell'ordine di 50 ms se si considerano misure al
-99-esimo percentile, sebbene con valori mediani stabilmente sotto il millisecondo \cite{aws-
-latency}.
+99-esimo percentile, sebbene con valori mediani stabilmente sotto il millisecondo
+\cite{aws-latency}.
 
 L'utilizzo di transazioni, sebbene utile per introdurre il concetto di atomocità di esecuzione,
 non migliora la latenza poiché ogni comando viene inviato separatamente e necessita quindi di un 
@@ -729,7 +729,9 @@ il problema della latenza di rete tramite le cosidette \emph{stored procedure}: 
 inviare al database un programma speciale, che viene memorizzato per usi successivi, ed eseguirlo
 poi successivamnete; questo programma può quindi effettuare più operazioni in successione, oltre che
 utilizzare istruzioni per controllo di flusso, pagando, in termini di latenza, un solo roundtrip di
-rete.
+rete. Inoltre, specialmente nel caso in cui sia necessario effettuare delle funzioni di aggregazione
+di dati (es: calcolo di una media), non è necessario trasferire via rete tutti i dati, ma solamente
+il risultato.
 
 Invece che utilizzare un linguaggio di programmazione progettato ad-hoc (come per esempio il
 linguaggio PL/pgSQL \cite{plpgsql} utilizzato dal famoso database PostgreSQL), Redis utilizza un
@@ -742,9 +744,66 @@ quantitativi di memoria limitati (si pensi per esempio alla Sony Playstation 2, 
 un processore MIPS R5900 a 300Mhz con 32Mb di RAM), ed è stato utilizzato all'interno di successi
 quali Angry Birds \cite{lua-angry} o World of Warcraft \cite{lua-wow}.
 
-Supponiamo quindi di voler eseguire un'oparazione 
+Supponiamo di voler scrivere una stored procedure che calcoli un dato statistico aggregato; per
+esempio, dato un insieme ordinato \verb|paying-users| ln cui le stringhe sono gli ID degli utenti
+di un sistema, e il punteggio associato è il totale speso dall'utente nell'applicazione, vogliamo
+calcolare qual è la media di spesa degli utenti ``premium'', cioè che hanno speso più di €1000. 
+Per fare questo, è necessario estrarre prima la lista degli utenti premium tramite il comando
+\verb|ZRANGEBYSCORE|, e poi iterare in questa lista calcolando il valore medio. L'utilizzo di una
+stored precedure ci consente di fare questo senza trasferire sulla rete le informazioni relative
+a tutti gli utenti premium, che potrebbero essere migliaia o anche più. Il sorgente LUA che
+implementa questo semplice algoritmo è mostrato nel seguente listato:
 
+\medskip
+\lstinputlisting{code/zsetaverage.lua}
 
+Come si nota, il sorgente può essere parametrizzato tramite dei parametri di tipo chiave/valore
+che verranno passati al momento dell'utilizzo; in questo caso, si è scelto di passare come parametro 
+la chiave dell'insieme ordinato da utilizzare, e la soglia minima di spesa, rendendo così lo script 
+più generico e flessibile. Le chiavi dei parametri (accessibili tramite l'array \verb|KEYS|) non
+sono invece utilizzate.
+
+Per provare ad eseguire lo script durante la fase di sviluppo, è consigliabile l'utilizzo
+dell'opzione \verb|--eval| del comando \verb|redis-cli|:
+
+\medskip
+\begin{lstlisting}
+$ redis-cli
+127.0.0.1:6379> ZADD paying_users 1000 a 2000 b 3000 c 3000 d 250 e
+(integer) 5
+$ redis-cli --eval zsetaverage.lua k t , paying_users 1000
+(integer) 2250
+$ redis-cli --eval zsetaverage.lua k t , paying_users 2000
+(integer) 2666
+\end{lstlisting}
+
+Si noti che abbiamo passato 2 parametri: il primo con chiave \verb|k| e valore \verb|paying_users|;
+il secondo con chiave \verb|t| e valore \verb|1000| (o \verb|2000|). L'identificatore \verb|,|
+separara l'elenco delle chiavi (che non sono utilizzate dal nostro script) dall'elenco dei valori.
+
+L'uso in produzione invece richiede due fasi: prima, lo script viene caricato nel database
+come stored procedure tramite il comando \verb|SCRIPT LOAD|, che restituisce un ID univoco. 
+Successivamente, lo script può essere eseguito richiamandolo tramite il suo ID, e specificando 
+i parametri, con il comando \verb|EVALSHA|.
+
+In questo caso, la sequenza è la seguente:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> SCRIPT LOAD "-- zsetaverage.lua: calcola la media di spesa degli utenti paganti sopra\n-- una certa soglia.\n--\n-- Argomenti:\n--     ARGV[1] - chiave dell'insieme ordinato\n--     ARGV[2] - soglia di spesa\n\n-- Estrae tutti gli utenti con un punteggio maggiore a quello specificato.\n-- L'opzione WITHSCORES dice a redis di tornare non solo le stringhe\n-- dell'insieme ordinato (quindi gli ID degli utenti) ma anche i \n-- punteggi associati.\n-- matches sara' quindi un array contenente in sequenza ID1, SCORE1, ID2, SCORE2, ecc.\nlocal matches = redis.call('ZRANGEBYSCORE', ARGV[1], ARGV[2], '+inf', 'WITHSCORES')\n\nlocal total = 0\n\n-- Attraversa l'array a partire dal secondo elemento, fino alla sua lunghezza,\n-- con passo 2. In questo modo ad ogni passo indirizziamo direttamente i punteggi\n-- saltando gli ID\n-- Si noti che in LUA il primo elemento di un array ha indice 1\nfor idx=2, #matches, 2 do\n    total = total + tonumber(matches[idx])\nend\n\n-- Calcola la media\nreturn total / (#matches / 2)\n"
+"c8fe4ea641681f744e517b52002266ca7b4e4cdf"
+127.0.0.1:6379> EVALSHA c8fe4ea641681f744e517b52002266ca7b4e4cdf 2 k t paying_users 1000
+(integer) 2250
+127.0.0.1:6379> EVALSHA c8fe4ea641681f744e517b52002266ca7b4e4cdf 2 k t paying_users 2000
+(integer) 2666
+\end{lstlisting}
+
+Il comando \verb|EVALSHA| riceve come argomento l'ID dello script, il numero di parametri, e poi
+in sequenza tutte le chiavi (non utilizzate nel nostro esempio) e tutti i valori. 
+
+Si noti che l'ID dello script è in realtà il suo hash crittografico ottenuto tramite l'algoritmo
+SHA-1; questo vuol dire che caricando più volte lo stesso script si otterrà sempre lo stesso valore
+ed è inoltre possibile precalcolare l'ID che uno script avrà, per semplicità di implementazione.
 
 \section{Utilizzo come cache}
 
