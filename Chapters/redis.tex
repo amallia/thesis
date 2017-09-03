@@ -32,7 +32,7 @@ principali tipologie e sottolinearne le differenze:
 	\textbf{Database Chiave-valore}: questi database si comportano come giganteschi array
 	associativi distribuiti, nei quali dunque è possibile risalire ad un valore data la
 	sua chiave univoca di riferimento. Vengono spessi offerti più spazi di chiavi
-	a disposizione, e l'obiettivo di scala è molto elavato (fino a petabyte di dati
+	a disposizione, e l'obiettivo di scala è molto elevato (fino a petabyte di dati
 	e milioni di operazioni al secondo).
 
 	\item
@@ -104,7 +104,7 @@ anni 2000, i servizi su Internet hanno iniziato a sperimentare dei problemi di s
 quando si trovavano a gestire alti picchi di traffico. Tali servizi, infatti, erano
 comunemente implementati come un semplice servizio di tipo CGI, ospitato all'interno
 del processo del webserver; in caso di traffico troppo elevato, l'unica soluzione possibile
-era quella della cosidetta ``scalabilità verticale'', cioè eseguire il servizio su un
+era quella della cosiddetta ``scalabilità verticale'', cioè eseguire il servizio su un
 server più potente.
 
 Il tema dei picchi di traffico, così alti e improvvisi da mettere fuori uso i siti,
@@ -401,7 +401,7 @@ semplici oggetti, sebbene non sia possibile avere tipologie più complesse di da
 Un esempio di uso di tabella hash è la memorizzazione delle informazioni sugli utenti di un
 applicativo; è possibile infatti utilizzare come chiave una stringa composta da un prefisso (per
 esempio \verb|user|), seguito dall'ID univoco (chiave primaria) dell'utente, per esempio un intero
-progressivo, opzionalmente divis da un separatore per leggibilità (\verb|user:88|). All'interno
+progressivo, opzionalmente divisi da un separatore per leggibilità (\verb|user:88|). All'interno
 della tabella, i campi sono i nomi degli attributi che si vuole memorizzare (\verb|nome|,
 \verb|cognome|, ecc.), associati ai relativi valori.
 
@@ -462,7 +462,7 @@ OK
 
 Come si può vedere, la tabella hash è creata dinamicamente al primo uso, e non è necessario
 dimensionarla in alcun modo; Redis implementa in modo efficiente le tabelle hash e le ridimensiona
-automaticamente al crescere degli elementi contenuti, mantentendo un fattore massimo di riempimento
+automaticamente al crescere degli elementi contenuti, mantenendo un fattore massimo di riempimento
 che garantisce una buona velocità di accesso.
 
 \subsection{Insiemi}
@@ -500,7 +500,7 @@ Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizza
 	presenti.
 	\item \textbf{SPOP}. Come ``SRANDMEMBER'', ma rimuove le stringhe scelte dall'insieme.
 	\item \textbf{SUNION}. Restituisce l'unione tra due o più insiemi.
-	\item \textbf{SINTER}. Restituisce l'interesezione tra due o più insiemi.
+	\item \textbf{SINTER}. Restituisce l'intersezione tra due o più insiemi.
 	\item \textbf{SDIFF}. Restituisce la differenza tra un insieme e uno o più altri insiemi.
 	\item \textbf{SUNIONSTORE}, \textbf{SINTERSTORE}, \textbf{SDIFFSTORE}: Come i comandi
 	precedenti, ma il risultato dell'operazione viene memorizzato in Redis in una nuova chiave
@@ -540,7 +540,7 @@ accesso, esse vengono create automaticamente, e si dimensionano in modo dinamico
 
 Un insieme ordinato è una sequenza di stringhe univoche, ordinate secondo un valore associato
 chiamato ``punteggio''. Ogni inserimento di una stringa viene effettuato specificando il suo
-punteggio (aggiornando quindi un eventuale puntegggio già esistente), e la struttura dati effettua
+punteggio (aggiornando quindi un eventuale punteggio già esistente), e la struttura dati effettua
 l'inserimento (o lo spostamento) nel modo giusto per mantenere l'ordinamento. In questo modo, è
 possibile effettuare sia operazioni di tipo insiemistico (controllo appartenenza, aggiunta,
 rimozione, unioni, intersezioni), sia operazioni che lavorano su intervalli di stringhe all'interno
@@ -575,7 +575,7 @@ Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
 	sostituirlo.
 	\item \textbf{ZREM}: rimuove una o più stringhe dall'insieme.
 	\item \textbf{ZSCORE}: ritorna il punteggio associato ad una stringa, e può essere usato anche
-	come test di appartanenza.
+	come test di appartenenza.
 	\item \textbf{ZCARD}: ritorna la cardinalità dell'insieme, cioè il numero di stringhe
 	contenute.
 	\item \textbf{ZINTERSTORE}, \textbf{ZUNIONSTORE}: come le controparti per gli insieme,
@@ -583,7 +583,7 @@ Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
 	in un nuovo insieme ordinato. Il punteggio ottenuto è la somma dei punteggi specificati negli
 	insiemi di origine, ma è possibile specificare una funzione di aggregazione diversa (media,
 	minimo o massimo), oltre che applicare dei pesi (fattori moltiplicativi) ai punteggi.
-	\item \textbf{ZRANGE}: resituisce gli elementi all'interno dell'intervallo specificato come
+	\item \textbf{ZRANGE}: restituisce gli elementi all'interno dell'intervallo specificato come
 	indice di sequenza. Per esempio, specificando come intervallo inclusivo \verb|0 4|, si
 	ottengono i primi 5 elementi, cioè i 5 elementi con minor punteggio attualmente presenti
 	nell'insieme. È possibile usare gli indici negativi per fare riferimento alla fine della
@@ -628,7 +628,7 @@ della struttura dati, indichiamo alcuni possibili scenari applicativi.
 	tramite \verb|ZRANGEBYSCORE|) e processarle; via via che ciascuna azione termina l'esecuzione,
 	può essere rimossa dall'insieme (\verb|ZREM|).
 
-	\item Supponiamo di voler creare un sistema di loyalty per un e-commerce, basato sulla spesa 
+	\item Supponiamo di voler creare un sistema di fidelizzazione per un e-commerce, basato sulla spesa 
 	effettuata da ciascun utente. Ogni volta che un utente effettua un acquisto, possiamo
 	memorizzato nell'insieme ordinato l'ID dell'utente aggiungendo l'importo del carrello
 	(\verb|ZINCR|); non è necessario gestire in modo diverso il primo acquisto, perché \verb|ZINCR|
@@ -668,6 +668,80 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordi
 
 
 \subsection{HyperLogLog}
+
+HyperLogLog \cite{hyperloglog} è una struttura dati probabilistica con la quale è possibile
+calcolare in modo efficiente il numero di elementi distinti di un multi-insieme. Normalmente, questo
+algoritmo richiede una quantità di memoria proporzionale al numero di elementi distinti (poiché è
+necessario memorizzare ogni elemento per poter eliminare i duplicati), mentre HyperLogLog richiede
+una frazione dello spazio, in base a come è configurato: per esempio, nell'implementazione di Redis
+la memoria occupata da ciascun HyperLogLog è pari a 12 KiB, indipendentemente dalla quantità di dati
+conteggiati, e l'errore standard della cardinalità calcolata è pari allo 0.83\%.
+
+Rimandando a \cite{hyperloglog} per una trattazione approfondita, l'intuizione base di HyperLogLog,
+come spiegato in \cite{hyperloglog-explain}, è che, osservando nella loro
+rappresentazione binaria un multi-insieme di numeri equamente distribuiti, se troviamo uno specifico
+prefisso di $N$ bit predeterminato, è possibile ipotizzare che la cardinalità dell'insieme sia
+almeno $2^N$; per esempio, in un insieme di numeri casuali, circa il 12.5\% di essi ha un prefisso
+binario pari \verb|001|, per cui se troviamo questo prefisso, possiamo ipotizzare che i numeri siano
+almeno 8. Effettuando questo test con prefissi sempre più lunghi (cercando cioè, il più lungo
+prefisso di zeri iniziali nel multi-insieme), è possibile ottenere una stima della cardinalità.
+
+Questa osservazione però commette un errore con varianza molto elevata, per cui HyperLogLog divide i
+numeri in ingresso in più sottoinsiemi, effettua per ciascuno una stima della cardinalità e poi
+bilancia queste stime tramite una media armonica. Per ciascun sottoinsieme, è sufficiente quindi
+conservare un registro, che conti il prefisso più lungo visto. Si calcola che l'errore standard 
+risultante è pari a $1.04 / \sqrt{m}$, con $m$ pari al numero di registri. 
+
+Per distribuire uniformemente le stringhe in input, Redis utilizza una funzione di hash a 64-bit
+(come suggerito in \cite{hyperloglog-plusplus}), in particolare scegliendo MurMurHash64
+\cite{murmur}, un algoritmo di hash non crittografico con buone proprietà di diffusione e velocità.
+Essendo quindi il prefisso massimo lungo appunto 64 bit, i registri richiedono 6 bit. Redis sceglie
+di usare $2^{14}$ registri, ottenendo quindi un errore pari a $1.04 / \sqrt{2^{14}} = 0.8\%$, e
+utilizzando un totale di $2^{14} * 6 / 8 = 12228$ byte di memoria necessaria, come già riportato.
+
+Questi sono i comandi esistenti, identificati dal prefisso \verb|PF|:
+
+\begin{itemize}
+	\item \textbf{PFADD}: aggiunge una o più stringhe all'HyperLogLog specificato, creandone uno
+	se non esiste già.
+	\item \textbf{PFCOUNT}: restituisce l'attuale stima di cardinalità dell'HyperLogLog
+	specificato.
+	\item \textbf{PFMERGE}: fonde due o più HyperLogLog, creando un nuovo HyperLogLog che stima la
+	cardinalità dell'unione degli insiemi specificati.
+\end{itemize}
+
+Un tipico caso d'uso è quello di conteggiare i cosiddetti \emph{DAU}, ``daily active users'', cioè
+il numero di utenti attivi in un'applicazione all'interno di ciascuna giornata solare.
+L'applicazione, alla mezzanotte, può creare un nuovo HyperLogLog utilizzando una chiave derivata dal
+giorno in corso (per esempio, \verb|DAU-2017-09-02|), aggiungendo via via l'ID di ciascun utente
+(tramite \verb|PFADD|) ogni volta che ne viene rilevata una qualunque attività, senza doversi
+preoccupare di tenere conto se l'utente era già stato conteggiato come attivo o meno. Al termine
+della giornata, è possibile stimare i \emph{DAU} tramite il comando \textbf{PFCOUNT}. Lo storico può
+essere conservato per ragioni di analisi a posteriori, e può essere aggregato tramite
+\textbf{PFMERGE} per ottenere stime di attività su finestre temporali diverse, per esempio su base
+settimanale o mensile (cosiddetti rispettivamente \emph{WAU} o \emph{MAU}). Grazie all'HyperLogLog,
+l'utilizzo di memoria è costante indipendentemente dal numero di utente attivi, anche se questi
+dovessero raggiungere importanti volumi; a titolo di esempio, il numero di \emph{MAU} su Facebook in
+Giugno 2017 è stato più di 2 miliardi \cite{fb-mau}.
+
+Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> PFADD dau 50
+(integer) 1
+127.0.0.1:6379> PFCOUNT dau
+(integer) 1
+127.0.0.1:6379> PFADD dau 51 52 50 53 54 50 55 56 50 57 58 59 50
+(integer) 1
+127.0.0.1:6379> PFCOUNT dau
+(integer) 10
+127.0.0.1:6379> PFADD dau 51 52 53 54 55 56 57 58 59 61
+(integer) 1
+127.0.0.1:6379> PFCOUNT dau
+(integer) 11
+\end{lstlisting}
+
 
 \section{Velocita}
 
@@ -725,33 +799,33 @@ di un comando successivo. In questi casi, è necessario quindi introdurre un nuo
 rete per leggere la risposta, processarla, e inviare il successivo comando.
 
 Esattamente come nel caso dei comuni database SQL, Redis consente di risolvere in modo più completo
-il problema della latenza di rete tramite le cosidette \emph{stored procedure}: il programmatore può
-inviare al database un programma speciale, che viene memorizzato per usi successivi, ed eseguirlo
-poi successivamnete; questo programma può quindi effettuare più operazioni in successione, oltre che
-utilizzare istruzioni per controllo di flusso, pagando, in termini di latenza, un solo roundtrip di
-rete. Inoltre, specialmente nel caso in cui sia necessario effettuare delle funzioni di aggregazione
-di dati (es: calcolo di una media), non è necessario trasferire via rete tutti i dati, ma solamente
-il risultato.
+il problema della latenza di rete tramite le cosiddette \emph{stored procedure}: il programmatore
+può inviare al database un programma speciale, che viene memorizzato per usi successivi, ed
+eseguirlo poi successivamente; questo programma può quindi effettuare più operazioni in successione,
+oltre che utilizzare istruzioni per controllo di flusso, pagando, in termini di latenza, un solo
+roundtrip di rete. Inoltre, specialmente nel caso in cui sia necessario effettuare delle funzioni di
+aggregazione di dati (es: calcolo di una media), non è necessario trasferire via rete tutti i dati,
+ma solamente il risultato.
 
 Invece che utilizzare un linguaggio di programmazione progettato ad-hoc (come per esempio il
 linguaggio PL/pgSQL \cite{plpgsql} utilizzato dal famoso database PostgreSQL), Redis utilizza un
-linguaggio già esistente: LUA \cite{lua}. LUA è un linguaggio di scripting, tipato dinamicamente,
+linguaggio già esistente: LUA \cite{lua}. LUA è un linguaggio di scripting, tipizzato dinamicamente,
 normalmente eseguito tramite un interprete molto efficiente e compatto, facilmente adatto
 all'integrazione (embedding). Già dai primi anni 2000, ha ottenuto molto popolarità nell'industria
-videoludica come linguaggio di scripting, proprio in virtù del profilo di performance e compatezza
-che lo rendeva utilizzabile anche all'interno di console con processori non troppo potenti e
-quantitativi di memoria limitati (si pensi per esempio alla Sony Playstation 2, che era comandata da
-un processore MIPS R5900 a 300Mhz con 32Mb di RAM), ed è stato utilizzato all'interno di successi
-quali Angry Birds \cite{lua-angry} o World of Warcraft \cite{lua-wow}.
+di videogiochi come linguaggio di scripting, proprio in virtù del profilo di performance e
+compatezza che lo rendeva utilizzabile anche all'interno di console con processori non troppo
+potenti e quantitativi di memoria limitati (si pensi per esempio alla Sony Playstation 2, che era
+comandata da un processore MIPS R5900 a 300Mhz con 32Mb di RAM), ed è stato utilizzato all'interno
+di successi quali Angry Birds \cite{lua-angry} o World of Warcraft \cite{lua-wow}.
 
 Supponiamo di voler scrivere una stored procedure che calcoli un dato statistico aggregato; per
 esempio, dato un insieme ordinato \verb|paying-users| ln cui le stringhe sono gli ID degli utenti
 di un sistema, e il punteggio associato è il totale speso dall'utente nell'applicazione, vogliamo
 calcolare qual è la media di spesa degli utenti ``premium'', cioè che hanno speso più di €1000. 
-Per fare questo, è necessario estrarre prima la lista degli utenti premium tramite il comando
+Per fare questo, è necessario estrarre prima la lista degli utenti ``premium'' tramite il comando
 \verb|ZRANGEBYSCORE|, e poi iterare in questa lista calcolando il valore medio. L'utilizzo di una
 stored precedure ci consente di fare questo senza trasferire sulla rete le informazioni relative
-a tutti gli utenti premium, che potrebbero essere migliaia o anche più. Il sorgente LUA che
+a tutti gli utenti ``premium'', che potrebbero essere migliaia o anche più. Il sorgente LUA che
 implementa questo semplice algoritmo è mostrato nel seguente listato:
 
 \medskip
@@ -779,7 +853,7 @@ $ redis-cli --eval zsetaverage.lua k t , paying_users 2000
 
 Si noti che abbiamo passato 2 parametri: il primo con chiave \verb|k| e valore \verb|paying_users|;
 il secondo con chiave \verb|t| e valore \verb|1000| (o \verb|2000|). L'identificatore \verb|,|
-separara l'elenco delle chiavi (che non sono utilizzate dal nostro script) dall'elenco dei valori.
+separa l'elenco delle chiavi (che non sono utilizzate dal nostro script) dall'elenco dei valori.
 
 L'uso in produzione invece richiede due fasi: prima, lo script viene caricato nel database
 come stored procedure tramite il comando \verb|SCRIPT LOAD|, che restituisce un ID univoco. 
@@ -814,14 +888,14 @@ ed è inoltre possibile precalcolare l'ID che uno script avrà, per semplicità 
 
 \section{Concorrenza}
 
-Coerentemente con la sua archiettura orientata alla semplicità e al minimalismo, Redis ha un
+Coerentemente con la sua architettura orientata alla semplicità e al minimalismo, Redis ha un
 supporto primitivo ma efficace per la concorrenza, che è basato sulla serializzazione delle
 operazioni. La scelta è dovuta al fatto che l'esecuzione di ciascun comando è (nella maggior parte
 dei casi) molto veloce anche con grossi dataset, come si è visto, trattandosi di operazioni dirette
 su specifiche strutture dati completamente conservate in memoria, senza necessità di interrogare o
-aggioranare indici, né effettuare I/O di alcun tipo.
+aggiornare indici, né effettuare I/O di alcun tipo.
 
-All'interno di ciasuna connessione TCP, il protocollo proibisce di eseguire comandi in parallelo,
+All'interno di ciascuna connessione TCP, il protocollo proibisce di eseguire comandi in parallelo,
 cioè il client deve necessariamente attendere il risultato di un comando prima di poter inviare il
 comando successivo (con l'unica eccezione dell'esecuzione di una transazione, che però come abbiamo
 visto si configura di fatto come un unico comando inviato a livello di protocollo).
@@ -834,10 +908,10 @@ programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive 
 
 Questa architettura rende il codice di Redis più semplice e veloce, perché non è necessario
 acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale
-per serializzare gli accessi tra diversi thread in carico di gestire ciascuna connesione. L'uso di
+per serializzare gli accessi tra diversi thread in carico di gestire ciascuna connessione. L'uso di
 lock quale per esempio un ``mutex'' implementato dalla libreria \verb|pthread| avrebbe un impatto non
 solo a livello di semplicità di codice sorgente, ma anche di performance, poiché acquisire un lock
-impiega un tempo non trascurabile rispetto alla reale esecuzione dell'operazioni richiesta, anche
+impiega un tempo non trascurabile rispetto alla reale esecuzione delle operazioni richiesta, anche
 nel caso in cui non è conteso.
 
 \section{Persistenza}
