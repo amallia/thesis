@@ -140,7 +140,7 @@ server.
 Per ovviare a questo inconveniente, nel 2003 nasce Memcached, scritto da Brad Fitzpatrick per
 implementare la scalabilità orizzontale nel suo popolare gestore di blog LiveJournal. Memcached è di
 fatto una tabella hash chiave-valore, raggiungibile via TCP con un semplice protocollo testuale. Le
-operazioni sono stanzialmente due: GET e SET. È sufficiente qundi collegare tutti i server
+operazioni sono sostanzialmente due: GET e SET. È sufficiente quindi collegare tutti i server
 applicativi ad un unico server Memcached (possibilmente sulla stessa rete fisica, beneficiando
 quindi di una latenza molto bassa) perché possano condividere la stessa cache, aggiornando il codice
 che prima utilizzava una tabella in RAM dentro il processo con una libreria che acceda alla stessa
@@ -155,12 +155,12 @@ dei più popolari siti al mondo quali YouTube, Reddit, Facebook, Twitter, Tumblr
 Redis (acronimo di Remote Dictionary Service) è un database chiave-valore in RAM scritto
 da Salvatore Sanfilippo e rilasciato per la prima volta nel 2008 sotto licenza BSD.
 
-Redis nasce come costola di un progetto (ora defunto) chiamato "lloogg", un servizio di
+Redis nasce come costola di un progetto (ora defunto) chiamato ``lloogg'', un servizio di
 analisi in tempo reale di log di siti. Originariamente, Sanfilippo aveva progettato
-questo servizio  utilizzando MySQL come database primario per la memorizzazione dei
+questo servizio utilizzando MySQL come database primario per la memorizzazione dei
 dati, ma presto questa scelta si era dimostrata errata, perché MySQL non raggiungeva le
-performance desiderata in un contesto particolarmente intensivo dal punto di vista delle
-scrittura come quello degli aggregatori di log \cite{nascita}.
+performance desiderate in un contesto particolarmente intensivo dal punto di vista delle
+scritture come quello degli aggregatori di log \cite{nascita}.
 
 Sanfilippo aveva necessità di memorizzare velocemente i dati in arrivo, e di eseguire
 delle semplice query strutturate tipo "estrai gli ultimi N dati inseriti". Questo genere
@@ -205,8 +205,12 @@ comando \verb|brew install redis|.
 
 \section{Architettura}
 
-Redis implementa un array associativo (tramite tabella hash) in cui le chiavi sono
-stringhe, e i valori associati sono oggetti di vari tipi (stringhe o strutture dati).
+Redis implementa un array associativo (tramite tabella hash) in cui le chiavi sono stringhe, e i
+valori associati sono oggetti di vari tipi (stringhe o strutture dati). Essendo un database
+chiave-valore in RAM, l'intero dataset di chiavi e valori viene memorizzato primariamente in RAM, e
+solo successivamente serializzato su disco con alcune politiche di persistenza configurabili (si
+veda la sezione \hyperref[sec:persistence]{Persistenza}).
+
 Per comunicare con Redis, un client si deve connettere via TCP (la porta di default è la 6379) e
 comunicare tramite un protocollo testuale di tipo master/slave. È possibile utilizzare
 anche semplicemente \verb|telnet| per sperimentare, sebbene sia più comodo utilizzare il
@@ -743,7 +747,7 @@ Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 \end{lstlisting}
 
 
-\section{Velocita}
+\section{Velocit\`a}
 
 (benchmark)
 (segnalare problema del rountrip di rete)
@@ -764,7 +768,7 @@ Services è possibile misurare latenze anche nell'ordine di 50 ms se si consider
 99-esimo percentile, sebbene con valori mediani stabilmente sotto il millisecondo
 \cite{aws-latency}.
 
-L'utilizzo di transazioni, sebbene utile per introdurre il concetto di atomocità di esecuzione,
+L'utilizzo di transazioni, sebbene utile per introdurre il concetto di atomicità di esecuzione,
 non migliora la latenza poiché ogni comando viene inviato separatamente e necessita quindi di un 
 roundtrip (ai quali si sommano addirittura i due roundtrip richiesti da \verb|MULTI| e \verb|EXEC|).
 
@@ -915,7 +919,92 @@ impiega un tempo non trascurabile rispetto alla reale esecuzione delle operazion
 nel caso in cui non è conteso.
 
 \section{Persistenza}
+\label{persistence}
+
+Il dataset di Redis si trova primariamente in RAM. Questo rende tutte le operazioni sulle strutture
+dati estremamente rapide poiché non è mai necessario eseguire I/O di nessun tipo, né adottare
+strutture dati complesse per gestire il fatto che possano risiedere parzialmente su disco. Viceversa,
+il formato su disco non ha necessità di consentire un accesso efficiente ai dati contenuti,
+e quindi può essere molto compatto, senza indici di alcun tipo.
+
+Redis supporta due meccanismi di persistenza, denominati in base al formato di file che viene
+prodotto: RDB, che rappresenta uno snapshot atomico dello stato dell'interno database, e AOF, che
+utilizza invece un approccio di memorizzazione dei log delle operazioni con ricostruzione
+successiva.
+
+\subsection{Persistenza in RDB}
+
+La persistenza in RDB è architetturalmente molto semplice: ad intervalli regolari di tempo, e in
+modo sincrono rispetto all'esecuzione dei comandi client, Redis chiede al kernel di eseguire un
+``fork'', creando così una copia del processo principale inclusivo dell'intero dataset, in un
+momento di piena consistenza. Il nuovo processo figlio percorre il dataset così congelato
+serializzandolo su disco. Il processo principale nel frattempo continua a processare i nuovi comandi
+in arrivo dai client, senza però influenzare il dataset del processo figlio che rimane indipendente
+grazie al ``fork''.
+
+Nei sistemi UNIX moderni, la primitiva fork (implementata dal kernel) utilizza la tecnica di
+copy-on-write sulle pagine della memoria: in altre parole, sebbene i due processi risultanti abbiano
+ciascuno una copia del dataset indipendente, questa copia è in realtà simulata tramite l'MMU del
+processo mappando le medesime pagine fisiche di memoria (normalmente, di 4 KiB ciascuna); solo
+quando uno dei due processi prova per la prima volta a scrivere in una qualunque delle pagine, il
+kernel effettua una duplicazione della pagina stessa. In questo modo, si ottengono due vantaggi:
+l'operazione di fork è molto veloce, perché non deve immediatamente copiare tutta la memoria del
+processo (operazione che può essere onerosa se il dataset è molto grosso, e che causerebbe quindi un
+ritardo nell'esecuzione dei comandi del client), ed inoltre la memoria occupata non è immediatamente
+raddoppiata, superando potenzialmente la memoria fisica presente e costringendo ad onerose
+operazioni di swapping.
+
+Ad ogni nuovo avvio, Redis carica il contenuto del file RDB in RAM, deserializzandone il contenuto,
+prima di iniziare a ricevere comandi dai client.
+
+In aggiunta alla frequenza configurata, o client possono forzare un'operazione di salvataggio 
+tramite il comando \verb|BGSAVE|, tramite il quale si avvia un ``fork'' che effettuerà la
+serializzazione, ed eventualmente verificare il suo completamento tramite \verb|LASTSAVE|, che
+restituisce il timestamp dell'ultimo salvataggio effettuato. Può essere usato anche il comando
+\verb|SAVE| che effettua un salvataggio attendendone la fine, ma è consigliabile solo su dataset
+molto piccoli perché il tempo d'esecuzione può essere anche di diversi minuti, e tutti i client
+saranno bloccati nel frattempo.
 
 
+\subsection{Persistenza in AOF}
+
+AOF è un formato di persistenza più complesso. Rappresenta infatti un log di tutte le operazioni
+eseguite dal database, in ordine temporale, memorizzate in un semplice formato testuale. In altre
+parole, prima di eseguire ogni comando, Redis lo memorizza nel file AOF destinazione, comprensivo di
+tutti i parametri, appendendolo in fondo al file. Di conseguenza, il file AOF viene scritto
+esclusivamente aggiungendo nuovi comandi in fondo, senza alcuna possibilità di corrompersi; anche in
+seguito a scritture parziali (dovute a crash, spegnimenti improvvisi, o spazio su disco
+insufficiente), Redis è in grado di scartare correttamente il comando scritto parzialmente, senza
+compromettere l'integrità del database.
+
+Periodicamente, Redis compatta il file AOF in background; analizzando il file, scarta tutti i
+comandi ridondanti o non più utili (per esempio, comandi relativi a chiavi poi sovrascritte o
+cancellate) e accorpa comandi che supportano parametri multipli in uno solo, creando un file più
+compatto; queste operazioni vengono eseguite in un nuovo file AOF che viene poi sostituito
+atomicamente al precedente, in modo da evitare qualunque possibile corruzione.
+
+Ad ogni nuovo avvio, Redis esegue i comandi contenuti nel file AOF, ricostruendo l'intero dataset.
 
 
+\subsection{Confronto}
+
+La persistenza in RDB è utile per backup (anche di lungo termine) e scenari di recupero di
+disastri: infatti, il file RDB è molto compatto e può essere archiviato con semplicità. Lo
+svantaggio principale deriva dal fatto che, rappresentando un immagine congelata del dataset
+salvato solo ad intervalli di tempo configurati, in caso di crash o spegnimento improvviso,
+dal file RDB saranno mancanti gli ultimi dati inseriti. La frequenza di salvataggio può essere
+considerata in modo flessibile (anche in base alla velocità rilevata di modifica chiavi, in modo
+che un database ad alta frequenza di scrittura venga salvato più spesso), ma non è quindi
+garantita l'effettiva persistenza dei dati risultanti dai comandi eseguiti.
+
+Viceversa, la persistenza in AOF viene aggiornata ad ogni comando scritto, e rappresenta sempre
+quindi uno stato aggiornato del dataset. Chiaramente, è necessario molto più I/O su disco ma
+da questo punto di vista, per limitare l'impatto, è possibile configurare la frequenza alla
+quale Redis invoca il comando ``fsync'' del kernel (che forza l'effettiva scrittura su
+disco, poiché viceversa le scritture sono normalmente bufferizzate a livello kernel per
+efficienza), indicando l'intervallo in secondi; se si vuole ottenere la massima persistenza a
+discapito delle performance, è possibile forzare l'uso di ``fsync'' dopo l'esecuzione di
+ciascun comando.
+
+I due tipi di persistenza non sono mutualmente esclusivi: infatti possono essere attivati o 
+disattivati separatamente tramite file di configurazione.
