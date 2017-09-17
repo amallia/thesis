@@ -632,14 +632,14 @@ della struttura dati, indichiamo alcuni possibili scenari applicativi.
 	tramite \verb|ZRANGEBYSCORE|) e processarle; via via che ciascuna azione termina l'esecuzione,
 	può essere rimossa dall'insieme (\verb|ZREM|).
 
-	\item Supponiamo di voler creare un sistema di fidelizzazione per un e-commerce, basato sulla spesa 
-	effettuata da ciascun utente. Ogni volta che un utente effettua un acquisto, possiamo
+	\item Supponiamo di voler creare un sistema di fidelizzazione per un e-commerce, basato sulla
+	spesa effettuata da ciascun utente. Ogni volta che un utente effettua un acquisto, possiamo
 	memorizzato nell'insieme ordinato l'ID dell'utente aggiungendo l'importo del carrello
 	(\verb|ZINCR|); non è necessario gestire in modo diverso il primo acquisto, perché \verb|ZINCR|
 	funziona anche se l'elemento non è ancora presente. Se vogliamo contattare tutti gli utenti che
 	hanno speso più di €1000 sul nostro e-commerce, possiamo utilizzare \verb|ZRANGEBYSCORE|
-	specificando l'intervallo \verb|1000.00 +inf| per estrarre gli ID. In alternativa, supponendo
-	di voler premiare i 100 utenti che hanno speso di più, possiamo estrarre i loro ID con
+	specificando l'intervallo \verb|1000.00 +inf| per estrarre gli ID. In alternativa, supponendo di
+	voler premiare i 100 utenti che hanno speso di più, possiamo estrarre i loro ID con
 	\verb|ZREVRANGE| usando l'intervallo \verb|0 99| (essendo l'insieme in ordine crescente,
 	dobbiamo usare \verb|ZREVRANGE| per estrarre facilmente gli elementi con punteggio più grosso).
 \end{itemize}
@@ -911,9 +911,9 @@ programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive 
 \cite{select}, \verb|epoll| \cite{epoll} o \verb|kqueue|.
 
 Questa architettura rende il codice di Redis più semplice e veloce, perché non è necessario
-acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale
-per serializzare gli accessi tra diversi thread in carico di gestire ciascuna connessione. L'uso di
-lock quale per esempio un ``mutex'' implementato dalla libreria \verb|pthread| avrebbe un impatto non
+acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale per
+serializzare gli accessi tra diversi thread in carico di gestire ciascuna connessione. L'uso di lock
+quale per esempio un ``mutex'' implementato dalla libreria \verb|pthread| avrebbe un impatto non
 solo a livello di semplicità di codice sorgente, ma anche di performance, poiché acquisire un lock
 impiega un tempo non trascurabile rispetto alla reale esecuzione delle operazioni richiesta, anche
 nel caso in cui non è conteso.
@@ -923,9 +923,9 @@ nel caso in cui non è conteso.
 
 Il dataset di Redis si trova primariamente in RAM. Questo rende tutte le operazioni sulle strutture
 dati estremamente rapide poiché non è mai necessario eseguire I/O di nessun tipo, né adottare
-strutture dati complesse per gestire il fatto che possano risiedere parzialmente su disco. Viceversa,
-il formato su disco non ha necessità di consentire un accesso efficiente ai dati contenuti,
-e quindi può essere molto compatto, senza indici di alcun tipo.
+strutture dati complesse per gestire il fatto che possano risiedere parzialmente su disco.
+Viceversa, il formato su disco non ha necessità di consentire un accesso efficiente ai dati
+contenuti, e quindi può essere molto compatto, senza indici di alcun tipo.
 
 Redis supporta due meccanismi di persistenza, denominati in base al formato di file che viene
 prodotto: RDB, che rappresenta uno snapshot atomico dello stato dell'interno database, e AOF, che
