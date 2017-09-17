@@ -95,6 +95,7 @@ questi database in due grossi gruppi:
 \end{itemize}
 
 \section{Nascita dei database chiave-valore in RAM}
+\label{sec:birth}
 
 I database chiave-valore in RAM sono anche chiamati "cache distribuite", una sineddoche
 che rimanda al tipo d'uso più comune, nato intorno alla metà degli anni 2000.
@@ -209,7 +210,7 @@ Redis implementa un array associativo (tramite tabella hash) in cui le chiavi so
 valori associati sono oggetti di vari tipi (stringhe o strutture dati). Essendo un database
 chiave-valore in RAM, l'intero dataset di chiavi e valori viene memorizzato primariamente in RAM, e
 solo successivamente serializzato su disco con alcune politiche di persistenza configurabili (si
-veda la sezione \hyperref[sec:persistence]{Persistenza}).
+veda la sezione Persistenza \ref{sec:persistence}).
 
 Per comunicare con Redis, un client si deve connettere via TCP (la porta di default è la 6379) e
 comunicare tramite un protocollo testuale di tipo master/slave. È possibile utilizzare
@@ -396,6 +397,23 @@ Si noti che non è necessario inizializzare la lista in nessun modo: il primo ri
 \verb|mylist| tramite un comando \verb|RPUSH| (che opera esclusivamente su liste) è sufficiente
 per creare dinamicamente l'oggetto di tipo giusto.
 
+Oltre agli ovvi usi di memorizzazione di dati mantenendo un certo ordine di inserimento, le liste
+di Redis consentono anche di implementare un complesso meccanismo di `task queue`, cioè code di 
+attività da eseguire; infatti, i comando \verb|LPOP| e \verb|RPOP| dispongono anche di una versione
+bloccante, chiamate rispettivamente \verb|BLPOP| e \verb|BRPOP|. Se eseguiti specificando una lista
+vuota, invece di tornare un errore, sospendono il client finché un elemento viene aggiunto alla
+lista da un altro client. In questo modo, un gruppo di client produttori possono inserire i attività
+da eseguire (magari codificati da un ID) in una coda di attività pendenti, e un secondo gruppo di
+client consumatori possono restare in attesa di attività da eseguire, ed eseguirli via via che 
+vengono accodati. Si noti che \verb|BLPOP| e \verb|BRPOP| consentono anche di specificare più di
+una lista da controllare, restando in attesa finché non viene inserito un elemento in una qualunque
+delle liste specificate; così facendo è possibile quindi suddividere meglio i attività per priorità
+o per tipologia, consentendo comunque flessibilità su quali attività eseguire da parte dei
+consumatori. A titolo di esempio di utilizzo di questa funzionalità, si veda Celery \cite{celery},
+una coda di attività distribuita per programmi scritti in Python, che consente di utilizzare Redis
+come database.
+
+
 \subsection{Tabelle hash}
 
 Una tabella hash consente di memorizzare una serie di coppie di stringhe (denominate ``campo'' e
@@ -570,6 +588,7 @@ comandi dedicati a questa modalità sottolinea proprio la flessibilità di quest
 Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
 
 \begin{itemize}
+	\medskip
 	\item \textbf{ZADD}: aggiunge una o più stringhe all'insieme ordinata, associandole ad un
 	punteggio. Se le stringhe esistono già, il punteggio viene aggiornato al valore specificato. Il
 	comando prevede anche una serie di opzioni avanzate per cambiare il comportamento di default in
@@ -706,6 +725,7 @@ utilizzando un totale di $2^{14} * 6 / 8 = 12228$ byte di memoria necessaria, co
 Questi sono i comandi esistenti, identificati dal prefisso \verb|PF|:
 
 \begin{itemize}
+	\medskip
 	\item \textbf{PFADD}: aggiunge una o più stringhe all'HyperLogLog specificato, creandone uno
 	se non esiste già.
 	\item \textbf{PFCOUNT}: restituisce l'attuale stima di cardinalità dell'HyperLogLog
@@ -747,15 +767,177 @@ Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 \end{lstlisting}
 
 
+\section{Transazioni}
+
+Nella teoria delle basi di dati, una transazione è una sequenza di operazioni disgiunte che
+modificano la base di dati in modo corretto solo se eseguite accorpate, come fossero una singola
+operazione. Le proprietà che un sistema di transazioni può offrire sono 4: atomicità (la transazione
+viene eseguita nel suo complesso, oppure fallisce senza che nessun risultato parziale sia visibile),
+coerenza (vengono rispettati i vincoli di integrità all'inizio e alla fine della transazione),
+isolamento (durante l'esecuzione di una transizione, lo stato che essa osserva della base di dati
+non deve essere modificato da operazioni che avvengono parallelamente), e durabilità (una
+transazione eseguita con successo modifica la base di dati in modo persistente, senza cioè che la
+modifica possa più essere persa a causa di un crash). Queste proprietà vengono comunemente chiamate
+tramite il loro acronimo ACID, e un database è detto supportare transazioni ACID se espone un
+sistema di transazioni che verifichino contemporaneamente le 4 proprietà.
+
+Il supporto per le transazioni di Redis è molto primitivo: è possibile infatti raggruppare
+una sequenza di comandi in modo che venga eseguita atomicamente dal server, senza possibilità che
+altre operazioni (eseguite da altri client) possano inframezzarsi. Non è però previsto nessun
+meccanismo di ripristino in caso uno dei comandi inviati fallisca: la transazione si interrompe
+semplicemente restituendo il codice di errore del comando, ma senza annullare le modifiche
+eventualmente operate dai comandi precedenti.
+
+Per utilizzare una transazione, è sufficiente inviare il comando \verb|MULTI|, seguito dalla 
+sequenza di comandi che si vuole eseguire atomicamente, seguiti dal comando \verb|EXEC|, che dà
+il via all'esecuzione. I valori di ritorno di tutti comandi vengono concatenati e restituiti come
+valore di ritorno del comando \verb|EXEC|. È possibile anche annullare una transazione prima di
+eseguirla, inviando il comando \verb|DISCARD|.
+
+Questo è un esempio d'uso, nel quale creiamo una tabella hash per memorizzare i record relativi
+agli utenti (tramite \verb|HMSET|) e un insieme ordinato che rappresenta un indice della tabella
+(\verb|paying-users|, tramite \verb|ZADD|); per rimuovere l'utente dal database, utilizziamo una
+transazione per evitare che altri client possano accedere ad uno stato inconsistente nel quale
+l'utente è presente come record ma non nell'indice (o viceversa):
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> HMSET user:123 name Giovanni surname Bajo
+OK
+127.0.0.1:6379> ZADD paying-users 1500 123
+(integer) 1
+127.0.0.1:6379> HMSET user:124 name Mickey surname Mouse
+OK
+127.0.0.1:6379> ZADD paying-users 1200 124
+(integer) 1
+127.0.0.1:6379> MULTI
+OK
+127.0.0.1:6379> DEL user:123
+QUEUED
+127.0.0.1:6379> ZREM paying-users 123
+QUEUED
+127.0.0.1:6379> EXEC
+1) (integer) 1
+2) (integer) 1
+\end{lstlisting}
+
+Come si vede, i comandi inviati al server dopo il comando \verb|MULTI| non sono stati eseguiti
+immediatamente, ma accodati in attesa della fine della definizione della transazione, delimitata
+dal comando \verb|EXEC|.
+
+Relativamente alle proprietà ACID sopra descritte, è possibile osservare che:
+
+\begin{itemize}
+	\medskip
+	\item \textbf{Atomicità}: la proprietà non viene rispettata, poiché se un comando all'interno
+	delle transazione fallisce, la transazione viene bloccata a metà della propria esecuzione,
+	ma senza effettuare un ripristino del database allo stato iniziale. Si noti inoltre che i
+	comandi di Redis tipicamente non restituiscono errori su chiavi non trovate o non esistenti, 
+	preferendo restituire valori speciali come numeri negativi; in questi casi, la transazione
+	continua. 
+	\item \textbf{Coerenza}: questa proprietà non si applica a Redis perché non è possibile definire 
+	veri vincoli d'integrità nella base di dati.
+	\item \textbf{Isolamento}: la proprietà viene rispettata perché l'esecuzione dei comandi
+	della transazione è perfettamente isolata da altri client, che rimangono in attesa. Questo
+	comportamento è ottenuto semplicemente tramite l'approccio a singolo thread di esecuzione (si
+	veda la sezione sulla Concorrenza \ref{sec:concurrency} per maggiori informazioni).
+	\item \textbf{Durabilità}: questa possibilità può essere rispettata se Redis viene configurato
+	per effettuare una piena persistenza dopo ciascun comando (si veda la sezione
+	\ref{sec:durability:aof}): in particolare, sarà necessario attivare la persistenza in formato
+	AOF, indicando poi di eseguire un \verb|fsync| dopo l'esecuzione ciascun comando.
+\end{itemize}
+
+
+\subsection{Transazioni condizionali}
+
+Come appena descritto, il sistema di transazioni di Redis si basa su accodare comandi ed eseguirli
+poi sequenzialmente in modo atomico; ma, poiché qualunque comando viene accodato, non è possibile
+inviare un comando i cui parametri dipendono da valori restituiti da comandi precedenti; infatti il
+client non avrà accesso al valore di ritorno di un comando fino a che l'intera transazione non sarà
+stata eseguita, né è disponibile una sintassi speciali per referenziare il valore restituito da un
+comando precedente.
+
+Supponiamo di implementare un social network e di voler incrementare in modo atomico 
+un campo memorizzato all'interno di una tabella hash, per esempio il numero di commenti che un
+determinato post ha ricevuto; poiché il comando \verb|INCR| agisce solo su chiavi di tipo stringa,
+e non quindi su campi di una tabella hash, sarà necessario utilizzare il comando \verb|HGET|
+per estrarre il valore corrente, e poi \verb|HSET| per inserire il nuovo valore incrementato,
+in questo modo:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> HGET post:589 vote
+"56"
+127.0.0.1:6379> HSET post:589 vote 57
+(integer) 0
+\end{lstlisting}
+
+Purtroppo questa sequenza è soggetta ad una race condition da parte di un altro client che volesse
+modificare lo stesso campo. Non sembra inoltre possibile inoltre utilizzare una transazione
+basata su \verb|MULTI| e \verb|EXEC| perché il comando \verb|HSET| può essere inviato dal client
+solo dopo che ha ricevuto la risposta al comando \verb|HGET|:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> MULTI
+OK
+127.0.0.1:6379> HGET post:589 vote
+QUEUED
+127.0.0.1:6379> HSET post:589 ???
+\end{lstlisting}
+
+Per risolvere queste situazioni, Redis utilizza un comune pattern di transazione atomica chiamato
+``check and set'', che consente di condizionare l'esecuzione di una transazione alla verifica che un
+valore non sia mutato rispetto a quanto atteso. Il comando \verb|WATCH| infatti consente di
+annullare automaticamente una transazione se il valore di una chiave cambia tra il momento in cui
+viene eseguito e il momento in cui la transazione viene eseguita, cioè se si è effettivamente
+verificata una race condition. In questo caso, il client vorrà probabilmente provare nuovamente ad
+eseguire la transazione, nella speranza di riuscire a vincere la corsa.
+
+Questo è l'uso corretto di \verb|WATCH| nell'esempio che stiamo analizzando:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> WATCH post:589
+OK
+127.0.0.1:6379> HGET post:589 vote
+"56"
+127.0.0.1:6379> MULTI
+OK
+127.0.0.1:6379> HSET post:589 vote 57
+QUEUED
+127.0.0.1:6379> EXEC
+1) (integer) 0
+\end{lstlisting}
+
+Vediamo cosa succede invece simulando l'intervento di un client esterno che modifica il valore
+del post in modo concorrente:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> WATCH post:589
+OK
+127.0.0.1:6379> HGET post:589 vote
+"56"
+127.0.0.1:6379> HSET post:589 vote 57
+(integer) 0
+127.0.0.1:6379> MULTI
+OK
+127.0.0.1:6379> HSET post:589 vote 57
+QUEUED
+127.0.0.1:6379> EXEC
+(nil)
+\end{lstlisting}
+
+In questo caso, la modifica sopraggiunta alla chiave tra \verb|WATCH| e \verb|EXEC| ha fatto sì
+che la transazione non venisse eseguita; il client può rilevare questa condizione dal valore 
+restituito da \verb|EXEC| (che è \verb|nil|, invece che un array contenente i valori restituiti
+dai comandi della transazione), e riprovare nuovamente la sequenza.
+
 \section{Velocit\`a}
 
 (benchmark)
 (segnalare problema del rountrip di rete)
-
-
-\section{Transazioni}
-
-(atomicità, non performance perché sono necessari X roundtrip)
 
 
 \section{Pipelining}
@@ -883,14 +1065,67 @@ Si noti che l'ID dello script è in realtà il suo hash crittografico ottenuto t
 SHA-1; questo vuol dire che caricando più volte lo stesso script si otterrà sempre lo stesso valore
 ed è inoltre possibile precalcolare l'ID che uno script avrà, per semplicità di implementazione.
 
-\section{Utilizzo come cache}
+\section{Scadenza delle chiavi}
 
-(TTL e timeout)
+Abbiamo visto che un comune caso d'uso per i database chiave-valore in RAM è quello di funzionare
+come cache: poiché le operazioni sono molto più veloci di un più complesso database relazionale con
+dataset su disco, è utile memorizzare in Redis il risultato di alcune complesse operazioni laddove
+si ritiene che possano venire nuovamente eseguite. 
 
+Oltre al già citato caso delle sessioni utente (\ref{sec:birth}), un'applicazione web di tipo CMS
+(\emph{Content Managament System}) potrebbe utilizzare Redis per memorizzare il risultato della
+compilazione delle pagine HTML (o parti di esse) sulla base delle informazioni estratte dal database
+e dei template di pagina, così da poter più velocemente inviare la medesima pagina ad un altro
+utente che dovesse richiederla.
 
+In entrambi questi esempi, è utile poter indicare una durata massima di vita per le informazioni
+memorizzate, in modo da poter automaticamente eliminare le informazioni troppo vecchie e
+potenzialmente obsolete. Per implementare questa funzionalità, Redis consente di associare
+opzionalmente ad ogni chiave un istante di scadenza, oltre il quale la chiave viene automaticamente
+rimossa.
 
+I comandi che manipolano la scadenza delle chiavi sono i seguenti:
+
+\begin{itemize}
+	\medskip
+	\item \textbf{EXPIRE} e \textbf{PEXPIRE}: modificano la data di scadenza di una chiave in
+	modo relativo, specificandola rispettivamente in secondi o millisecondi dal momento in cui 
+	il comando viene eseguito.
+	\item \textbf{EXPIREAT} e \textbf{PEXPIREAT}: modificano la data di scadenza di una chiave
+	in modo assoluto, specificandola cioè come data, calcolata rispettivamente in secondi o 
+	millisecondi dalla cosiddetta \emph{UNIX epoch}, cioè il 1° Gennaio 1970.
+	\item \textbf{TTL} e \textbf{PTTL}: restituiscono il tempo di vita rimasto di una chiave,
+	rispettivamente in secondi o millisecondi. Se la chiave non esiste viene restituito il
+	valore speciale \verb|-2|, mentre se la chiave esiste ma non ha una data di scadenza viene
+	restituito il valore \verb|-1|.
+	\item \textbf{PERSIST}: elimina la data di scadenza dalla chiave specificata, trasformandola
+	così in una chiave persistente.
+\end{itemize}
+
+Questo è un esempio di uso dei comandi di scadenza:
+
+\medskip
+\begin{lstlisting}
+127.0.0.1:6379> SET data 123
+OK
+127.0.0.1:6379> GET data
+"123"
+127.0.0.1:6379> EXPIREAT data 1545662795
+(integer) 1
+127.0.0.1:6379> TTL data
+(integer) 39999983
+127.0.0.1:6379> PTTL data
+(integer) 39999980005
+127.0.0.1:6379> GET data
+"123"
+127.0.0.1:6379> PEXPIRE data 100
+(integer) 1
+127.0.0.1:6379> GET data
+(nil)
+\end{lstlisting}
 
 \section{Concorrenza}
+\label{sec:concurrency}
 
 Coerentemente con la sua architettura orientata alla semplicità e al minimalismo, Redis ha un
 supporto primitivo ma efficace per la concorrenza, che è basato sulla serializzazione delle
@@ -899,12 +1134,11 @@ dei casi) molto veloce anche con grossi dataset, come si è visto, trattandosi d
 su specifiche strutture dati completamente conservate in memoria, senza necessità di interrogare o
 aggiornare indici, né effettuare I/O di alcun tipo.
 
-All'interno di ciascuna connessione TCP, il protocollo proibisce di eseguire comandi in parallelo,
-cioè il client deve necessariamente attendere il risultato di un comando prima di poter inviare il
-comando successivo (con l'unica eccezione dell'esecuzione di una transazione, che però come abbiamo
-visto si configura di fatto come un unico comando inviato a livello di protocollo).
+All'interno di ciascuna connessione TCP, l'esecuzione dei comandi abbiamo visto essere sempre
+serializzata, cioè i comandi vengono eseguiti in sequenza uno alla volta, anche se un comando
+venisse inviato prima del termine del precedente, tramite pipelining.
 
-Viceversa, per quanto concerne comandi inviati da più clienti (e quindi tramite più connessioni) in
+Per quanto concerne comandi inviati da clienti diversi (e quindi tramite più connessioni TCP) in
 parallelo, Redis provvede a serializzarli tra loro in automatico poiché il codice del server si
 basa su un singolo thread di esecuzione, e gestisce l'accesso ai socket in parallelo tramite
 programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive quali \verb|select| 
@@ -919,7 +1153,7 @@ impiega un tempo non trascurabile rispetto alla reale esecuzione delle operazion
 nel caso in cui non è conteso.
 
 \section{Persistenza}
-\label{persistence}
+\label{sec:persistence}
 
 Il dataset di Redis si trova primariamente in RAM. Questo rende tutte le operazioni sulle strutture
 dati estremamente rapide poiché non è mai necessario eseguire I/O di nessun tipo, né adottare
@@ -967,6 +1201,7 @@ saranno bloccati nel frattempo.
 
 
 \subsection{Persistenza in AOF}
+\label{sec:durability:aof}
 
 AOF è un formato di persistenza più complesso. Rappresenta infatti un log di tutte le operazioni
 eseguite dal database, in ordine temporale, memorizzate in un semplice formato testuale. In altre
@@ -993,9 +1228,9 @@ disastri: infatti, il file RDB è molto compatto e può essere archiviato con se
 svantaggio principale deriva dal fatto che, rappresentando un immagine congelata del dataset
 salvato solo ad intervalli di tempo configurati, in caso di crash o spegnimento improvviso,
 dal file RDB saranno mancanti gli ultimi dati inseriti. La frequenza di salvataggio può essere
-considerata in modo flessibile (anche in base alla velocità rilevata di modifica chiavi, in modo
-che un database ad alta frequenza di scrittura venga salvato più spesso), ma non è quindi
-garantita l'effettiva persistenza dei dati risultanti dai comandi eseguiti.
+configurata in modo flessibile (anche in base alla velocità rilevata di modifica chiavi, in modo
+che un database ad alta frequenza di scrittura venga salvato più spesso), ma come tutti i backup
+basati su immagini, i dati risultanti dagli ultimi comandi eseguiti non saranno presenti.
 
 Viceversa, la persistenza in AOF viene aggiornata ad ogni comando scritto, e rappresenta sempre
 quindi uno stato aggiornato del dataset. Chiaramente, è necessario molto più I/O su disco ma
@@ -1008,3 +1243,8 @@ ciascun comando.
 
 I due tipi di persistenza non sono mutualmente esclusivi: infatti possono essere attivati o 
 disattivati separatamente tramite file di configurazione.
+
+
+
+
+
