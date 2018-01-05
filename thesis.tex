@@ -39,8 +39,8 @@
 \usepackage[fleqn]{amsmath}
 \usepackage{ellipsis}
 \usepackage{listings}
-\usepackage{subfig}
-\usepackage{caption}
+\usepackage{listingsutf8}
+\usepackage{caption,subcaption}
 \usepackage{appendix}
 \usepackage{siunitx}
 %--------------------------------------------------------------
@@ -50,8 +50,7 @@
 % tocaligned eulerchapternumbers drafting linedheaders
 % listsseparated subfig nochapters beramono eulermath parts
 % minionpro pdfspacing
-\usepackage[eulerchapternumbers,linedheaders,subfig,beramono,eulermath,
-parts]{classicthesis}
+\usepackage[eulerchapternumbers,linedheaders,beramono,eulermath,parts]{classicthesis}
 %--------------------------------------------------------------
 \newlength{\abcd} % for ab..z string length calculation
 % how all the floats will be aligned
@@ -74,7 +73,6 @@ parts]{classicthesis}
 
 \lstset{
   	frame=tb,
-	language=Matlab,
   	aboveskip=3mm,
   	belowskip=3mm,
   	showstringspaces=false,
@@ -83,7 +81,8 @@ parts]{classicthesis}
   	numbers=none,
   	breaklines=true,
   	breakatwhitespace=true,
-  	tabsize=3
+  	tabsize=4,
+  	inputencoding=utf8/latin1
 }
 %--------------------------------------------------------------
 \begin{document}
@@ -115,7 +114,10 @@ Ne deriva che vi sono delle conoscenze probabili le quali, benché non possano e
 \cleardoublepage
 \include{Chapters/introduzione}
 \include{Chapters/redis}
-%\include{esercizi}
+\include{Chapters/bloom}
+\appendix
+\appendixpage
+\include{Chapters/codice}
 \include{Chapters/bibliografia}
 %--------------------------------------------------------------
 \end{document}

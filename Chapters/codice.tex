@@ -1,0 +1,23 @@
+\chapter{Codice sorgente}
+
+\section{Esempio di stored procedure in Redis}
+
+Il seguente listato mostra una stored procedure scritta in LUA che dato un insieme ordinato
+\verb|paying-users| in cui le stringhe sono gli ID degli utenti di un sistema, e il punteggio
+associato è il totale speso dall'utente nell'applicazione, calcola qual è la media di spesa degli
+utenti ``premium'', cioè che hanno speso più di €1000.
+
+Si veda \ref{redislua} per maggiori informazioni.
+
+\lstinputlisting[language={[5.0]Lua}]{code/zsetaverage.lua}
+
+
+\section{Calcolo dell'errore di cardinalit\'a di un filtro di Bloom}
+
+Il seguente listato effettua una simulazione di calcolo dell'errore di cardinalità in un filtro
+di Bloom di 8192 bit, con 2 funzioni di hash.
+
+Si veda \ref{sec:bloomcard} per maggiori informazioni.
+
+\lstinputlisting[language=Python]{code/cardinality.py}
+
