@@ -165,6 +165,14 @@ un elemento che non è presente utilizza, per il test di primalità, \verb|K| bi
 precedenti accesi da altri elementi tramite le varie funzioni di hash ad essi applicate, l'elemento
 risulterà falsamente presente nel filtro, causando un cosiddetto \emph{falso positivo}.  
 
+\subsection{Scelta delle funzioni di hash}
+
+Utilizzo del double-hashing come metodo efficiente
+Utilizzo del partizionamento in sezioni
+
+Dillinger, Peter C.; Manolios, Panagiotis (2004b), "Bloom Filters in Probabilistic Verification", Proceedings of the 5th International Conference on Formal Methods in Computer-Aided Design, Springer-Verlag, Lecture Notes in Computer Science 3312
+
+
 \subsection{Stima della cardinalità}
 \label{sec:bloomcard}
 
@@ -225,41 +233,114 @@ non diverge anche per valori di densità elevati.
 \end{figure}
 
 
-\section{Parametri di definizione di un filtro}
+\section{Ottimizzazione dei parametri}
 \label{sec:bloomparms}
 
-Un filtro di Bloom è definito dai seguenti parametri:
+Ci sono diversi parametri di interesse quando si analizza un filtro di Bloom, riassunti in questa
+tabella.
+
+\medskip
+\begin{tabular}{ |l|l| }
+  \hline
+  \multicolumn{2}{|c|}{Parametri} \\
+  \hline
+  $M$ & Dimensione in bit dell'array \\
+  $K$ & Numero delle funzioni di hash (e delle sezioni) \\
+  $m$ & Dimensione in bit di una sezione \\
+  $N$ & Numero di elementi presenti nel filtro \\
+  $p$ & Densità \\
+  $P$ & Probabilità di un falso positivo \\
+  \hline
+\end{tabular}
+
+\medskip
+
+Vediamo ora come è possibile ottimizzare i parametri, cercando di minimizzare $P$, la probabilità
+di un falso positivo, come descritto in \cite{bloomscalable}.
+
+La probabilità di trovare un bit impostato a 1 in una sezione è $p$, di conseguenza la probabilità 
+di un falso positivo, cioè di trovare i bit di tutte le sezioni già impostati, è:
+
+$$ P = p^K $$
+
+Ricordando che $M=km$, otteniamo:
+
+$$ m = M\frac{\ln(p)}{\ln(P)} $$
+
+e sostituendo nella formula della cardinalità, otteniamo:
+
+$$ N \approx -M\frac{\ln(p)\ln(1-p)}{\ln(P)} $$
+
+Supponiamo ora di fissare $M$ (dimensione del filtro) e $P$ (probabilità di un falso positivo), e di
+voler cercare qual è la densità $p$ che massimizza il numero di elementi presenti nell'array. È
+facile convincersi che il massimo della funzione $\ln(p)\ln(1-p)$ si trova con $p=0.5$, risultato
+che ci indica che il punto di utilizzo ottimo di un filtro di Bloom è quando la densità è
+esattamente al 50\%, cioè metà dei bit è impostato a 1.
+
+Sostituendo quindi $p=0.5$ come valore ottimo, otteniamo:
+
+$$ N \approx -M\frac{\ln(0.5)^2}{\ln(P)} $$
+$$ N \approx \ceil*{M\frac{0.480453014}{|\ln(P)|}} $$
+
+che ci permette di calcolare il numero di elementi memorizzabili in un filtro prima di raggiungere
+la densità di 0.5 e dunque la probabilità $P$ di falsi positivi richiesta. Oppure, ricavando
+le altre variabili:
+
+$$ M = \ceil*{n\frac{|\ln(P)|}{0.480453014}} $$
+$$ P = e^{-\ln(0.5)^2\frac{M}{N}} = 0.5^{ln(2)\frac{M}{N}} \approx 0.6185^{\frac{M}{N}} $$
+
+possiamo calcolare la dimensione ottimale di un filtro dato il numero di elementi che si vuole
+memorizzare e la probabilità di falsi positivi attesa, oppure ancora i falsi positivi attesi
+data la dimensione di un filtro e il numero di elementi inseriti. 
+
+Inoltre, da $P = p^k$, sostituendo nuovamente $p=0.5$, possiamo ricavare:
+
+$$ K = \ceil*{log_2{\frac{1}{P}}} = \ceil*{-log_2{P}} $$
+
+con cui calcolare il numero ottimale di funzioni di hash per un data probabilità attesa di falso
+positivo.
+
+Vediamo ora due esempi di derivazione di parametri ottimali. 
 
 \begin{itemize}
 	\medskip
 
-	\item
-	\verb|N|: numero di bit di cui è composto l'array che implementa il filtro.
+	\item Supponiamo di voler memorizzare $N=25000$ elementi in un filtro con una probabilità di
+	falso positivo $P=0.5\%$; possiamo ricavare i parametri necessari in questo modo:
+
+	$$ M = \ceil*{n\frac{|\ln(P)|}{0.480453014}} = \ceil*{25000\frac{|ln(0.005)|}{0.480453014}} = 275694 $$
+	$$ K = \ceil*{-log_2{P}} = \ceil*{-log_2{0.005}} = 8 $$
+
+	Quindi è necessario utilizzare un filtro di circa 33 KiB con 8 funzioni di hash.
+
+	\item Supponiamo di avere 1 MiB di RAM a disposizione per creare un filtro di Bloom che deve
+	memorizzare 2 milioni di elementi. Qual è il valore minimo di falso positivo che possiamo
+	ottenere, e con quante funzioni di hash lo otterremo? È presto detto:
+
+	$$ M = 1024 x 1024 x 8 = 8388608 $$
+	$$ N = 2\,000\,000 $$
+	$$ P = 0.6185 ^ \frac{M}{N} = 14.63\% $$
+	$$ K = \ceil*{-log_2{P}} = 3 $$
+
+	Quindi possiamo arrivare ad avere circa il 14\% di falsi positivi utilizzando 3 funzioni di
+	hash.
 \end{itemize}
 
-Intuitivamente, la probabilità di un \emph{falso positivo} è tanto maggiore quanto più \emph{denso}
-è il filtro, cioè all'aumentare dei bit impostati ad 1 in percentuale sul numero totale di bit
-presenti. La densità è quindi legata a diversi fattori: la dimensione \verb|N| dell'array, il 
-numero \verb|K| di funzioni di hash utilizzate, e il numero di elementi inseriti nell'array.
+\begin{figure}
+	\centering
 
+	\begin{subfigure}[t]{280px}
+	\centering\includegraphics[width=280px]{bloom_parms_1}
+	\subcaption{Numero di elementi in base alla probabilità attesa}
+	\end{subfigure}
 
+	\begin{subfigure}[t]{280px}
+	\centering\includegraphics[width=280px]{bloom_parms_2}
+	\subcaption{Probabilità attesa in base al numero di elementi}
+	\end{subfigure}
 
-\section{Scelta delle funzioni di hash}
-
-Utilizzo del double-hashing come metodo efficiente
-
-Dillinger, Peter C.; Manolios, Panagiotis (2004b), "Bloom Filters in Probabilistic Verification", Proceedings of the 5th International Conference on Formal Methods in Computer-Aided Design, Springer-Verlag, Lecture Notes in Computer Science 3312
-
-
-
-
-
-
-
-
-
-
-
+	\caption{Andamento dei parametri ottimale in un filtro di 64 MiB}
+\end{figure}
 
 
 
