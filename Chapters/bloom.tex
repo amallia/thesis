@@ -142,7 +142,22 @@ insiemi elencate precedentemente:
 
 Un filtro di Bloom è un array di bit, utilizzato come tabella hash, di dimensione arbitraria
 \verb|M| fissata al momento della creazione in base ai parametri (vedi \ref{sec:bloomparms}).
-Quando il filtro è vuoto, tutti i bit sono impostati a 0.
+Quando il filtro è vuoto, tutti i bit sono impostati a 0. La seguente tabella mostra un filtro
+vuoto composto di 11 bit:
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+\subsection{Inserimento di un elemento}
 
 L'inserimento di un elemento $X$ avviene calcolando alcune funzioni di hash $h_i(X)$ prestabilite
 sull'elemento (il numero delle funzioni, chiamato $K$, è anch'esso un parametro del filtro). I $K$
@@ -151,19 +166,146 @@ all'interno dell'array (per esempio, scegliendo il bit con indice $h_i(X) \bmod 
 identificati vengono impostati a 1. Si noti che nessuna altra informazione sull'elemento viene
 memorizzata dentro il filtro.
 
-Il test di appartenenza di un elemento segue un processo simmetrico: vengono eseguite le \verb|K|
-funzioni di hash e si identificano così \verb|K| bit dell'array. Se tutti i bit sono impostati a 1,
-l'elemento è \emph{probabilmente presente} all'interno del filtro; se almeno uno dei bit è
-impostato a 0, l'elemento è \emph{sicuramente assente} all'interno del filtro.
+Continuando l'esempio seguente, supponiamo di utilizzare $K=2$ funzioni di hash $h_1(x)$ e $h_2(x)$
+e di voler inserire 3 elementi $\{ A, B, C \}$ nel filtro. La seguente tabella mostra i valori
+delle funzioni di hash per ciascun elemento:
+
+\begin{center}
+	\begin{tabular}{ l c c c }
+		 & A & B & C \\
+		\hline
+		$h_1(x)$ & 1 & 10 & 7 \\
+		$h_2(x)$ & 8 & 4 & 1 \\	
+		\hline
+	\end{tabular}
+\end{center}
+
+Per inserire l'elemento $A$, è dunque sufficiente impostare ad 1 i bit $h_1(A) = 1$ e $h_2(A) = 8$:
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    0 & \cellcolor{blue!25}1 & 0 & 0 & 0 & 0 & 0 & 0 & \cellcolor{blue!25}1 & 0 & 0 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+Per inserire l'elemento $B$, impostiamo a 1 i bit $10$ e $4$:
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    0 & 1 & 0 & 0 & \cellcolor{blue!25}1 & 0 & 0 & 0 & 1 & 0 & \cellcolor{blue!25}1 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+Per inserire l'elemento $C$, impostiamo a 1 i bit $7$ e $1$. Si noti che il bit $1$ era già
+stato impostato dall'elemento $A$, ma questo non causa problemi: si tratta di un normale 
+conflitto di funzione di hash ($h_1(A) = h_2(C)$) che è possibile ignorare:
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    0 & \cellcolor{blue!5}1 & 0 & 0 & 1 & 0 & 0 & \cellcolor{blue!25}1 & 1 & 0 & 1 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+A questo punto, l'inserimento dei 3 elementi è terminato.
+
+\subsection{Test di appartenenza}
+
+Il test di appartenenza di un elemento segue un processo simmetrico: vengono eseguite le $K$
+funzioni di hash e si identificano così $K$ bit dell'array di cui verificare lo stato. Se tutti i 
+bit sono impostati a 1, l'elemento è \emph{probabilmente presente} all'interno del filtro; se almeno 
+uno dei bit è impostato a 0, l'elemento è \emph{sicuramente assente} all'interno del filtro.
 
 Il motivo per cui il test di appartenenza non può asserire con certezza la presenza di un elemento
 è dovuto all'assenza di un meccanismo di rilevamento delle collisioni delle funzioni di hash tra
 elementi distinti; quando il test verifica se un determinato bit è impostato a 1, non può sapere
 se quel bit è stato impostato tramite l'inserimento dell'elemento su cui si sta effettuando il test,
 o tramite l'inserimento di un altro elemento che è in conflitto a livello di funzione di hash. Se
-un elemento che non è presente utilizza, per il test di primalità, \verb|K| bit che sono stati
+un elemento che non è presente utilizza, per il test di primalità, $K$ bit che sono stati
 precedenti accesi da altri elementi tramite le varie funzioni di hash ad essi applicate, l'elemento
 risulterà falsamente presente nel filtro, causando un cosiddetto \emph{falso positivo}.  
+
+Continuando l'esempio del filtro visto in precedenza, supponiamo di voler effettuare il test di 
+appartenenza sui seguenti elementi:
+
+\begin{center}
+	\begin{tabular}{ l c c c }
+		 & B & E & F \\
+		\hline
+		$h_1(x)$ & 10 & 0 & 4 \\
+		$h_2(x)$ & 4 & 7 & 8 \\	
+		\hline
+	\end{tabular}
+\end{center}
+
+Per verificare la presenza dell'elemento $B$, verifichiamo se i bit $10$ e $4$ sono impostati a 1;
+poiché l'elemento è stato effettivamente inserito in precedenza, questa condizione è banalmente
+vera:
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    0 & 1 & 0 & 0 & \cellcolor{green!35}1 & 0 & 0 & 1 & 1 & 0 & \cellcolor{green!35}1 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+La verifica dell'elemento $E$ comprende il test dei bit $0$ e $7$. Si noti che il bit $7$ era
+stato precedentemente impostato durante l'inserimento dell'elemento $C$ ($h_1(C) = h_2(E)$), ma
+il test fallisce (restituendo il risultato corretto) poiché il bit $0$ è impostato a 0, e il test
+prevede che tutti i bit controllati debbano essere impostati a 1:
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    \cellcolor{red!35}0 & 1 & 0 & 0 & 1 & 0 & 0 & \cellcolor{green!35}1 & 1 & 0 & 1 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+La verifica dell'elemento $E$ comprende il test dei bit $4$ e $8$. Entrambi i bit erano stati
+impostati in precedenza durante l'inserimento di altri elementi ($h_1(F) = h_2(E)$, $h_2(F) =
+h_2(A)$), e il test dunque restituisce vero. Si tratta di un caso di \emph{falso positivo}, poiché
+l'elemento $E$ non era stato precedentemente inserito nel filtro.
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    0 & 1 & 0 & 0 & \cellcolor{green!35}1 & 0 & 0 & 1 & \cellcolor{green!35}1 & 0 & 1 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+
 
 \subsection{Scelta delle funzioni di hash}
 
@@ -207,9 +349,9 @@ $$ n \approx -\frac{M}{K}\ln(1-p) $$
 che è possibile valutare quindi estraendo la densità $p$ del filtro da un semplice conteggio
 dei bit impostati ad 1 in un dato momento.
 
-I seguenti grafici mostrano l'errore di calcolo della cardinalità effettuato in un filtro al crescere
-della densità, e al numero di funzioni di hash. Come si può vedere, l'errore effettuato dalla stima
-non diverge anche per valori di densità elevati.
+I grafici nella figura \ref{fig:bloomerror} mostrano l'errore di calcolo della cardinalità
+effettuato in un filtro al crescere della densità, e al numero di funzioni di hash. Come si può
+vedere, l'errore effettuato dalla stima non diverge anche per valori di densità elevati.
 
 \begin{figure}
 	\centering
@@ -230,8 +372,100 @@ non diverge anche per valori di densità elevati.
 	\end{subfigure}
 
 	\caption{Errore sulla cardinalità nei filtri di Bloom}
+	\label{fig:bloomerror}
 \end{figure}
 
+\subsection{Unione ed intersezione}
+
+Dati due filtri creati con gli stessi parametri ed utilizzanti le stesse funzioni di hash, è
+possibile calcolare l'unione semplicemente applicando l'operazione di \verb|OR| bit a bit agli
+array. Questa operazione non causa alcuna perdita di informazione né pessimizzazione, poiché l'array
+risultante è il medesimo che si sarebbe ottenuto aggiungendo in un solo filtro tutti gli elementi
+presenti nel primo e nel secondo filtro in input.
+
+È possibile in modo simile calcolare l'intersezione tra due filtri applicando l'operazione di
+\verb|AND| bit a bit agli array. In questo caso però il risultato non è ottimale: l'array risultante
+potrebbe contenere alcuni bit impostati a 1 che non risulterebbero tali se si fosse creato
+direttamente un filtro aggiungendo solo gli elementi facenti parte dell'intersezione, e di
+conseguenza la probabilità di falsi positivi risultante dal filtro intersezione è potenzialmente non
+ottimale.
+
+Supponiamo per esempio di avere due filtri che contengono rispettivamente gli elementi ${ A, B }$
+e ${ A, C }$. Le funzioni di hash sugli elementi sono le seguenti:
+
+\begin{center}
+	\begin{tabular}{ l c c c }
+		 & A & B & C \\
+		\hline
+		$h_1(x)$ & 5 & 2 & 7 \\
+		$h_2(x)$ & 9 & 6 & 2 \\	
+		\hline
+	\end{tabular}
+\end{center}
+
+I filtri risultanti saranno i seguenti:
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    0 & 0 & B & 0 & 0 & A & B & 0 & 0 & A & 0 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    0 & 0 & C & 0 & 0 & A & 0 & C & 0 & A & 0 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+dove ogni cella impostata a 1 viene identificata con una lettera che si riferisce all'elemento che
+l'ha impostata durante l'inserimento. 
+
+L'insieme unione è $\{ A, B \} \cup \{ A , C \} = \{ A, B, C \}$, e il filtro risultante
+dall'operazione di \verb|OR| bit a bit, come si può vedere, è ottimale poiché è lo stesso che
+avremmo ottenuto per inserimento diretto:
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    0 & 0 & B,C & 0 & 0 & A & B & C & 0 & A & 0 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+L'insieme intersezione è ${ A, B } \cap { A , C } = { A }$, ma il filtro risultante dall'operazione
+di \verb|AND| bit a bit è il seguente:
+
+\begin{center}
+  \begin{tabular}{*{11}{|c}|}
+  	\multicolumn{1}{c}{0} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} &
+  	\multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} &
+  	\multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8} &
+  	\multicolumn{1}{c}{9} & \multicolumn{1}{c}{10} \\
+    \hline
+    0 & 0 & B,C & 0 & 0 & A & 0 & 0 & 0 & A & 0 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+Il bit 2 rimane acceso a causa di un conflitto tra le funzioni di hash ($h_1(B) = h_2(C)$), ma
+né l'elemento $B$ né l'elemento $C$ sono presenti nell'insieme intersezione. Se il filtro fosse
+stato creato da zero, inserendo solamente $A$, il bit 2 risulterebbe impostato a zero.
 
 \section{Ottimizzazione dei parametri}
 \label{sec:bloomparms}
@@ -341,6 +575,15 @@ Vediamo ora due esempi di derivazione di parametri ottimali.
 
 	\caption{Andamento dei parametri ottimale in un filtro di 64 MiB}
 \end{figure}
+
+
+\section{Varianti dei filtri di Bloom}
+
+
+
+\section{Casi d'uso}
+
+
 
 
 
