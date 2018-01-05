@@ -70,7 +70,7 @@ Nei database chiave-valore, sia l'inserimento che la ricerca avviene tramite
 la chiave primaria. Su questa chiave (tipicamente una stringa o array di byte),
 viene applicata internamente una funzione hash che consente poi una strutturazione
 in tabella dei dati con ricerca e inserimento efficiente. Per gestire il partizionamento
-dei dato su più nodi, si utilizza normalmente una funzione hash consistente.
+dei dati su più nodi, si utilizza normalmente una funzione hash consistente.
 
 Per effettuare una ulteriore analisi più approfondita, è necessario suddividere
 questi database in due grossi gruppi:
@@ -259,8 +259,44 @@ modo separato. Per esempio, un comando inesistente restituisce un codice di erro
 Ogni chiave in Redis è una stringa (sequenza di byte) di lunghezza arbitraria; non è
 necessario che sia stampabile, sebbene questo sia consigliabile per facilitare il
 debugging. La funzione hash con la quale la stringa viene convertita in indice è
-una semplice funziona polinomiale utilizzante un numero primo come base, 
-comunemente chiamata djb2 \cite{djbhash}, dal nome del suo ideatore (Daniel J. Bernestein).
+chiamata MurMurHash2.
+
+\subsection{Funzione di hash MurMurHash2}
+
+La funzione di hash MurMurHash2 \cite{murmur2} è una funzione di hash non crittografica creata nel
+2008 da  Austin Appleby, un ingegnere di Google, seconda versione della famiglia MurMur.
+
+Il nome MurMur deriva dalla combinazione delle due operazioni fondamentali che compongono la
+funzione: la moltiplicazione (``mu'' per ``multiplication'') e la rotazione di bit (``r'' per
+``rotation''). La funzione gode di una buona popolarità poiché unisce una buona velocità di
+esecuzione a una buona diffusione dei dati in ingresso (cosiddetto ``effetto valanga'').
+
+Il cuore della funzione MurMur è rappresentato dal seguente codice:
+
+\medskip
+\begin{lstlisting}[language=C]
+	k *= m
+	k ^= k >> r
+	k *= m
+	
+	h *= m
+	h ^= k
+\end{lstlisting}
+
+dove \verb|m| e \verb|r| sono due costanti (nel caso di Redis, vengono usati i valori consigliati:
+\verb|m=0x5bd1e995| e \verb|r=24|), \verb|k| è un blocco di chiave (di solito 32-bit), e \verb|h| è
+il valore di hash.
+
+MurMurHash2 è considerata oggi obsoleta e sorpassata da MurMurHash3, poiché è stata individuata una
+falla in caso di blocchi di dati identici consecutivi \cite{murmur2flaw}. Infatti, se la chiave
+contiene due blocchi da 32-bit (es: \verb|abcdabcd|), ciascun blocco viene modificato nello stesso
+modo tramite le costanti, e poi mixato al valore di hash tramite un semplice XOR, che applicato due
+volte in sequenza provoca una possibile cancellazione di informazione. La moltiplicazione del valore
+di hash per la costante \verb|m| attutisce un po' l'effetto ma non del tutto: per esempio, per la
+costante \verb|0x5bd1e995| utilizzata come default, si può misurare sperimentalmente una
+cancellazione di circa 4.6 bit su 32, che corrisponde quindi a collisioni con una probabilità di 1
+su $2 ^ {27.4}$ invece che l'ottimale 1 su $2 ^ {32}$.
+
 
 \section{Tipologie di oggetti memorizzabili}
 
@@ -442,7 +478,7 @@ I comandi principali sono i seguenti, caratterizzata dal prefisso \verb|H|:
 	\item \textbf{HDEL}. Cancella un campo dalla tabella.
 	\item \textbf{HEXISTS}. Verifica se un campo è presente nella tabella.
 	\item \textbf{HLEN}. Restituisce il numero di campi presenti nella tabella.
-	\item \textbf{HGETALL}. Restituisce tutte i campi e tutti i valori nella tabella.
+	\item \textbf{HGETALL}. Restituisce tutti i campi e tutti i valori nella tabella.
 	\item \textbf{HMGET} e \textbf{HMSET}. Rispettivamente come \verb|HGET| e \verb|HSET| ma operano
 	su campi multipli.
 	\item \textbf{HKEYS} e \textbf{HVALS}. Restituiscono rispettivamente tutti i campi e tutti i
@@ -486,6 +522,11 @@ Come si può vedere, la tabella hash è creata dinamicamente al primo uso, e non
 dimensionarla in alcun modo; Redis implementa in modo efficiente le tabelle hash e le ridimensiona
 automaticamente al crescere degli elementi contenuti, mantenendo un fattore massimo di riempimento
 che garantisce una buona velocità di accesso.
+
+La funzione di hash utilizzata dalla tabella è la medesima utilizzata per memorizzare le chiavi
+dentro il database (MurMurHash2). D'altra parte, l'intero database Redis è esso stesso una tabella
+hash che associa le chiavi agli oggetti contenuti, ed è quindi logico che venga riutilizzata la
+medesima implementazione.
 
 \subsection{Insiemi}
 
@@ -570,7 +611,7 @@ della sequenza (per esempio, delimitandone gli estremi per punteggio).
 
 Il punteggio deve essere specificato come un valore decimale con virgola, e le stringhe vengono
 ordinate secondo l'ordinamento crescente. In caso due stringhe abbiano lo stesso punteggio, si
-utilizza l'ordinamento lessicografico tra le stringhe stesse per decide l'ordine. In virtù di
+utilizza l'ordinamento lessicografico tra le stringhe stesse per deciderne l'ordine. In virtù di
 questa proprietà, è comune utilizzare un insieme ordinato in cui tutti i valori hanno un medesimo
 punteggio (di solito 0), utilizzando quindi le stringhe stesse per l'ordinamento, e ottenendo di
 fatto l'equivalente di una lista di stringhe univoche ordinate alfabeticamente.
@@ -583,13 +624,13 @@ posizione (es: estrai le prime 10 stringhe secondo l'ordinamento attuale), oppur
 lessicografico (es: estrai tutte le stringhe che iniziano con la lettera K); quest'ultimo tipo di
 intervallo è in realtà correttamente definito solo quando il punteggio di tutte le stringhe è lo
 stesso, e cioè quando la struttura dati sta di fatto già ordinando alfabeticamente, ma l'esistenza
-comandi dedicati a questa modalità sottolinea proprio la flessibilità di questa struttura dati.
+di comandi dedicati a questa modalità sottolinea proprio la flessibilità di questa struttura dati.
 
 Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
 
 \begin{itemize}
 	\medskip
-	\item \textbf{ZADD}: aggiunge una o più stringhe all'insieme ordinata, associandole ad un
+	\item \textbf{ZADD}: aggiunge una o più stringhe all'insieme ordinato, associandole ad un
 	punteggio. Se le stringhe esistono già, il punteggio viene aggiornato al valore specificato. Il
 	comando prevede anche una serie di opzioni avanzate per cambiare il comportamento di default in
 	caso di stringa già esistente.
@@ -597,11 +638,11 @@ Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
 	punteggio viene modificato in modo relativo, sommando cioè il valore specificato invece che
 	sostituirlo.
 	\item \textbf{ZREM}: rimuove una o più stringhe dall'insieme.
-	\item \textbf{ZSCORE}: ritorna il punteggio associato ad una stringa, e può essere usato anche
-	come test di appartenenza.
-	\item \textbf{ZCARD}: ritorna la cardinalità dell'insieme, cioè il numero di stringhe
+	\item \textbf{ZSCORE}: restituisce il punteggio associato ad una stringa, e può essere usato
+	anche come test di appartenenza.
+	\item \textbf{ZCARD}: restituisce la cardinalità dell'insieme, cioè il numero di stringhe
 	contenute.
-	\item \textbf{ZINTERSTORE}, \textbf{ZUNIONSTORE}: come le controparti per gli insieme,
+	\item \textbf{ZINTERSTORE}, \textbf{ZUNIONSTORE}: come le controparti per gli insiemi,
 	effettuano le operazioni (rispettivamente) di unione e intersezione, memorizzando il risultato
 	in un nuovo insieme ordinato. Il punteggio ottenuto è la somma dei punteggi specificati negli
 	insiemi di origine, ma è possibile specificare una funzione di aggregazione diversa (media,
@@ -653,7 +694,7 @@ della struttura dati, indichiamo alcuni possibili scenari applicativi.
 
 	\item Supponiamo di voler creare un sistema di fidelizzazione per un e-commerce, basato sulla
 	spesa effettuata da ciascun utente. Ogni volta che un utente effettua un acquisto, possiamo
-	memorizzato nell'insieme ordinato l'ID dell'utente aggiungendo l'importo del carrello
+	memorizzarlo nell'insieme ordinato l'ID dell'utente aggiungendo l'importo del carrello
 	(\verb|ZINCR|); non è necessario gestire in modo diverso il primo acquisto, perché \verb|ZINCR|
 	funziona anche se l'elemento non è ancora presente. Se vogliamo contattare tutti gli utenti che
 	hanno speso più di €1000 sul nostro e-commerce, possiamo utilizzare \verb|ZRANGEBYSCORE|
@@ -693,12 +734,16 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordi
 \subsection{HyperLogLog}
 
 HyperLogLog \cite{hyperloglog} è una struttura dati probabilistica con la quale è possibile
-calcolare in modo efficiente il numero di elementi distinti di un multi-insieme. Normalmente, questo
-algoritmo richiede una quantità di memoria proporzionale al numero di elementi distinti (poiché è
-necessario memorizzare ogni elemento per poter eliminare i duplicati), mentre HyperLogLog richiede
-una frazione dello spazio, in base a come è configurato: per esempio, nell'implementazione di Redis
-la memoria occupata da ciascun HyperLogLog è pari a 12 KiB, indipendentemente dalla quantità di dati
-conteggiati, e l'errore standard della cardinalità calcolata è pari allo 0.83\%.
+calcolare in modo efficiente il numero di elementi distinti di un multi-insieme. 
+
+Normalmente, per poter contare elementi distinti, è necessario memorizzare tutti gli elementi visti
+almeno una volta, in modo da scartare i duplicati (utilizzando quindi un insieme), e ricavare infine
+la cardinalità. Questa implementazione però utilizza una quantità di memoria proporzionale al numero
+di elementi distinti, che può essere quindi molto elevata quando gli elmenti sono milioni o
+miliardi. HyperLogLog invece richiede una frazione dello spazio, in base a come è configurato: per
+esempio, nell'implementazione di Redis la memoria occupata da ciascun HyperLogLog è pari a 12 KiB,
+indipendentemente dalla quantità di dati conteggiati, e l'errore standard della cardinalità
+calcolata è pari allo 0.83\%.
 
 Rimandando a \cite{hyperloglog} per una trattazione approfondita, l'intuizione base di HyperLogLog,
 come spiegato in \cite{hyperloglog-explain}, è che, osservando nella loro
@@ -717,7 +762,7 @@ risultante è pari a $1.04 / \sqrt{m}$, con $m$ pari al numero di registri.
 
 Per distribuire uniformemente le stringhe in input, Redis utilizza una funzione di hash a 64-bit
 (come suggerito in \cite{hyperloglog-plusplus}), in particolare scegliendo MurMurHash64
-\cite{murmur}, un algoritmo di hash non crittografico con buone proprietà di diffusione e velocità.
+\cite{murmur}, una versione a 64 bit del già citato MurMurHash3.
 Essendo quindi il prefisso massimo lungo appunto 64 bit, i registri richiedono 6 bit. Redis sceglie
 di usare $2^{14}$ registri, ottenendo quindi un errore pari a $1.04 / \sqrt{2^{14}} = 0.8\%$, e
 utilizzando un totale di $2^{14} * 6 / 8 = 12228$ byte di memoria necessaria, come già riportato.
@@ -766,6 +811,16 @@ Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 (integer) 11
 \end{lstlisting}
 
+Inizialmente, viene aggiunto il valore 50 all'HyperLogLog denominato \verb|dau| (che viene quindi
+creato con questo primo comando), e successivamente si può verificare che la cardinalità
+dell'insieme è al momento quella attesa, cioè 1. Successivamente, vengono aggiunti un gruppo di
+valori di cui alcuni non già presenti (i numeri dal 51 al 59) ma altri invece già presenti (il
+numero 50, che viene aggiunto per 3 volte nella sequenza, pur essendo già presente). La cardinalità
+però risulta comunque corretta: infatti \verb|PFCOUNT| restituisce il valore atteso 10, visto che in
+questo momento nella struttura sono stati inseriti tutti i valori tra il 50 e il 59. Infine,
+proviamo nuovamente ad inserire un set comprendente tutti valori già visti tranne l'ultimo (61). La
+cardinalità ancora una volta è corretta, poiché misura 11, avendo scartato correttamente i valori
+già visti e aggiunto solo l'elemento 61.
 
 \section{Transazioni}
 
@@ -971,12 +1026,16 @@ pipelining risulta particolarmente comodo perché l'intera transazione (comprens
 \end{figure}
 
 Si noti che, se si è interessati ad ottenere la massima performance, è consigliabile anche
-disattivare l'algoritmo di Nagle, ed utilizzare le opzioni \verb|TCP_NODELAY| e \verb|TCP_CORK| per
-gestire manualmente il buffering \cite{tcp-cork}. Molte librerie client Redis per i principali
-linguaggi di programmazione si occupano di questi dettagli automaticamente; si veda a titolo di
-esempio i sorgenti della libreria \verb|redis-py| \cite{tcp-cork-redispy}.
+disattivare il controllo della congestione del TCP (il cosidettato algoritmo di Nagle \cite{rfc896},
+che rallenta l'invio di pacchetti piccoli di dati aggregandoli in ``segmenti'', diminuendo il
+traffico sulla rete ma aumentando la latenza fino anche a 500 millisecondi), ed utilizzare le
+opzioni \verb|TCP_NODELAY| e \verb|TCP_CORK| per gestire manualmente il buffering \cite{tcp-cork}.
+Molte librerie client Redis per i principali linguaggi di programmazione si occupano di questi
+dettagli automaticamente; si veda a titolo di esempio i sorgenti della libreria \verb|redis-py|
+\cite{tcp-cork-redispy}.
 
 \section{Stored procedure in LUA}
+\label{redislua}
 
 Il \emph{pipelining} non è però in grado di essere sempre utilizzato: per esempio, può essere
 necessario verificare che un comando abbia successo prima di procedere al successivo; oppure
@@ -1005,7 +1064,7 @@ comandata da un processore MIPS R5900 a 300Mhz con 32Mb di RAM), ed è stato uti
 di successi quali Angry Birds \cite{lua-angry} o World of Warcraft \cite{lua-wow}.
 
 Supponiamo di voler scrivere una stored procedure che calcoli un dato statistico aggregato; per
-esempio, dato un insieme ordinato \verb|paying-users| ln cui le stringhe sono gli ID degli utenti
+esempio, dato un insieme ordinato \verb|paying-users| in cui le stringhe sono gli ID degli utenti
 di un sistema, e il punteggio associato è il totale speso dall'utente nell'applicazione, vogliamo
 calcolare qual è la media di spesa degli utenti ``premium'', cioè che hanno speso più di €1000. 
 Per fare questo, è necessario estrarre prima la lista degli utenti ``premium'' tramite il comando
@@ -1038,7 +1097,7 @@ $ redis-cli --eval zsetaverage.lua k t , paying_users 2000
 \end{lstlisting}
 
 Si noti che abbiamo passato 2 parametri: il primo con chiave \verb|k| e valore \verb|paying_users|;
-il secondo con chiave \verb|t| e valore \verb|1000| (o \verb|2000|). L'identificatore \verb|,|
+il secondo con chiave \verb|t| e valore \verb|1000| (o \verb|2000|). L'identificatore ``\verb|,|''
 separa l'elenco delle chiavi (che non sono utilizzate dal nostro script) dall'elenco dei valori.
 
 L'uso in produzione invece richiede due fasi: prima, lo script viene caricato nel database
@@ -1225,7 +1284,7 @@ Ad ogni nuovo avvio, Redis esegue i comandi contenuti nel file AOF, ricostruendo
 
 La persistenza in RDB è utile per backup (anche di lungo termine) e scenari di recupero di
 disastri: infatti, il file RDB è molto compatto e può essere archiviato con semplicità. Lo
-svantaggio principale deriva dal fatto che, rappresentando un immagine congelata del dataset
+svantaggio principale deriva dal fatto che, rappresentando un'immagine congelata del dataset
 salvato solo ad intervalli di tempo configurati, in caso di crash o spegnimento improvviso,
 dal file RDB saranno mancanti gli ultimi dati inseriti. La frequenza di salvataggio può essere
 configurata in modo flessibile (anche in base alla velocità rilevata di modifica chiavi, in modo
