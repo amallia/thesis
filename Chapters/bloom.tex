@@ -138,6 +138,146 @@ insiemi elencate precedentemente:
 
 \end{itemize}
 
+\section{Scenari applicativi}
+
+I filtri di Bloom hanno conosciuto negli anni una ampia adozione, in diversi scenari applicativi. 
+In linea generale, consentono di ottenere una rappresentazione compatta di un insieme di dati,
+che può essere usata sia come cache ad accesso veloce (in RAM) per un controllo preliminare
+di esistenza di un elemento, sia trasferita in modo efficiente via rete ad un altro nodo per
+fornire una vista parziale di un set di dati.
+
+Un approfondimento degli scenari applicativi presentati qui può essere trovata in
+\cite{bloomnetwork}.
+
+\subsection{Controllo ortografico e sillabazione}
+
+Quando furono introdotti nel 1970, Bloom stava lavorando ad un programma per la sillabazione del
+testo inglese. Al contrario delle lingue latine, la sillabazione delle parole nella lingua inglese 
+non è basata sui fonemi, ma sull'etimologia o la morfologia delle parole. Questo rende le regole
+di sillabazione molto complesse, con numerose eccezioni. Bloom pensò di ottimizzare il programma
+utilizzando un filtro per memorizzare tutte le parole che richiedevano un'eccezione; il programma
+poteva così verificare velocemente se una parola era soggetta ad eccezione o meno con un test
+di appartenenza nel filtro; nel caso il test restituisse un valore positivo, il programma poteva
+effettuare un controllo più lento nel dizionario completo delle eccezione. Le parole soggette
+a falso positivo venivano riportate al caso standard al termine del controllo nel dizionario.
+
+Allo stesso modo, i filtri di Bloom vennero usati per i primi programmi di controllo ortografico
+negli anni 80. Era possibile infatti memorizzare una versione compatta di un dizionario di tutte le
+parole conosciute (complete anche tutte le forme verbali che possono essere costruite tramite
+algoritmo), ed utilizzarlo per effettuare il controllo; in questo caso, i falsi positivi
+corrispondevano a parole non esistenti che veniva erroneamente ignorate durante il controllo. Visto
+che all'epoca non era possibile distribuire l'intero dizionario, questa soluzione era un compromesso
+accettabile.
+
+\subsection{Proxy Cache distribuita}
+
+In \cite{bloomproxy}, viene introdotto uno dei primi casi di utilizzo dei filtri di Bloom per
+ottimizzare i trasferimenti di rete. Lo scenario prevedeva una rete di proxy web, che comunicavano
+tra loro. Nel momento in cui veniva effettuata una richiesta ad un proxy per una pagina web non
+presente nella cache, il proxy poteva comunicare con gli altri proxy della rete, chiedendo loro
+se qualcuno aveva nella propria cache la pagina richiesta, in modo da accedervi senza contattare
+il server d'origine.
+
+Per diminuire il traffico generato per la comunicazione tra proxy, fu introdotto un meccanismo
+tramite il quale ciascun proxy periodicamente pubblicava in broadcast un filtro di Bloom contenente
+l'elenco dei siti memorizzati nella propria cache. Gli altri proxy memorizzavano il filtro e
+potevano usarlo per verificare se un sito era presente in cache senza causare traffico di rete. I
+falsi positivi corrispondevano dunque a richieste di rete potenzialmente inutili, ma in ogni caso
+una piccola frazione rispetto alla quantità di traffico generato in precedenza per ogni richiesta.
+
+
+\subsection{Google SafeBrowsing}
+
+Il browser Chrome di Google utilizzava (fino al 2012) i filtri di Bloom per implementare
+efficientemente la funzionalità SafeBrowsing \cite{safebrowsing}, che protegge gli utenti bloccando
+automaticamente l'accesso ai siti contenenti \emph{malware} o \emph{phishing}.
+
+Google, infatti, mantiene sui propri server un enorme elenco di tipo \emph{blacklist} di indirizzi
+web (URL) considerate pericolose per gli utenti. L'elenco è in continua evoluzione: nuovi indirizzi
+vengono infatti aggiunti e rimossi con alta frequenza ogni ora.
+
+Un applicativo che volesse verificare la presenza di un sito all'interno dell'elenco potrebbe
+effettuare una interrogazione via API ai server di Google; il tempo di esecuzione di questo
+controllo comprende però almeno 1 \emph{roundtrip} di rete tra il client e il server, che può
+richiedere tempi variabile a seconda della qualità della connessione Internet, ma può salire fino a
+centinaia di millisecondi per una connessione mobile (anche in presenza di segnale ottimale). Questo
+genere di attesa prima della visualizzazione di una pagina è considerato non accettabile per un
+browser come Google Chrome, il quale cerca di minimizzare il tempo di apertura dei siti.
+
+Scaricare l'intera lista di siti richiederebbe probabilmente molta banda, soprattutto per le
+numerose sincronizzazione che sarebbero necessarie periodicamente. Vista l'alta volatilità della
+lista, infatti, sarebbe necessario effettuare sincronizzazioni con alta frequenza, per evitare di
+consultare una lista troppo vecchia, e questi aggiornamenti avrebbero impatti importanti
+sull'utilizzo di banda Internet da parte del client.
+
+La soluzione che fu scelta inizialmente fu quella di affidarsi ad un filtro di Bloom: i server
+di Google infatti costruivano un filtro contenente tutte le URL presenti nella blacklist, e
+trasferivano il filtro al client. Grazie alle proprietà dei filtri di Bloom, i dati da trasferire
+erano molto compatti, e potevano essere conservati in RAM anche sui dispositivi mobili.
+
+Ogni volta che l'utente navigava su un nuovo sito, il client verificava prima se l'indirizzo era
+presente nel filtro: nel caso più comune (sito non malevole), il filtro restituiva correttamente
+esito negativo, e il browser consentiva l'accesso all'utente senza nessun rallentamento. Solo nei
+casi in cui il filtro restituiva esito positivo, il client effettuava una chiamata alle API di
+Google per verificare se l'indirizzo era veramente malevolo o se si trattasse di un falso positivo;
+con parametri di creazione adeguati, era possibile fare in modo che questa chiamata avvenisse
+pochissime volte nel corso di una navigazione normale, impattando così il meno possibile i tempi
+di apertura dei siti.
+
+Con il passare del tempo, la lista è cresciuta troppo, e di conseguenza il filtro ha iniziato
+ad avere dimensioni importanti; di conseguenza, è stato scelto di usare un'altra struttura dati
+probabilistica (gli insiemi di Golomb-Rice \cite{golomb}), che ha una rappresentazione in memoria
+compressa, dunque più compatta, sebbene più lenta da utilizzare \cite{golomb-safebrowsing}. 
+
+\subsection{Riconciliazione di una rete di distribuzione contenuti}
+
+Le reti di distribuzione contenuti (\emph{Content Delivery Network} o \emph{CDN}) sono delle reti
+di server distribuiti geograficamente che memorizzano copie di dati statici (immagini, font, 
+fogli di stile, sorgenti javascript) richiesti durante la navigazione di siti ad alto traffico. 
+Memorizzando una copia di questi contenuti sui nodi della CDN, il contenuto può essere offerto
+al visitatore da un server geograficamente più vicino a lui e quindi con una latenza di rete
+inferiore, migliorando la velocità di accesso al sito; inoltre, il traffico si distribuisce
+così su tanti nodi, diminuendo l'impatto del traffico sul server principale.
+
+In alcuni casi, può essere richiesto che i nodi della CDN si \emph{riscaldino}, popolando le
+proprie cache di contenuti che si ritiene verranno richiesti a breve dagli utenti. In questo caso,
+le CDN lavorano con una logica di rete P2P, trasferendo i dati da nodo a nodo. Per sincronizzare
+il contenuto del nodo $N1$ con il nodo $N2$, $N1$ invia a $N2$ un filtro di Bloom contentente
+l'elenco dei contenuti presenti nella propria cache. $N2$ può quindi utilizzare il filtro
+per individuare i contenuti che $N1$ non possiede, ed inviargieli. In caso di falso positivo,
+un dato risulterà erroneamente posseduto da $N1$ e non verrà quindi inviato; trattandosi di una
+operazione di ottimizzazione del traffico, è sufficiente che non avvenga con frequenza troppo 
+elevata per non impattare sulle prestazioni: infatti $N1$ non avrà il dato disponibile all'arrivo
+della prima richiesta, e si occuperà di scaricarlo in quel momento. 
+
+L'azienda Akamai (leader di mercato nel settore delle CDN) utilizza i filtri di Bloom anche per
+evitare di memorizzare contenuti richiesti una sola volta (come descritto in \cite{bloomakamai}).
+Infatti ogni nodo conserva un filtro di Bloom dei contenuti richiesti almeno una volta. Alla prima
+richiesta, il contenuto non è ancora presente nel filtro e viene aggiunto ma non viene cachato
+dal nodo. In questo modo, si evita di inserire in cache contenuti non popolari che possono 
+utilizzare spazio meglio utilizzato da contenuti più richiesti. I falsi positivi corrispondono
+a contenuti richiesti la prima volta che risultano però già richiesti; in questo caso, poiché
+la probabilità è bassa, l'ottimizzazione ha comunque successo nel non appesantire troppo la cache.
+
+\subsection{Routing ottimale in reti P2P}
+
+All'interno delle reti puramente P2P, il routing è l'algoritmo che consente ad ogni nodo di
+decidere verso quale altro nodo inviare un pacchetto. È possibile pensare alla rete P2P come
+ad un grafo, e al problema del routing come alla ricerca di un percorso tra nodi all'interno
+del grafo. La ricerca del percorso ottimale è di solito possibile tramite dei protocolli di 
+\emph{path discovery}, che sono però abbastanza onerosi. Di conseguenza, è possibile memorizzare
+l'esito della ricerca del percorso all'interno di un bloom filter associato ad ogni arco uscente.
+Se viene richiesto di effettuare lo stesso routing, il bloom filter consente di individuare
+rapidamente l'arco da utilizzare per inviare il pacchetto. I falsi positivi in questo caso
+corrispondono a routing non ottimali: il pacchetto viene inviato erroneamente al nodo sbagliato,
+ma probabilmente raggiungerà comunque poi la destinazione, sebbene non nel modo più efficiente. 
+
+Le reti P2P sono per loro stessa natura dinamiche: i nodi si connettono e sconnettono con una certa
+frequenza. Quando un nodo si disconnette, i nodi collegati possono decidere di buttare via il
+filtro associato all'arco che scompare, o in alternativo unirlo ad un altro filtro di un nodo
+magari ad alto traffico con molta banda a disposizione (utilizzando l'operazione di unione
+dei filtri).
+
 \section{Funzionamento dei filtri}
 
 Un filtro di Bloom è un array di bit, utilizzato come tabella hash, di dimensione arbitraria
@@ -304,7 +444,6 @@ l'elemento $E$ non era stato precedentemente inserito nel filtro.
     \hline
   \end{tabular}
 \end{center}
-
 
 
 \subsection{Scelta delle funzioni di hash}
@@ -581,7 +720,6 @@ Vediamo ora due esempi di derivazione di parametri ottimali.
 
 
 
-\section{Casi d'uso}
 
 
 
