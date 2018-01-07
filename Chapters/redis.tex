@@ -184,12 +184,12 @@ per essere compatibile anche con architetture a 32-bit, sebbene la versione a 64
 sia di gran lunga la più utilizzata in virtù della maggiore capacità di indirizzamento
 di memoria.
 
-La compilazione da codice sorgente è molto semplice: Redis è scritto nel linguaggio
-ANSI C90, e le pochissime dipendenze a livello di librerie sono distribuite con il
-codice sorgente stesso, quindi è sufficiente disporre sul sistema del compilatore GCC.
-Una volta scaricato l'archivio di codice sorgente dalla \cite{pagina di scaricamento ufficiale}
-o tramite \verb|git| dal \cite{repositorio ufficiale su GitHub}, è sufficiente lanciare il
-comando \verb|make|. Questa l'intera sequenza:
+La compilazione da codice sorgente è molto semplice: Redis è scritto nel linguaggio ANSI C90, e le
+pochissime dipendenze a livello di librerie sono distribuite con il codice sorgente stesso, quindi è
+sufficiente disporre sul sistema del compilatore GCC. Una volta scaricato l'archivio di codice
+sorgente dalla \href{https://redis.io/download}{pagina di scaricamento ufficiale} o tramite
+\verb|git| dal \href{https://github.com/antirez/redis}{repositorio ufficiale su GitHub}, è
+sufficiente lanciare il comando \verb|make|. Questa l'intera sequenza:
 
 \medskip
 \begin{lstlisting}
@@ -263,8 +263,9 @@ chiamata MurMurHash2.
 
 \subsection{Funzione di hash MurMurHash2}
 
-La funzione di hash MurMurHash2 \cite{murmur2} è una funzione di hash non crittografica creata nel
-2008 da  Austin Appleby, un ingegnere di Google, seconda versione della famiglia MurMur.
+La funzione di hash \href{https://sites.google.com/site/murmurhash/}{MurMurHash2} è una funzione di
+hash non crittografica creata nel 2008 da  Austin Appleby, un ingegnere di Google, seconda versione
+della famiglia MurMur.
 
 Il nome MurMur deriva dalla combinazione delle due operazioni fondamentali che compongono la
 funzione: la moltiplicazione (``mu'' per ``multiplication'') e la rotazione di bit (``r'' per
@@ -433,21 +434,21 @@ Si noti che non è necessario inizializzare la lista in nessun modo: il primo ri
 \verb|mylist| tramite un comando \verb|RPUSH| (che opera esclusivamente su liste) è sufficiente
 per creare dinamicamente l'oggetto di tipo giusto.
 
-Oltre agli ovvi usi di memorizzazione di dati mantenendo un certo ordine di inserimento, le liste
-di Redis consentono anche di implementare un complesso meccanismo di `task queue`, cioè code di 
+Oltre agli ovvi usi di memorizzazione di dati mantenendo un certo ordine di inserimento, le liste di
+Redis consentono anche di implementare un complesso meccanismo di `task queue`, cioè code di
 attività da eseguire; infatti, i comando \verb|LPOP| e \verb|RPOP| dispongono anche di una versione
 bloccante, chiamate rispettivamente \verb|BLPOP| e \verb|BRPOP|. Se eseguiti specificando una lista
 vuota, invece di tornare un errore, sospendono il client finché un elemento viene aggiunto alla
 lista da un altro client. In questo modo, un gruppo di client produttori possono inserire i attività
 da eseguire (magari codificati da un ID) in una coda di attività pendenti, e un secondo gruppo di
-client consumatori possono restare in attesa di attività da eseguire, ed eseguirli via via che 
-vengono accodati. Si noti che \verb|BLPOP| e \verb|BRPOP| consentono anche di specificare più di
-una lista da controllare, restando in attesa finché non viene inserito un elemento in una qualunque
+client consumatori possono restare in attesa di attività da eseguire, ed eseguirli via via che
+vengono accodati. Si noti che \verb|BLPOP| e \verb|BRPOP| consentono anche di specificare più di una
+lista da controllare, restando in attesa finché non viene inserito un elemento in una qualunque
 delle liste specificate; così facendo è possibile quindi suddividere meglio i attività per priorità
 o per tipologia, consentendo comunque flessibilità su quali attività eseguire da parte dei
-consumatori. A titolo di esempio di utilizzo di questa funzionalità, si veda Celery \cite{celery},
-una coda di attività distribuita per programmi scritti in Python, che consente di utilizzare Redis
-come database.
+consumatori. A titolo di esempio di utilizzo di questa funzionalità, si veda il software
+\href{http://celery.readthedocs.io/en/latest/}{Celery}, una coda di attività distribuita per
+programmi scritti in Python, che consente di utilizzare Redis come database.
 
 
 \subsection{Tabelle hash}
@@ -761,11 +762,12 @@ conservare un registro, che conti il prefisso più lungo visto. Si calcola che l
 risultante è pari a $1.04 / \sqrt{m}$, con $m$ pari al numero di registri. 
 
 Per distribuire uniformemente le stringhe in input, Redis utilizza una funzione di hash a 64-bit
-(come suggerito in \cite{hyperloglog-plusplus}), in particolare scegliendo MurMurHash64
-\cite{murmur}, una versione a 64 bit del già citato MurMurHash3.
-Essendo quindi il prefisso massimo lungo appunto 64 bit, i registri richiedono 6 bit. Redis sceglie
-di usare $2^{14}$ registri, ottenendo quindi un errore pari a $1.04 / \sqrt{2^{14}} = 0.8\%$, e
-utilizzando un totale di $2^{14} * 6 / 8 = 12228$ byte di memoria necessaria, come già riportato.
+(come suggerito in \cite{hyperloglog-plusplus}), in particolare scegliendo MurMurHash64, una
+versione a 64 bit del già citato
+\href{https://github.com/aappleby/smhasher/wiki/MurmurHash3}{MurMurHash3}. Essendo quindi il
+prefisso massimo lungo appunto 64 bit, i registri richiedono 6 bit. Redis sceglie di usare $2^{14}$
+registri, ottenendo quindi un errore pari a $1.04 / \sqrt{2^{14}} = 0.8\%$, e utilizzando un totale
+di $2^{14} * 6 / 8 = 12228$ byte di memoria necessaria, come già riportato.
 
 Questi sono i comandi esistenti, identificati dal prefisso \verb|PF|:
 
@@ -1026,13 +1028,14 @@ pipelining risulta particolarmente comodo perché l'intera transazione (comprens
 \end{figure}
 
 Si noti che, se si è interessati ad ottenere la massima performance, è consigliabile anche
-disattivare il controllo della congestione del TCP (il cosidettato algoritmo di Nagle \cite{rfc896},
-che rallenta l'invio di pacchetti piccoli di dati aggregandoli in ``segmenti'', diminuendo il
-traffico sulla rete ma aumentando la latenza fino anche a 500 millisecondi), ed utilizzare le
-opzioni \verb|TCP_NODELAY| e \verb|TCP_CORK| per gestire manualmente il buffering \cite{tcp-cork}.
-Molte librerie client Redis per i principali linguaggi di programmazione si occupano di questi
-dettagli automaticamente; si veda a titolo di esempio i sorgenti della libreria \verb|redis-py|
-\cite{tcp-cork-redispy}.
+disattivare il controllo della congestione del TCP, descritto in
+\href{https://tools.ietf.org/html/rfc896}{RFC896} (detto anche \emph{algoritmo di Nagle} dal nome
+dell'autore), che rallenta l'invio di pacchetti piccoli di dati aggregandoli in ``segmenti'',
+diminuendo il traffico sulla rete ma aumentando la latenza fino anche a 500 millisecondi), ed
+utilizzare le opzioni \verb|TCP_NODELAY| e \verb|TCP_CORK| per gestire manualmente il buffering
+\cite{tcp-cork}. Molte librerie client Redis per i principali linguaggi di programmazione si
+occupano di questi dettagli automaticamente; si veda a titolo di esempio i sorgenti della libreria
+\verb|redis-py| \cite{tcp-cork-redispy}.
 
 \section{Stored procedure in LUA}
 \label{redislua}
@@ -1053,8 +1056,9 @@ aggregazione di dati (es: calcolo di una media), non è necessario trasferire vi
 ma solamente il risultato.
 
 Invece che utilizzare un linguaggio di programmazione progettato ad-hoc (come per esempio il
-linguaggio PL/pgSQL \cite{plpgsql} utilizzato dal famoso database PostgreSQL), Redis utilizza un
-linguaggio già esistente: LUA \cite{lua}. LUA è un linguaggio di scripting, tipizzato dinamicamente,
+\href{https://www.postgresql.org/docs/9.6/static/plpgsql.html}{linguaggio PL/pgSQL} utilizzato dal
+famoso database PostgreSQL), Redis utilizza un linguaggio già esistente:
+\href{https://www.lua.org}{LUA}. LUA è un linguaggio di scripting, tipizzato dinamicamente,
 normalmente eseguito tramite un interprete molto efficiente e compatto, facilmente adatto
 all'integrazione (embedding). Già dai primi anni 2000, ha ottenuto molto popolarità nell'industria
 di videogiochi come linguaggio di scripting, proprio in virtù del profilo di performance e
