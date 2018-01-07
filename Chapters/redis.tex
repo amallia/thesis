@@ -264,39 +264,48 @@ chiamata MurMurHash2.
 \subsection{Funzione di hash MurMurHash2}
 
 La funzione di hash \href{https://sites.google.com/site/murmurhash/}{MurMurHash2} è una funzione di
-hash non crittografica creata nel 2008 da  Austin Appleby, un ingegnere di Google, seconda versione
+hash non crittografica creata nel 2008 da Austin Appleby, un ingegnere di Google, seconda versione
 della famiglia MurMur.
 
 Il nome MurMur deriva dalla combinazione delle due operazioni fondamentali che compongono la
 funzione: la moltiplicazione (``mu'' per ``multiplication'') e la rotazione di bit (``r'' per
-``rotation''). La funzione gode di una buona popolarità poiché unisce una buona velocità di
-esecuzione a una buona diffusione dei dati in ingresso (cosiddetto ``effetto valanga'').
+``rotation''). 
 
-Il cuore della funzione MurMur è rappresentato dal seguente codice:
+L'algoritmo (descritto in~\ref{alg:murmurhash2}) gode di una buona popolarità poiché unisce una
+buona velocità di esecuzione a una buona diffusione dei dati in ingresso (cosiddetto ``effetto
+valanga'').
 
-\medskip
-\begin{lstlisting}[language=C]
-	k *= m
-	k ^= k >> r
-	k *= m
-	
-	h *= m
-	h ^= k
-\end{lstlisting}
+\begin{algorithm}
+\caption{Funzione di hash MurMurHash2}
+\label{alg:murmurhash2}
+\begin{algorithmic}[1]
+\Procedure{MurMurHash2}{$msg$}
+	\State $m \gets \mathtt{0x5bd1e995}$ \Comment{Costante moltiplicativa suggerita}
+	\State $r \gets 24$ \Comment{Costante di shift suggerita}
 
-dove \verb|m| e \verb|r| sono due costanti (nel caso di Redis, vengono usati i valori consigliati:
-\verb|m=0x5bd1e995| e \verb|r=24|), \verb|k| è un blocco di chiave (di solito 32-bit), e \verb|h| è
-il valore di hash.
+	\State $hash \gets 0$
+	\ForAll{$k$ \textbf{word in} $msg$}
+		\State $k \gets k \times m$
+		\State $k \gets k \oplus (k \gg r)$
+		\State $k \gets k \times m$
+		\State $hash \gets hash \times m$
+		\State $hash \gets hash \oplus k$
+	\EndFor
+	\State \Return $hash$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 MurMurHash2 è considerata oggi obsoleta e sorpassata da MurMurHash3, poiché è stata individuata una
 falla in caso di blocchi di dati identici consecutivi \cite{murmur2flaw}. Infatti, se la chiave
-contiene due blocchi da 32-bit (es: \verb|abcdabcd|), ciascun blocco viene modificato nello stesso
-modo tramite le costanti, e poi mixato al valore di hash tramite un semplice XOR, che applicato due
-volte in sequenza provoca una possibile cancellazione di informazione. La moltiplicazione del valore
-di hash per la costante \verb|m| attutisce un po' l'effetto ma non del tutto: per esempio, per la
-costante \verb|0x5bd1e995| utilizzata come default, si può misurare sperimentalmente una
-cancellazione di circa 4.6 bit su 32, che corrisponde quindi a collisioni con una probabilità di 1
-su $2 ^ {27.4}$ invece che l'ottimale 1 su $2 ^ {32}$.
+contiene due blocchi da \SI{32}{\bit} (es: \verb|abcdabcd|), ciascun blocco viene modificato nello
+stesso modo tramite le costanti, e poi mixato al valore di hash tramite un semplice XOR, che
+applicato due volte in sequenza provoca una possibile cancellazione di informazione. La
+moltiplicazione del valore di hash per la costante \verb|m| attutisce un po' l'effetto ma non del
+tutto: per esempio, per la costante \verb|0x5bd1e995| utilizzata come default, si può misurare
+sperimentalmente una cancellazione di circa \SI{4.6}{\bit} su \num{32}, che corrisponde quindi a
+collisioni con una probabilità di \num{1} su $2 ^ {27.4}$ invece che l'ottimale \num{1} su $2 ^
+{32}$.
 
 
 \section{Tipologie di oggetti memorizzabili}

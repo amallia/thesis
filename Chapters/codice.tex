@@ -1,5 +1,9 @@
 \chapter{Codice sorgente}
 
+\newcommand{\sourcecode}[2][]{%
+    \lstinputlisting[caption={\texttt{\detokenize{#2}}},#1]{#2}%
+}
+
 \section{Esempio di stored procedure in Redis}
 
 Il seguente listato mostra una stored procedure scritta in LUA che dato un insieme ordinato
@@ -9,7 +13,7 @@ utenti ``premium'', cioè che hanno speso più di €1000.
 
 Si veda \ref{redislua} per maggiori informazioni.
 
-\lstinputlisting[language={[5.0]Lua}]{code/zsetaverage.lua}
+\sourcecode[language={[5.0]Lua}]{code/zsetaverage.lua}
 
 
 \section{Calcolo dell'errore di cardinalit\'a di un filtro di Bloom}
@@ -19,7 +23,7 @@ di Bloom di 8192 bit, con 2 funzioni di hash.
 
 Si veda \ref{sec:bloomcard} per maggiori informazioni.
 
-\lstinputlisting[language=Python]{code/cardinality.py}
+\sourcecode[language=Python]{code/cardinality.py}
 
 
 \section{Calcolo dei parametri ottimali di un filtro di Bloom}
@@ -28,7 +32,7 @@ I seguenti listati effettuano il calcolo dei parametri ottimali per un filtro di
 
 Si veda \ref{sec:bloomparms} per maggiori informazioni.
 
-\lstinputlisting[language=Python]{code/bloomparms1.py}
-\lstinputlisting[language=Python]{code/bloomparms2.py}
+\sourcecode[language=Python]{code/bloomparms1.py}
+\sourcecode[language=Python]{code/bloomparms2.py}
 
 

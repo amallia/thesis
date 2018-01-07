@@ -312,11 +312,11 @@ informazione sull'elemento viene memorizzata dentro il filtro.
 \caption{Inserimento elemento in filtro}
 \label{alg:bloominsert}
 \begin{algorithmic}[1]
-\Procedure{BloomInsert}{}
-\For {$i=0$ to $k-1$}
-	\State $j \gets h_i(x) \bmod M$
-	\State $bloom[j] \gets 1$
-\EndFor
+\Procedure{BloomInsert}{$bf$, $x$}
+	\For {$i=0$ \textbf{to} $K-1$}
+		\State $j \gets h_i(x) \bmod M$
+		\State $bf(j) \gets 1$
+	\EndFor
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
@@ -393,14 +393,14 @@ presente} all'interno del filtro; se almeno uno dei bit è impostato a 0, l'elem
 \caption{Test di appartenenza di elemento in filtro}
 \label{alg:bloomtest}
 \begin{algorithmic}[1]
-\Procedure{BloomTest}{}
-\For {$i=0$ to $k-1$}
-	\State $j \gets h_i(x) \bmod M$
-	\If{$bloom[j] = 0$}
-		\State \Return \textit{false}
-	\EndIf
-\EndFor
-\State \Return \textit{true}
+\Procedure{BloomTest}{$bf$, $x$}
+	\For {$i=0$ \textbf{to} $K-1$}
+		\State $j \gets h_i(x) \bmod M$
+		\If{$bf(j) = 0$}
+			\State \Return \textit{false}
+		\EndIf
+	\EndFor
+	\State \Return \textit{true}
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
@@ -520,15 +520,15 @@ assimilabile al calcolo di 2 sole funzioni.
 \caption{Generazione di indici tramite hash doppio}
 \label{alg:doublehash}
 \begin{algorithmic}[1]
-\Procedure{DoubleHash}{}
-\State $a \gets h_a(x)$
-\State $b \gets h_b(x)$
-\State $h[0] \gets a$
-\For {$i=1$ to $k-1$}
-	\State $a \gets a+b$
-	\State $h[i] \gets a$
-\EndFor
-\State \Return h
+\Procedure{DoubleHash}{$x$, $h_a$, $h_b$, $k$}
+	\State $a \gets h_a(x)$
+	\State $b \gets h_b(x)$
+	\State $h(0) \gets a$
+	\For {$i=1$ \textbf{to} $k-1$}
+		\State $a \gets a+b$
+		\State $h(i) \gets a$
+	\EndFor
+	\State \Return $h$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
@@ -537,9 +537,9 @@ Questo utilizzo di hash doppio è soggetto comunque ad alcuni potenziali problem
 funzione $h_b$ scelta; per esempio, se $h_b(x) = 0$, otteniamo $h_i(x) = h_a(x) \; \forall i$, che
 ovviamente aumenta notevolemente le possibilità di collisioni; allo stesso modo, se $h_b(x)$ divide
 $M$, il numero di valori distinti generati sarà $\min(k, m/h_b(x))$ che nel caso peggiore potrebbe
-addirittura essere 2. Se $M$ è una potenza di 2, è possibile forzare $h_b(x)$ ad essere sempre
-dispari, ma questo riduce l'uniformità della funzione. Per finire, ci saranno alcuni casi in cui
-le sequenze di indici tra due elementi potrebbe essere parzialmente sovrapposte sebbene gli hash
+addirittura essere \num{2}. Se $M$ è una potenza di \num{2}, è possibile forzare $h_b(x)$ ad essere
+sempre dispari, ma questo riduce l'uniformità della funzione. Per finire, ci saranno alcuni casi in
+cui le sequenze di indici tra due elementi potrebbe essere parzialmente sovrapposte sebbene gli hash
 siano diversi; si pensi per esempio a $h_b(x_1) = 2h_b(x_2) \bmod M$.
 
 Per risolvere questi problemi, \cite{bloomdoublehash} propone di usare
@@ -551,16 +551,16 @@ avanzato''. Volendo derivare matematicamente la formula, otteniamo $$ h_i(x) = h
 \caption{Generazione di indici tramite hash doppio avanzato}
 \label{alg:ehndoublehash}
 \begin{algorithmic}[1]
-\Procedure{EnhancedDoubleHash}{}
-\State $a \gets h_a(x)$
-\State $b \gets h_b(x)$
-\State $h[0] \gets a$
-\For {$i=1$ to $k-1$}
-	\State $a \gets a+b$
-	\State $b \gets b+i$
-	\State $h[i] \gets a$
-\EndFor
-\State \Return h
+\Procedure{EnhancedDoubleHash}{$x$, $h_a$, $h_b$, $k$}
+	\State $a \gets h_a(x)$
+	\State $b \gets h_b(x)$
+	\State $h(0) \gets a$
+	\For {$i=1$ \textbf{to} $k-1$}
+		\State $a \gets a+b$
+		\State $b \gets b+i$
+		\State $h(i) \gets a$
+	\EndFor
+	\State \Return $h$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
@@ -637,11 +637,12 @@ aggiungendo in un solo filtro tutti gli elementi presenti nel primo e nel second
 \caption{Unione di due filtri di bloom}
 \label{alg:bloomunion}
 \begin{algorithmic}[1]
-\Procedure{BloomUnion}{}
-\For {$i=0$ to $m-1$}
-	\State $out[i] \gets bloom1[i]$ \textbf{OR} $bloom2[i]$
-\EndFor
-\State \Return $out$
+\Require $bf_1$ e $bf_2$ devono essere costruiti con gli stessi parametri
+\Procedure{BloomUnion}{$bf_1$, $bf_2$}
+	\For {$i=0$ \textbf{to} $M-1$}
+		\State $out(i) \gets bf_1(i) \lor bf_2(i)$
+	\EndFor
+	\State \Return $out$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
@@ -658,17 +659,18 @@ intersezione è potenzialmente non ottimale.
 \caption{Intersezione di due filtri di bloom}
 \label{alg:bloomintersection}
 \begin{algorithmic}[1]
-\Procedure{BloomUnion}{}
-\For {$i=0$ to $m-1$}
-	\State $out[i] \gets bloom1[i]$ \textbf{AND} $bloom2[i]$
-\EndFor
-\State \Return $out$
+\Require $bf_1$ e $bf_2$ devono essere costruiti con gli stessi parametri
+\Procedure{BloomIntersect}{$bf_1$, $bf_2$}
+	\For {$i=0$ \textbf{to} $m-1$}
+		\State $out(i) \gets bf_1(i) \land bf_2(i)$
+	\EndFor
+	\State \Return $out$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
 
-Supponiamo per esempio di avere due filtri che contengono rispettivamente gli elementi ${ A, B }$
-e ${ A, C }$. Le funzioni di hash sugli elementi sono le seguenti:
+Supponiamo per esempio di avere due filtri che contengono rispettivamente gli elementi $\{ A, B \}$
+e $\{ A, C \}$. Le funzioni di hash sugli elementi sono le seguenti:
 
 \begin{center}
 	\begin{tabular}{ l c c c }
@@ -725,8 +727,8 @@ avremmo ottenuto per inserimento diretto:
   \end{tabular}
 \end{center}
 
-L'insieme intersezione è ${ A, B } \cap { A , C } = { A }$, ma il filtro risultante dall'operazione
-di \verb|AND| bit a bit è il seguente:
+L'insieme intersezione è $\{ A, B \} \cap \{ A , C \} = \{ A \}$, ma il filtro risultante
+dall'operazione di \verb|AND| bit a bit è il seguente:
 
 \begin{center}
   \begin{tabular}{*{11}{|c}|}
@@ -739,7 +741,7 @@ di \verb|AND| bit a bit è il seguente:
     \hline
   \end{tabular}
 \end{center}
-
+	
 Il bit 2 rimane acceso a causa di un conflitto tra le funzioni di hash ($h_1(B) = h_2(C)$), ma
 né l'elemento $B$ né l'elemento $C$ sono presenti nell'insieme intersezione. Se il filtro fosse
 stato creato da zero, inserendo solamente $A$, il bit 2 risulterebbe impostato a zero.
@@ -816,25 +818,25 @@ Vediamo ora due esempi di derivazione di parametri ottimali.
 \begin{itemize}
 	\medskip
 
-	\item Supponiamo di voler memorizzare $N=25000$ elementi in un filtro con una probabilità di
-	falso positivo $P=0.5\%$; possiamo ricavare i parametri necessari in questo modo:
+	\item Supponiamo di voler memorizzare $N=\num{25000}$ elementi in un filtro con una probabilità di
+	falso positivo $P=\SI{0.5}{\percent}$; possiamo ricavare i parametri necessari in questo modo:
 
-	$$ M = \ceil*{n\frac{|\ln(P)|}{0.480453014}} = \ceil*{25000\frac{|\ln(0.005)|}{0.480453014}} = 275694 $$
+	$$ M = \ceil*{n\frac{|\ln(P)|}{0.480453014}} = \ceil*{25000\frac{|\ln(0.005)|}{0.480453014}} = \num{275694} $$
 	$$ K = \ceil*{-\log_2{P}} = \ceil*{-\log_2{0.005}} = 8 $$
 
-	Quindi è necessario utilizzare un filtro di circa 33 KiB con 8 funzioni di hash.
+	Quindi è necessario utilizzare un filtro di circa \SI{33}{\kibi\byte} con \num{8} funzioni di hash.
 
-	\item Supponiamo di avere 1 MiB di RAM a disposizione per creare un filtro di Bloom che deve
+	\item Supponiamo di avere \SI{1}{\mebi\byte} di RAM a disposizione per creare un filtro di Bloom che deve
 	memorizzare 2 milioni di elementi. Qual è il valore minimo di falso positivo che possiamo
 	ottenere, e con quante funzioni di hash lo otterremo? È presto detto:
 
-	$$ M = 1024 \times 1024 \times 8 = 8388608 $$
-	$$ N = 2\,000\,000 $$
-	$$ P = 0.6185 ^ \frac{M}{N} \approx 0.1463 \approx 15\% $$
+	$$ M = \num{1024 x 1024 x 8} = \num{8388608} $$
+	$$ N = \num{2000000} $$
+	$$ P = 0.6185 ^ \frac{M}{N} \approx 0.1463 \approx \SI{15}{percent} $$
 	$$ K = \ceil*{-\log_2{P}} = 3 $$
 
-	Quindi possiamo arrivare ad avere circa il 15\% di falsi positivi utilizzando 3 funzioni di
-	hash.
+	Quindi possiamo arrivare ad avere circa il \SI{15}{\percent} di falsi positivi utilizzando
+	\num{3} funzioni di hash.
 \end{itemize}
 
 \begin{figure}
@@ -850,7 +852,7 @@ Vediamo ora due esempi di derivazione di parametri ottimali.
 	\subcaption{Probabilità attesa in base al numero di elementi}
 	\end{subfigure}
 
-	\caption{Andamento dei parametri ottimale in un filtro di 64 MiB}
+	\caption{Andamento dei parametri ottimale in un filtro di \SI{64}{\mebi\byte}}
 \end{figure}
 
 
@@ -902,6 +904,6 @@ impatterebbe sulla velocità del test di appartenenza).
 
 Per quanto concerne i valori ottimali dei parametri $r$ e $s$, rimandiamo a \cite{bloomscalable} per
 l'analisi sperimentale che mostra che i valori ottimali di $r$ sono $r \in \interval{0.8}{0.9}$,
-mentre il parametro $s$ può essere usato normalmente con valore $2$, aumentando magari a $4$ se si
-prevede un numero molto elevato di elementi.
+mentre il parametro $s$ può essere usato normalmente con valore \num{2}, aumentando magari a \num{4}
+se si prevede un numero molto elevato di elementi.
 

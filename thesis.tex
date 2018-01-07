@@ -38,7 +38,7 @@
 \usepackage{listingsutf8}
 \usepackage{caption,subcaption}
 \usepackage[toc,page]{appendix}
-\usepackage{siunitx}
+\usepackage[binary-units]{siunitx}
 \usepackage{mathtools}
 \usepackage{colortbl}
 \usepackage{interval}
@@ -80,7 +80,7 @@
   	showstringspaces=false,
   	columns=flexible,
   	basicstyle={\small\ttfamily},
-  	numbers=none,
+  	stringstyle=\color{red},
   	breaklines=true,
   	breakatwhitespace=true,
   	tabsize=4,
@@ -93,6 +93,7 @@
 	\addto\captionsitalian{
 	\renewcommand{\ALG@name}{Algoritmo}
 	\renewcommand{\listalgorithmname}{Elenco degli algoritmi}
+	\renewcommand{\algorithmicrequire}{\textbf{Precondizione:}}
 	\renewcommand{\appendixtocname}{Appendici}
 	\renewcommand{\appendixpagename}{Appendici}
 	}
