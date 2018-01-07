@@ -15,11 +15,7 @@
 %--------------------------------------------------------------
 \newcommand{\myItalianTitle}{Aggiunta dei filtri di Bloom al database NoSQL Redis\xspace}
 \newcommand{\myEnglishTitle}{Adding Bloom filters to Redis, the NoSQL database\xspace}
-% use the right myDegree option
 \newcommand{\myDegree}{Corso di Laurea in Informatica\xspace}
-%\newcommand{\myDegree}{
-	%Corso di Laurea Specialistica in Scienze e Tecnologie
-	%dell'Informazione\xspace}
 \newcommand{\myName}{Giovanni Bajo\xspace}
 \newcommand{\myProf}{Donatella Merlini\xspace}
 \newcommand{\myOtherProf}{Correlatore\xspace}
@@ -41,7 +37,7 @@
 \usepackage{listings}
 \usepackage{listingsutf8}
 \usepackage{caption,subcaption}
-\usepackage{appendix}
+\usepackage[toc,page]{appendix}
 \usepackage{siunitx}
 \usepackage{mathtools}
 \usepackage{colortbl}
@@ -91,19 +87,23 @@
   	inputencoding=utf8/latin1
 }
 %--------------------------------------------------------------
+% Translations
+%--------------------------------------------------------------
+\makeatletter
+	\addto\captionsitalian{
+	\renewcommand{\ALG@name}{Algoritmo}
+	\renewcommand{\listalgorithmname}{Elenco degli algoritmi}
+	\renewcommand{\appendixtocname}{Appendici}
+	\renewcommand{\appendixpagename}{Appendici}
+	}
+\makeatother
+%--------------------------------------------------------------
 \begin{document}
 \graphicspath{ {img/} }
 \frenchspacing
 \raggedbottom
 \pagenumbering{roman}
 \pagestyle{plain}
-%--------------------------------------------------------------
-% Translations
-%--------------------------------------------------------------
-\makeatletter
-	\renewcommand{\ALG@name}{Algoritmo}
-	\renewcommand{\listalgorithmname}{Elenco degli algoritmi}
-\makeatother
 %--------------------------------------------------------------
 % Frontmatter
 %--------------------------------------------------------------
@@ -129,9 +129,10 @@ Ne deriva che vi sono delle conoscenze probabili le quali, benché non possano e
 \include{Chapters/introduzione}
 \include{Chapters/redis}
 \include{Chapters/bloom}
-\appendix
-\appendixpage
+\include{Chapters/patch}
+\begin{appendices}
 \include{Chapters/codice}
+\end{appendices}
 \include{Chapters/bibliografia}
 %--------------------------------------------------------------
 \end{document}

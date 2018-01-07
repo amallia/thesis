@@ -88,10 +88,10 @@ cui valori erano semplicemente valori booleani (di solito \verb|True|).
 
 \section{Propriet\`a dei filtri di Bloom}
 
-Un filtro di Bloom è una rappresentazione probabilistica di un insieme. Nel filtro infatti
-non vengono memorizzati per intero tutti gli elementi, ma ne viene memorizzata solo una
-rappresentazione parziale, che consente di effettuare comunque alcune operazioni, mantenendo però
-dei margini di errore controllati. 
+Un filtro di Bloom \cite{bloomfilters} è una rappresentazione probabilistica di un insieme. Nel
+filtro infatti non vengono memorizzati per intero tutti gli elementi, ma ne viene memorizzata solo
+una rappresentazione parziale, che consente di effettuare comunque alcune operazioni, mantenendo
+però dei margini di errore controllati.
 
 In particolare, il test di appartenenza restituisce un valore probabilistico, con la presenza di
 falsi valori positivi (cioè il test restituisce un valore di successo anche per elementi non
@@ -189,8 +189,9 @@ una piccola frazione rispetto alla quantità di traffico generato in precedenza 
 \subsection{Google SafeBrowsing}
 
 Il browser Chrome di Google utilizzava (fino al 2012) i filtri di Bloom per implementare
-efficientemente la funzionalità SafeBrowsing \cite{safebrowsing}, che protegge gli utenti bloccando
-automaticamente l'accesso ai siti contenenti \emph{malware} o \emph{phishing}.
+efficientemente la funzionalità \href{https://safebrowsing.google.com}{``SafeBrowsing''}, che
+protegge gli utenti bloccando automaticamente l'accesso ai siti contenenti \emph{malware} o
+\emph{phishing}.
 
 Google, infatti, mantiene sui propri server un enorme elenco di tipo \emph{blacklist} di indirizzi
 web (URL) considerate pericolose per gli utenti. L'elenco è in continua evoluzione: nuovi indirizzi
