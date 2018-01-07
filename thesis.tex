@@ -45,6 +45,9 @@
 \usepackage{siunitx}
 \usepackage{mathtools}
 \usepackage{colortbl}
+\usepackage{interval}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
 %--------------------------------------------------------------
 \usepackage{dia-classicthesis-ldpkg}
@@ -95,6 +98,11 @@
 \pagenumbering{roman}
 \pagestyle{plain}
 %--------------------------------------------------------------
+% Translations
+%--------------------------------------------------------------
+\renewcommand{\ALG@name}{Algoritmo}
+\renewcommand{\listalgorithmname}{Elenco degli algoritmi}
+%--------------------------------------------------------------
 % Frontmatter
 %--------------------------------------------------------------
 \include{titlePage}
@@ -107,6 +115,7 @@
 %\include{intro} % use \myChapter command instead of \chapter
 \tableofcontents
 \listoffigures
+\listofalgorithms
 \cleardoublepage
 \thispagestyle{empty}
 \begin{flushright}

@@ -230,6 +230,7 @@ probabilistica (gli insiemi di Golomb-Rice \cite{golomb}), che ha una rappresent
 compressa, dunque più compatta, sebbene più lenta da utilizzare \cite{golomb-safebrowsing}. 
 
 \subsection{Riconciliazione di una rete di distribuzione contenuti}
+\label{sec:bloomcdn}
 
 Le reti di distribuzione contenuti (\emph{Content Delivery Network} o \emph{CDN}) sono delle reti
 di server distribuiti geograficamente che memorizzano copie di dati statici (immagini, font, 
@@ -299,12 +300,25 @@ vuoto composto di 11 bit:
 
 \subsection{Inserimento di un elemento}
 
-L'inserimento di un elemento $X$ avviene calcolando alcune funzioni di hash $h_i(X)$ prestabilite
-sull'elemento (il numero delle funzioni, chiamato $K$, è anch'esso un parametro del filtro). I $K$
-valori risultanti $h_0(X), h_1(X), ... , h_K(X)$ sono utilizzati per identificare singoli bit
-all'interno dell'array (per esempio, scegliendo il bit con indice $h_i(X) \bmod M$), e i bit così
-identificati vengono impostati a 1. Si noti che nessuna altra informazione sull'elemento viene
-memorizzata dentro il filtro.
+L'inserimento di un elemento $X$ (algoritmo~\ref{alg:bloominsert}) avviene calcolando alcune
+funzioni di hash $h_i(X)$ prestabilite sull'elemento (il numero delle funzioni, chiamato $K$, è
+anch'esso un parametro del filtro). I $K$ valori risultanti $h_0(X), h_1(X), ... , h_{K-1}(X)$ sono
+utilizzati per identificare singoli bit all'interno dell'array (per esempio, scegliendo il bit con
+indice $h_i(X) \bmod M$), e i bit così identificati vengono impostati a 1. Si noti che nessuna altra
+informazione sull'elemento viene memorizzata dentro il filtro.
+
+\begin{algorithm}
+\caption{Inserimento elemento in filtro}
+\label{alg:bloominsert}
+\begin{algorithmic}[1]
+\Procedure{BloomInsert}{}
+\For {$i=0$ to $k-1$}
+	\State $j \gets h_i(x) \bmod M$
+	\State $bloom[j] \gets 1$
+\EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 Continuando l'esempio seguente, supponiamo di utilizzare $K=2$ funzioni di hash $h_1(x)$ e $h_2(x)$
 e di voler inserire 3 elementi $\{ A, B, C \}$ nel filtro. La seguente tabella mostra i valori
@@ -368,10 +382,27 @@ A questo punto, l'inserimento dei 3 elementi è terminato.
 
 \subsection{Test di appartenenza}
 
-Il test di appartenenza di un elemento segue un processo simmetrico: vengono eseguite le $K$
-funzioni di hash e si identificano così $K$ bit dell'array di cui verificare lo stato. Se tutti i 
-bit sono impostati a 1, l'elemento è \emph{probabilmente presente} all'interno del filtro; se almeno 
-uno dei bit è impostato a 0, l'elemento è \emph{sicuramente assente} all'interno del filtro.
+L'algoritmo~\ref{alg:bloomtest} per il test di appartenenza di un elemento segue un processo
+simmetrico: vengono eseguite le $K$ funzioni di hash e si identificano così $K$ bit dell'array di
+cui verificare lo stato. Se tutti i bit sono impostati a 1, l'elemento è \emph{probabilmente
+presente} all'interno del filtro; se almeno uno dei bit è impostato a 0, l'elemento è
+\emph{sicuramente assente} all'interno del filtro.
+
+\begin{algorithm}
+\caption{Test di appartenenza di elemento in filtro}
+\label{alg:bloomtest}
+\begin{algorithmic}[1]
+\Procedure{BloomTest}{}
+\For {$i=0$ to $k-1$}
+	\State $j \gets h_i(x) \bmod M$
+	\If{$bloom[j] = 0$}
+		\State \Return \textit{false}
+	\EndIf
+\EndFor
+\State \Return \textit{true}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 Il motivo per cui il test di appartenenza non può asserire con certezza la presenza di un elemento
 è dovuto all'assenza di un meccanismo di rilevamento delle collisioni delle funzioni di hash tra
@@ -448,17 +479,94 @@ l'elemento $E$ non era stato precedentemente inserito nel filtro.
 
 \subsection{Scelta delle funzioni di hash}
 
-Utilizzo del double-hashing come metodo efficiente
-Utilizzo del partizionamento in sezioni
+Come abbiamo visto, ogni filtro richiede l'utilizzo di un certo numero $K$ di funzioni di hash; la
+scelta del valore ideale per $K$ verrà analizzata in \ref{sec:bloomparms}, ma non è inusuale
+utilizzare filtri configurati con più di 5 funzioni (e a volte più di 10). 
 
-Dillinger, Peter C.; Manolios, Panagiotis (2004b), "Bloom Filters in Probabilistic Verification", Proceedings of the 5th International Conference on Formal Methods in Computer-Aided Design, Springer-Verlag, Lecture Notes in Computer Science 3312
+Le caratteristiche richieste per una funzione di hash utilizzata in un filtro sono le stesse che si
+ricercano quando la funzione viene utilizzata in una tabella hash, cioè l'uniformità e il
+determinismo. In particolare, non è strettamente necessario utilizzare una funzione crittografica di
+hash, che garantisce anche altre proprietà come la non reversibilità e la resistenza ad attacchi
+quali la collisione e la preimmagine, sebbene ovviamente ci sono scenari applicativi
+(come in \ref{sec:bloomcdn}) in cui una funzione di hash banalmente soggetta a ricerca di collisione
+potrebbe causare attacchi di tipo avvelenamento della cache con possibili \emph{denial of service}.
+Anche il parametro della velocità di esecuzione deve essere tenuto in considerazione, e tipicamente
+le funzioni crittografiche di hash sono più lente delle funzioni non crittografiche.
 
+Una volta identificata una funzione di hash $h$ appropriata allo scenario applicativo, è possibile
+utilizzarla come base per generare la famiglia di $K$ funzioni di hash richieste ($h_1, h_2, ...,
+h_K)$. Un primo metodo, intuitivamente semplice, è quello di creare una funzione derivata $h'$ che
+accetti un seme oltre al dato da processare; alcune funzioni di hash offrono già nativamente la
+possibilità di definire un seme, mentre per le altre si può per esempio concatenare il seme al
+contenuto, cioè definire $h'(seed, msg) = h(seed \Vert msg)$ (dove $\Vert$ indica la
+concatenazione). Di conseguenza, è possibile banalmente definire $h_i(msg) = h'(i, msg)$,
+creando così una famiglia di funzioni di hash, utilizzabili nel filtro.
+
+Questo approccio però richiede di eseguire la funzione di hash $K$ volte per ogni elemento che si
+vuole inserire nel filtro, impattando quindi in modo significativo sulla velocità di esecuzione al
+crescere di $K$. Una soluzione alternativa (proposta per la prima volta in \cite{bloomdoublehash}) è
+quella di utilizzare l'algoritmo~\ref{alg:doublehash} di hash doppio, utilizzato comunemente come
+metodo per la risoluzione di collisioni nelle tabelle hash. In termini matematici, date 2 funzioni
+di hash $h_a$ e $h_b$ (magari generate con un seme da una medesima funzione, come visto in
+precedenza) è possibile definire la seguente famiglia di funzioni:
+
+$$ h_i(x) = h_a(x) + ih_b(x) \pmod M $$ 
+
+calcolando così un numero arbitrario di funzioni di hash utilizzando un tempo computazionale
+assimilabile al calcolo di 2 sole funzioni.
+
+\begin{algorithm}
+\caption{Generazione di indici tramite hash doppio}
+\label{alg:doublehash}
+\begin{algorithmic}[1]
+\Procedure{DoubleHash}{}
+\State $a \gets h_a(x)$
+\State $b \gets h_b(x)$
+\State $h[0] \gets a$
+\For {$i=1$ to $k-1$}
+	\State $a \gets a+b$
+	\State $h[i] \gets a$
+\EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Questo utilizzo di hash doppio è soggetto comunque ad alcuni potenziali problemi in base alla
+funzione $h_b$ scelta; per esempio, se $h_b(x) = 0$, otteniamo $h_i(x) = h_a(x) \; \forall i$, che
+ovviamente aumenta notevolemente le possibilità di collisioni; allo stesso modo, se $h_b(x)$ divide
+$M$, il numero di valori distinti generati sarà $\min(k, m/h_b(x))$ che nel caso peggiore potrebbe
+addirittura essere 2. Se $M$ è una potenza di 2, è possibile forzare $h_b(x)$ ad essere sempre
+dispari, ma questo riduce l'uniformità della funzione. Per finire, ci saranno alcuni casi in cui
+le sequenze di indici tra due elementi potrebbe essere parzialmente sovrapposte sebbene gli hash
+siano diversi; si pensi per esempio a $h_b(x_1) = 2h_b(x_2) \bmod M$.
+
+Per risolvere questi problemi, \cite{bloomdoublehash} propone di usare
+l'algoritmo~\ref{alg:ehndoublehash} per la composizione degli hash, chiamato  ``hash doppio
+avanzato''. Volendo derivare matematicamente la formula, otteniamo $$ h_i(x) = h_a(x) + ih_b(x) +
+\frac{i^3-i}{6} \pmod M $$.
+
+\begin{algorithm}
+\caption{Generazione di indici tramite hash doppio avanzato}
+\label{alg:ehndoublehash}
+\begin{algorithmic}[1]
+\Procedure{EnhancedDoubleHash}{}
+\State $a \gets h_a(x)$
+\State $b \gets h_b(x)$
+\State $h[0] \gets a$
+\For {$i=1$ to $k-1$}
+	\State $a \gets a+b$
+	\State $b \gets b+i$
+	\State $h[i] \gets a$
+\EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Stima della cardinalità}
 \label{sec:bloomcard}
 
 È possibile effettuare una stima della cardinalità \verb|N| di un filtro di Bloom, derivandola
-dalla densità, come già mostrato in \cite{bloomcard} \cite{bloomscalable}.
+dalla densità, come descritto in \cite{bloomscalable}.
 
 Si noti che un filtro di dimensione $M$ con $K$ funzioni di hash può essere implementato, senza
 perdita di genericità, con $K$ array distinti di $m=\frac{M}{K}$ bit ciascuno, chiamati
@@ -517,17 +625,44 @@ vedere, l'errore effettuato dalla stima non diverge anche per valori di densità
 \subsection{Unione ed intersezione}
 
 Dati due filtri creati con gli stessi parametri ed utilizzanti le stesse funzioni di hash, è
-possibile calcolare l'unione semplicemente applicando l'operazione di \verb|OR| bit a bit agli
-array. Questa operazione non causa alcuna perdita di informazione né pessimizzazione, poiché l'array
-risultante è il medesimo che si sarebbe ottenuto aggiungendo in un solo filtro tutti gli elementi
-presenti nel primo e nel secondo filtro in input.
+possibile calcolare l'unione come da algoritmo~\ref{alg:bloomunion}, semplicemente applicando
+l'operazione di \verb|OR| bit a bit agli array. Questa operazione non causa alcuna perdita di
+informazione né pessimizzazione, poiché l'array risultante è il medesimo che si sarebbe ottenuto
+aggiungendo in un solo filtro tutti gli elementi presenti nel primo e nel secondo filtro in input.
+
+\begin{algorithm}
+\caption{Unione di due filtri di bloom}
+\label{alg:bloomunion}
+\begin{algorithmic}[1]
+\Procedure{BloomUnion}{}
+\For {$i=0$ to $m-1$}
+	\State $out[i] \gets bloom1[i]$ \textbf{OR} $bloom2[i]$
+\EndFor
+\State \Return $out$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
 
 È possibile in modo simile calcolare l'intersezione tra due filtri applicando l'operazione di
-\verb|AND| bit a bit agli array. In questo caso però il risultato non è ottimale: l'array risultante
-potrebbe contenere alcuni bit impostati a 1 che non risulterebbero tali se si fosse creato
-direttamente un filtro aggiungendo solo gli elementi facenti parte dell'intersezione, e di
-conseguenza la probabilità di falsi positivi risultante dal filtro intersezione è potenzialmente non
-ottimale.
+\verb|AND| bit a bit agli array, come da algoritmo~\ref{alg:bloomintersection}. In questo caso però
+il risultato non è ottimale: l'array risultante potrebbe contenere alcuni bit impostati a 1 che non
+risulterebbero tali se si fosse creato direttamente un filtro aggiungendo solo gli elementi facenti
+parte dell'intersezione, e di conseguenza la probabilità di falsi positivi risultante dal filtro
+intersezione è potenzialmente non ottimale.
+
+\begin{algorithm}
+\caption{Intersezione di due filtri di bloom}
+\label{alg:bloomintersection}
+\begin{algorithmic}[1]
+\Procedure{BloomUnion}{}
+\For {$i=0$ to $m-1$}
+	\State $out[i] \gets bloom1[i]$ \textbf{AND} $bloom2[i]$
+\EndFor
+\State \Return $out$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 Supponiamo per esempio di avere due filtri che contengono rispettivamente gli elementi ${ A, B }$
 e ${ A, C }$. Le funzioni di hash sugli elementi sono le seguenti:
@@ -716,17 +851,54 @@ Vediamo ora due esempi di derivazione di parametri ottimali.
 \end{figure}
 
 
-\section{Varianti dei filtri di Bloom}
+\section{Filtri estendibili}
 
+Uno dei problemi principali dei filtri così come originariamente progettati è che la struttura
+dati è definita staticamente, e dunque non è possibile espanderla dinamicamente in base al
+numero di elementi che via via si rende necessario memorizzare. Questo limite rende complesso
+l'utilizzo in diversi scenari applicativi, poiché, volendo mantenere la probabilità di un falso
+positivo contenuta entro una soglia, è necessario spesso sovradimensionare il filtro a causa della 
+impossibilità di prevedere il numero di elementi che sarà necessario memorizzare.
 
+Per risolvere questo problema, \cite{bloomscalable} propone di creare un \emph{filtro di Bloom
+scalabile} (SBF) formato da uno o più filtri in catena; quando i filtri raggiungono la densità
+scelta come obiettivo (di solito $p=0.5$), un nuovo filtro viene aggiunto in coda alla catena,
+facendo spazio così per l'inserimento nuovi elementi. Il test di appartenenza dovrà quindi ricercare
+l'elemento all'interno di tutti i filtri della catena. Ogni filtro che viene creato avrà una nuova
+probabilità $P_j$ per i falsi positivi, seguendo una progressione geometrica ($P_j = rP_{j-1} =
+r^iP_0$), in modo che la probabilità composta $P$ dell'intera catena converga verso il valore
+richiesto. Il fattore $r \in \interval[open]{0}{1}$ è detto \emph{fattore di intensificazione}
+(``tighten ratio'').
 
+La probabilità composta $P$, ottenuta ricercando l'elemento negli $l$ filtri della catena, può
+essere quindi calcolata così:
 
+$$ P = 1 - \prod_{i=0}^{l-1}(1-r^iP_0) $$
 
+e volendo calcolare un limite superiore, possiamo ottenere:
 
+$$ P \leq \sum_{i=0}^{l-1} r^iP_0 \leq \lim_{l \rightarrow \infty} \sum_{i=0}^{l-1} r^iP_0 =
+\frac{1}{1-r}P_0 $$
 
+Ricavando $P_0$, possiamo calcolare il valore di probabilità di falsi positivi che deve avere
+il primo filtro della catena, in base al fattore di intensificazione $r$ e la probabilità finale
+attesa $P$:
 
+$$ P_0 = (1-r)P $$
 
+Possiamo anche calcolare il numero ottimale di funzioni di hash che deve usare ogni filtro nella
+catena:
 
+$$ k_0 = -log_2{P_0} $$
+$$ k_i = -log_2{P_i} = -log_2{(r^iP_0)} = k_0 + i log_2{\frac{1}{r}} $$
 
+Per quanto concerne invece la dimensione $M_i$ dei filtri, è consigliabile utilizzare anche qui
+una progressione geometrica (il cui fattore è chiamato $s$), che si adatta velocemente ad una
+crescita importante di elementi nel filtro senza aumentare troppo la lunghezza della catena (che
+impatterebbe sulla velocità del test di appartenenza). 
 
+Per quanto concerne i valori ottimali dei parametri $r$ e $s$, rimandiamo a \cite{bloomscalable} per
+l'analisi sperimentale che mostra che i valori ottimali di $r$ sono $r \in \interval{0.8}{0.9}$,
+mentre il parametro $s$ può essere usato normalmente con valore $2$, aumentando magari a $4$ se si
+prevede un numero molto elevato di elementi.
 
