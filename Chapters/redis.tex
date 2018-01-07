@@ -751,17 +751,17 @@ almeno una volta, in modo da scartare i duplicati (utilizzando quindi un insieme
 la cardinalità. Questa implementazione però utilizza una quantità di memoria proporzionale al numero
 di elementi distinti, che può essere quindi molto elevata quando gli elmenti sono milioni o
 miliardi. HyperLogLog invece richiede una frazione dello spazio, in base a come è configurato: per
-esempio, nell'implementazione di Redis la memoria occupata da ciascun HyperLogLog è pari a 12 KiB,
-indipendentemente dalla quantità di dati conteggiati, e l'errore standard della cardinalità
-calcolata è pari allo 0.83\%.
+esempio, nell'implementazione di Redis la memoria occupata da ciascun HyperLogLog è pari a
+\SI{12}{\kibi\byte}, indipendentemente dalla quantità di dati conteggiati, e l'errore standard della
+cardinalità calcolata è pari allo \SI{0.83}{\percent}.
 
 Rimandando a \cite{hyperloglog} per una trattazione approfondita, l'intuizione base di HyperLogLog,
-come spiegato in \cite{hyperloglog-explain}, è che, osservando nella loro
-rappresentazione binaria un multi-insieme di numeri equamente distribuiti, se troviamo uno specifico
-prefisso di $N$ bit predeterminato, è possibile ipotizzare che la cardinalità dell'insieme sia
-almeno $2^N$; per esempio, in un insieme di numeri casuali, circa il 12.5\% di essi ha un prefisso
+come spiegato in \cite{hyperloglog-explain}, è che, osservando nella loro rappresentazione binaria
+un multi-insieme di numeri equamente distribuiti, se troviamo uno specifico prefisso di $N$ bit
+predeterminato, è possibile ipotizzare che la cardinalità dell'insieme sia almeno $2^N$; per
+esempio, in un insieme di numeri casuali, circa il \SI{12.5}{\percent} di essi ha un prefisso
 binario pari \verb|001|, per cui se troviamo questo prefisso, possiamo ipotizzare che i numeri siano
-almeno 8. Effettuando questo test con prefissi sempre più lunghi (cercando cioè, il più lungo
+almeno \num{8}. Effettuando questo test con prefissi sempre più lunghi (cercando cioè, il più lungo
 prefisso di zeri iniziali nel multi-insieme), è possibile ottenere una stima della cardinalità.
 
 Questa osservazione però commette un errore con varianza molto elevata, per cui HyperLogLog divide i
@@ -770,13 +770,14 @@ bilancia queste stime tramite una media armonica. Per ciascun sottoinsieme, è s
 conservare un registro, che conti il prefisso più lungo visto. Si calcola che l'errore standard 
 risultante è pari a $1.04 / \sqrt{m}$, con $m$ pari al numero di registri. 
 
-Per distribuire uniformemente le stringhe in input, Redis utilizza una funzione di hash a 64-bit
-(come suggerito in \cite{hyperloglog-plusplus}), in particolare scegliendo MurMurHash64, una
-versione a 64 bit del già citato
+Per distribuire uniformemente le stringhe in input, Redis utilizza una funzione di hash a
+\SI{64}{\bit} (come suggerito in \cite{hyperloglog-plusplus}), in particolare scegliendo
+MurMurHash64, una versione a \SI{64}{\bit} del già citato
 \href{https://github.com/aappleby/smhasher/wiki/MurmurHash3}{MurMurHash3}. Essendo quindi il
 prefisso massimo lungo appunto 64 bit, i registri richiedono 6 bit. Redis sceglie di usare $2^{14}$
-registri, ottenendo quindi un errore pari a $1.04 / \sqrt{2^{14}} = 0.8\%$, e utilizzando un totale
-di $2^{14} * 6 / 8 = 12228$ byte di memoria necessaria, come già riportato.
+registri, ottenendo quindi un errore pari a $1.04 / \sqrt{2^{14}} = \SI{0.8}{\percent}$, e
+utilizzando un totale di $2^{14} * 6 / 8 = \num{12228}$ byte di memoria necessaria, come già
+riportato.
 
 Questi sono i comandi esistenti, identificati dal prefisso \verb|PF|:
 
@@ -822,16 +823,16 @@ Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 (integer) 11
 \end{lstlisting}
 
-Inizialmente, viene aggiunto il valore 50 all'HyperLogLog denominato \verb|dau| (che viene quindi
+Inizialmente, viene aggiunto il valore $50$ all'HyperLogLog denominato \verb|dau| (che viene quindi
 creato con questo primo comando), e successivamente si può verificare che la cardinalità
-dell'insieme è al momento quella attesa, cioè 1. Successivamente, vengono aggiunti un gruppo di
-valori di cui alcuni non già presenti (i numeri dal 51 al 59) ma altri invece già presenti (il
-numero 50, che viene aggiunto per 3 volte nella sequenza, pur essendo già presente). La cardinalità
-però risulta comunque corretta: infatti \verb|PFCOUNT| restituisce il valore atteso 10, visto che in
-questo momento nella struttura sono stati inseriti tutti i valori tra il 50 e il 59. Infine,
-proviamo nuovamente ad inserire un set comprendente tutti valori già visti tranne l'ultimo (61). La
-cardinalità ancora una volta è corretta, poiché misura 11, avendo scartato correttamente i valori
-già visti e aggiunto solo l'elemento 61.
+dell'insieme è al momento quella attesa, cioè $1$. Successivamente, vengono aggiunti un gruppo di
+valori di cui alcuni non già presenti (i numeri dal $51$ al $59$) ma altri invece già presenti (il
+numero $50$, che viene aggiunto per 3 volte nella sequenza, pur essendo già presente). La cardinalità
+però risulta comunque corretta: infatti \verb|PFCOUNT| restituisce il valore atteso $10$, visto che in
+questo momento nella struttura sono stati inseriti tutti i valori tra il $50$ e il $59$. Infine,
+proviamo nuovamente ad inserire un set comprendente tutti valori già visti tranne l'ultimo ($61$). La
+cardinalità ancora una volta è corretta, poiché misura $11$, avendo scartato correttamente i valori
+già visti e aggiunto solo l'elemento $61$.
 
 \section{Transazioni}
 
@@ -1012,8 +1013,8 @@ Come dettagliato nella precedente sessione, le prestazioni ottenute nell'utilizz
 fortemente influenzate dalla velocità di rete. Sebbene le migliori pratiche di installazione in
 ambiente di produzione consigliano di posizionare rete su un server (o gruppi di server) fisicamente
 vicini al server dove girare l'applicazione client, in popolari ambienti cloud come Amazon Web
-Services è possibile misurare latenze anche nell'ordine di 50 ms se si considerano misure al
-99-esimo percentile, sebbene con valori mediani stabilmente sotto il millisecondo
+Services è possibile misurare latenze anche nell'ordine di \SI{50}{\milli\second} se si considerano
+misure al 99-esimo percentile, sebbene con valori mediani stabilmente sotto il millisecondo
 \cite{aws-latency}.
 
 L'utilizzo di transazioni, sebbene utile per introdurre il concetto di atomicità di esecuzione,
@@ -1040,7 +1041,7 @@ Si noti che, se si è interessati ad ottenere la massima performance, è consigl
 disattivare il controllo della congestione del TCP, descritto in
 \href{https://tools.ietf.org/html/rfc896}{RFC896} (detto anche \emph{algoritmo di Nagle} dal nome
 dell'autore), che rallenta l'invio di pacchetti piccoli di dati aggregandoli in ``segmenti'',
-diminuendo il traffico sulla rete ma aumentando la latenza fino anche a 500 millisecondi), ed
+diminuendo il traffico sulla rete ma aumentando la latenza fino anche a \SI{500}{\milli\second}), ed
 utilizzare le opzioni \verb|TCP_NODELAY| e \verb|TCP_CORK| per gestire manualmente il buffering
 \cite{tcp-cork}. Molte librerie client Redis per i principali linguaggi di programmazione si
 occupano di questi dettagli automaticamente; si veda a titolo di esempio i sorgenti della libreria
@@ -1073,21 +1074,22 @@ all'integrazione (embedding). Già dai primi anni 2000, ha ottenuto molto popola
 di videogiochi come linguaggio di scripting, proprio in virtù del profilo di performance e
 compatezza che lo rendeva utilizzabile anche all'interno di console con processori non troppo
 potenti e quantitativi di memoria limitati (si pensi per esempio alla Sony Playstation 2, che era
-comandata da un processore MIPS R5900 a 300Mhz con 32Mb di RAM), ed è stato utilizzato all'interno
-di successi quali Angry Birds \cite{lua-angry} o World of Warcraft \cite{lua-wow}.
+comandata da un processore MIPS R5900 a \SI{300}{\mega\hertz} con \SI{32}{\mebi\byte} di RAM), ed è
+stato utilizzato all'interno di successi quali Angry Birds \cite{lua-angry} o World of Warcraft
+\cite{lua-wow}.
 
 Supponiamo di voler scrivere una stored procedure che calcoli un dato statistico aggregato; per
-esempio, dato un insieme ordinato \verb|paying-users| in cui le stringhe sono gli ID degli utenti
-di un sistema, e il punteggio associato è il totale speso dall'utente nell'applicazione, vogliamo
-calcolare qual è la media di spesa degli utenti ``premium'', cioè che hanno speso più di €1000. 
-Per fare questo, è necessario estrarre prima la lista degli utenti ``premium'' tramite il comando
-\verb|ZRANGEBYSCORE|, e poi iterare in questa lista calcolando il valore medio. L'utilizzo di una
-stored precedure ci consente di fare questo senza trasferire sulla rete le informazioni relative
-a tutti gli utenti ``premium'', che potrebbero essere migliaia o anche più. Il sorgente LUA che
-implementa questo semplice algoritmo è mostrato nel seguente listato:
+esempio, dato un insieme ordinato \verb|paying-users| in cui le stringhe sono gli ID degli utenti di
+un sistema, e il punteggio associato è il totale speso dall'utente nell'applicazione, vogliamo
+calcolare qual è la media di spesa degli utenti ``premium'', cioè che hanno speso più di
+\SI{1000}{\EUR}. Per fare questo, è necessario estrarre prima la lista degli utenti ``premium''
+tramite il comando \verb|ZRANGEBYSCORE|, e poi iterare in questa lista calcolando il valore medio.
+L'utilizzo di una stored precedure ci consente di fare questo senza trasferire sulla rete le
+informazioni relative a tutti gli utenti ``premium'', che potrebbero essere migliaia o anche più. Il
+sorgente LUA che implementa questo semplice algoritmo è mostrato nel seguente listato:
 
 \medskip
-\lstinputlisting{code/zsetaverage.lua}
+\lstinputlisting[language={[5.0]lua}]{code/zsetaverage.lua}
 
 Come si nota, il sorgente può essere parametrizzato tramite dei parametri di tipo chiave/valore
 che verranno passati al momento dell'utilizzo; in questo caso, si è scelto di passare come parametro 
