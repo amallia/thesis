@@ -1,0 +1,15 @@
+\chapter{Aggiunta dei filtri di Bloom a Redis}
+
+\section{Obiettivo}
+
+L'obiettivo della modifica a Redis svolta per questa tesi è introdurre il supporto per i filtri di
+Bloom. È stato effettuata prima una fase di progettazione dei nuovi comandi da aggiungere e di
+conseguenza della variante esatta di filtro da implementare; è stata preparata una prima
+implementazione completa di copertura tramite test automatizzati; infine, sono state effettuate
+delle analisi sui parametri di configurazione di default, cercando di studiare il compromesso tra
+utilizzo della memoria, tempo di esecuzione, e probabilità di falsi positivi.
+
+\section{Progettazione dei nuovi comandi}
+
+Nel progettare i nuovi comandi, abbiamo cercato di adeguarci il più possibile allo stile dei
+comandi esistenti, cercando di
