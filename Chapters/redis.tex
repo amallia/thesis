@@ -284,13 +284,16 @@ valanga'').
 	\State $r \gets 24$ \Comment{Costante di shift suggerita}
 
 	\State $hash \gets 0$
-	\ForAll{$k$ \textbf{word in} $msg$}
+	\ForAll{$k$ \textbf{word in} $msg$} \Comment{Funzione di mix principale}
 		\State $k \gets k \times m$
 		\State $k \gets k \oplus (k \gg r)$
 		\State $k \gets k \times m$
 		\State $hash \gets hash \times m$
 		\State $hash \gets hash \oplus k$
 	\EndFor
+	\State $hash \gets hash \oplus (hash \gg r)$ \Comment{Mix di chiusura}
+	\State $hash \gets hash \times m$
+	\State $hash \gets hash \oplus (hash \gg r)$
 	\State \Return $hash$
 \EndProcedure
 \end{algorithmic}
@@ -299,14 +302,13 @@ valanga'').
 MurMurHash2 è considerata oggi obsoleta e sorpassata da MurMurHash3, poiché è stata individuata una
 falla in caso di blocchi di dati identici consecutivi \cite{murmur2flaw}. Infatti, se la chiave
 contiene due blocchi da \SI{32}{\bit} (es: \verb|abcdabcd|), ciascun blocco viene modificato nello
-stesso modo tramite le costanti, e poi mixato al valore di hash tramite un semplice XOR, che
+stesso modo tramite le costanti, e poi mixato al valore di hash tramite un semplice \verb|XOR|, che
 applicato due volte in sequenza provoca una possibile cancellazione di informazione. La
 moltiplicazione del valore di hash per la costante \verb|m| attutisce un po' l'effetto ma non del
 tutto: per esempio, per la costante \verb|0x5bd1e995| utilizzata come default, si può misurare
 sperimentalmente una cancellazione di circa \SI{4.6}{\bit} su \num{32}, che corrisponde quindi a
 collisioni con una probabilità di \num{1} su $2 ^ {27.4}$ invece che l'ottimale \num{1} su $2 ^
 {32}$.
-
 
 \section{Tipologie di oggetti memorizzabili}
 

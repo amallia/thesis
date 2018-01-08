@@ -520,13 +520,13 @@ assimilabile al calcolo di 2 sole funzioni.
 \caption{Generazione di indici tramite hash doppio}
 \label{alg:doublehash}
 \begin{algorithmic}[1]
-\Procedure{DoubleHash}{$x$, $h_a$, $h_b$, $k$}
+\Procedure{DoubleHash}{$x$, $h_a$, $h_b$}
 	\State $a \gets h_a(x)$
 	\State $b \gets h_b(x)$
-	\State $h(0) \gets a$
+	\State $h(0) \gets a \bmod M$
 	\For {$i=1$ \textbf{to} $k-1$}
 		\State $a \gets a+b$
-		\State $h(i) \gets a$
+		\State $h(i) \gets a \bmod M$
 	\EndFor
 	\State \Return $h$
 \EndProcedure
@@ -551,14 +551,14 @@ avanzato''. Volendo derivare matematicamente la formula, otteniamo $$ h_i(x) = h
 \caption{Generazione di indici tramite hash doppio avanzato}
 \label{alg:ehndoublehash}
 \begin{algorithmic}[1]
-\Procedure{EnhancedDoubleHash}{$x$, $h_a$, $h_b$, $k$}
+\Procedure{EnhancedDoubleHash}{$x$, $h_a$, $h_b$}
 	\State $a \gets h_a(x)$
 	\State $b \gets h_b(x)$
-	\State $h(0) \gets a$
-	\For {$i=1$ \textbf{to} $k-1$}
+	\State $h(0) \gets a \bmod M$
+	\For {$i=1$ \textbf{to} $K-1$}
 		\State $a \gets a+b$
 		\State $b \gets b+i$
-		\State $h(i) \gets a$
+		\State $h(i) \gets a \bmod M$
 	\EndFor
 	\State \Return $h$
 \EndProcedure
@@ -832,7 +832,7 @@ Vediamo ora due esempi di derivazione di parametri ottimali.
 
 	$$ M = \num{1024 x 1024 x 8} = \num{8388608} $$
 	$$ N = \num{2000000} $$
-	$$ P = 0.6185 ^ \frac{M}{N} \approx 0.1463 \approx \SI{15}{percent} $$
+	$$ P = 0.6185 ^ \frac{M}{N} \approx 0.1463 \approx \SI{15}{\percent} $$
 	$$ K = \ceil*{-\log_2{P}} = 3 $$
 
 	Quindi possiamo arrivare ad avere circa il \SI{15}{\percent} di falsi positivi utilizzando
