@@ -279,11 +279,12 @@ valanga'').
 \caption{Funzione di hash MurMurHash2}
 \label{alg:murmurhash2}
 \begin{algorithmic}[1]
-\Procedure{MurMurHash2}{$msg$}
+\Procedure{MurMurHash2}{$msg$, $seed$}
 	\State $m \gets \mathtt{0x5bd1e995}$ \Comment{Costante moltiplicativa suggerita}
 	\State $r \gets 24$ \Comment{Costante di shift suggerita}
 
-	\State $hash \gets 0$
+	\State $len \gets \textbf{length of}$ $msg$
+	\State $hash \gets seed \oplus len$
 	\ForAll{$k$ \textbf{word in} $msg$} \Comment{Funzione di mix principale}
 		\State $k \gets k \times m$
 		\State $k \gets k \oplus (k \gg r)$
