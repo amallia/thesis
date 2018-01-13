@@ -9,7 +9,161 @@ implementazione completa di copertura tramite test automatizzati; infine, sono s
 delle analisi sui parametri di configurazione di default, cercando di studiare il compromesso tra
 utilizzo della memoria, tempo di esecuzione, e probabilità di falsi positivi.
 
+\section{Scelta della variante di filtro}
+
+Nella fase iniziale di design, abbiamo comunicato più volte con l'autore di Redis (Salvatore
+Sanfilippo), cercando di stabilire insieme i requisiti che l'implementazione del filtro dovesse
+avere perché la modifica corrispondesse agli standard di Redis.
+
+In particolare, abbiamo identificato i seguenti requisiti:
+
+\begin{itemize}
+	\medskip
+	\item \textbf{Dinamicità}: tutte le strutture dati di Redis sono dinamiche, cioè è possibile
+	aggiungere elementi illimitati, con l'unico vincolo rappresentato dalla memoria a disposizione
+	sul sistema. Nessuna struttura dati richiede un dimensionamento fisso.
+
+	\item \textbf{Scalabilità}: l'utilizzo della memoria deve essere molto contenuto quando la
+	struttura dati contiene pochi elementi, e crescere gradualmente all'aumentare degli elementi.
+	Eventuali preallocazioni devono essere molto limitate. Per esempio, non sarebbe accettabile che
+	il filtro possa occupare \SI{1}{\mega\byte} di RAM alla creazione.
+
+	\item \textbf{Scarsa configurabilità}: Redis cerca di offrire strutture dati che siano
+	preconfigurate con default accettabili per la maggior parte dei casi d'uso, e offre la minima
+	configurabilità necessaria ad operare negli scenari applicativi previsti. In particolare,
+	i filtri di Bloom hanno diversi parametri a disposizione ed è quindi richiesto delle scelte
+	oculate.
+\end{itemize}
+
+Per soddisfare i requisiti, ci siamo orientati su implementare i {filtri di Bloom
+scalabili}~\ref{sec:bloomscalable}, i quali eliminano la necessità di determinare in anticipo il
+dimensionamento della struttura (in termini di byte o di numero di elementi), e la cui crescita
+esponenziale di occupazione della memoria consente una sostanziale scalabilità.
+
+Abbiamo ritenuto essenziale esporre il parametro $P$ di probabilità di falso positivo poiché
+strettamente legato al tipo di scenario applicativo, ma nascondendo all'utente tutti i parametri più
+tecnici (fattore di intensificazione $r$, fattore di crescita $s$, tipologia di funzione di hash).
+Anche per il parametro $P$ ci siamo orientati su offrire un default, rendendo più semplice per
+l'utente iniziare l'utilizzo della struttura dati, anche in fase di sviluppo.
+
 \section{Progettazione dei nuovi comandi}
 
 Nel progettare i nuovi comandi, abbiamo cercato di adeguarci il più possibile allo stile dei
-comandi esistenti, cercando di
+comandi esistenti, cercando di mantenere le proprietà evinte durante la fase di analisi.
+
+Abbiamo scelto il prefisso \verb|BF| per la famiglia di comandi, indicando chiaramente la
+struttura dati che viene manipolata.
+
+Questi sono i comandi implementati:
+
+\begin{itemize}
+	\medskip
+	\item \textbf{BFADD <key> [ERROR p] ELEMENTS <ele1> <ele2> ...}: aggiunge uno o più elementi al
+	filtro di Bloom specificato, creandolo se non già esistente. Restituisce il numero degli
+	elementi che risultavano non presenti al momento dell'inserimento (dato soggetto quindi ad
+	errore).
+
+	L'errore $P$ può essere indicato opzionalmente solo al momento della creazione, cioè del primo
+	inserimento; se viene specificato in un filtro già esistente, e il valore specificato è diverso
+	da quello con cui il filtro è stato creato, il comando restituisce un errore senza effettuare
+	alcun inserimento.
+
+	\item \textbf{BFEXIST <key> <ele>}: Verifica la presenza di un elemento nel filtro specificato
+	(test di appartenenza). Se il filtro non esiste, il comando restituisce falso.
+
+	\item \textbf{BFCOUNT <key>}: Restituisce una stima del numero di elementi inseriti nel filtro.
+	Se il filtro non esiste, il comando restituisce $0$.
+
+	\item \textbf{BFDEBUG}: Restituisce informazioni utili al debugging dell'implementazione del
+	filtro. Questo comando accetta come primo parametro un sotto-comando; al momento, ne sono stati
+	implementati due:
+
+		\begin{itemize}
+		\item \textbf{BFDEBUG STATUS <key>}: Restituisce una stringa che contiene informazioni sullo
+		stato attuale del filtro, e in particolare il numero di filtri presenti nella catena, e
+		l'errore che è stato specificato.
+
+		\item \textbf{BFDEBUG FILTER <key> <idx>}: Restituisce informazioni su uno specifico filtro
+		della catena; il filtro che si vuole ispezionare deve essere specificato come indice 
+		nel parametro \verb|idx|. La stringa restituita mostra il numero di sezioni (o funzioni
+		di hash), la dimensione in bit di una sezione, e il numero di bit impostati a 1.
+		\end{itemize}
+
+\end{itemize}
+
+Si noti come, avendo esposto il solo parametro di probabilità, di fatto i comandi si applicano ad
+una qualunque struttura dati probabilistica che implementa un insieme, consentendo in futuro di
+cambiare implementazione se lo si ritenesse necessario, senza invalidare l'utilizzo da parte dei
+client. I comandi di Redis, infatti, mantengono una retrocompatibilità completa fin dalla prima
+versione, in modo che sia sempre possibile aggiornare il server senza causare problemi ai client.
+
+\section{Esempio d'uso dei comandi}
+
+Vediamo ora un esempio di sessione utilizzando i comandi appena descritti:
+
+\medskip
+\begin{lstlisting}[numbers=left,frame=single,caption=Esempio di utilizzo dei nuovi comandi per i filtri di Bloom]
+127.0.0.1:6379> BFADD prova ELEMENTS a b c d e |\label{line:bfadd}|
+(integer) 5
+127.0.0.1:6379> BFCOUNT prova |\label{line:bfcount}|
+(integer) 5
+127.0.0.1:6379> BFADD prova ELEMENTS f g a |\label{line:bfadd2}|
+(integer) 2
+127.0.0.1:6379> BFCOUNT prova
+(integer) 7
+127.0.0.1:6379> BFEXIST prova b |\label{line:bfexist}|
+(integer) 1
+127.0.0.1:6379> BFEXIST prova z
+(integer) 0
+127.0.0.1:6379> BFDEBUG STATUS prova |\label{line:bfdebugstatus}|
+"n:1 e:0.003"
+127.0.0.1:6379> BFDEBUG FILTER prova 0 |\label{line:bfdebugfilter}|
+"k:11 s:1798 b:77"
+\end{lstlisting}
+
+Per cominciare, alla linea~\ref{line:bfadd} viene creato un filtro chiamato \verb|prova| in cui
+vengono inseriti 5 elementi (ciascun elemento è una stringa di un solo carattere, corrispondenti
+alle prime cinque lettere dell'alfabeto). Il comando restituisce il valore $5$, corrispondente al
+numero di elementi inseriti. Alla linea~\ref{line:bfcount}, viene effettuato un calcolo della 
+cardinalità stimata, che restituisce il valore corretto $5$.
+
+Alla linea~\ref{line:bfadd2} viene fatto un secondo inserimento; questa volta, oltre a due
+elementi nuovi (stringhe \verb|f| e \verb|g|), viene inserito anche un elemento che era stato
+già precedentemente inserito: la lettera \verb|a|. Il comando restituisce $2$, riportando
+correttamente il numero di nuovi elementi inseriti, e anche il successivo calcolo della
+cardinalità è corretto, poiché restituisce $7$
+
+Alla linea~\ref{line:bfexist} viene effettuato un primo test di appartenenza al filtro tramite
+il comando \verb|BFEXIST|, richiedendo
+se l'elemento corrispondente alla stringa \verb|b| è presente; l'elemento era stato inserito
+precedentemente (linea~\ref{line:bfadd}), ed infatti il comando restituisce correttamente $1$ per
+indicare che l'elemento è presente. Successivamente, viene effettuato un secondo test con
+l'elemento \verb|z| che non era stato mai inserito, e il comando questa volta restituisce $0$.
+
+Alla linea~\ref{line:bfdebugstatus} viene usato il comando \verb|BFDEBUG STATUS| per ispezionare lo
+stato del filtro. La stringa restituita è composta da due valori:
+
+\medskip
+\begin{tabular}{ |l|l|p{280px}| }
+  \hline
+  $n$ & $1$ & La catena del filtro scalabile contiene un solo filtro \\
+  $e$ & $0.003$ & La probabilità di falsi positivi è impostata a \SI{0.3}{\percent} \\
+  \hline
+\end{tabular}
+\medskip
+
+Alla linea ~\ref{line:bfdebugfilter}, viene eseguito il comando \verb|BFDEBUG FILTER| per
+ispezionare lo stato del primo filtro della catena. La stringa restituita contiene tre valori:
+
+\medskip
+\begin{tabular}{ |l|l|p{280px}| }
+  \hline
+  $k$ & $11$ & Il filtro utilizza $11$ funzioni di hash, cioè è diviso in $11$ sezioni \\
+  $s$ & $1798$ & Ciascuna sezione è formata da \SI{1798}{\bit}, per un totale di $\num{1798 x 11} =
+  \SI{19778}{\bit}$ \\
+  $b$ & $77$ & Al momento ci sono \SI{77}{\bit} impostati a $1$. Questo corrisponde infatti a $7$
+  elementi inseriti con $11$ funzioni di hash, e senza che si sia verificata alcuna collisione. \\
+  \hline
+\end{tabular}
+\medskip
+
