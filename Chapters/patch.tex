@@ -25,7 +25,7 @@ In particolare, abbiamo identificato i seguenti requisiti:
 
 	\item \textbf{Scalabilità}: l'utilizzo della memoria deve essere molto contenuto quando la
 	struttura dati contiene pochi elementi, e crescere gradualmente all'aumentare degli elementi.
-	Eventuali preallocazioni devono essere molto limitate. Per esempio, non sarebbe accettabile che
+	Eventuali pre-allocazioni devono essere molto limitate. Per esempio, non sarebbe accettabile che
 	il filtro possa occupare \SI{1}{\mega\byte} di RAM alla creazione.
 
 	\item \textbf{Scarsa configurabilità}: Redis cerca di offrire strutture dati che siano
@@ -166,4 +166,204 @@ ispezionare lo stato del primo filtro della catena. La stringa restituita contie
   \hline
 \end{tabular}
 \medskip
+
+\section{Analisi delle modifiche effettuate}
+\label{sec:patchexplain}
+
+Le modifiche effettuate a Redis sono disponibili su GitHub, all'interno del
+\href{https://github.com/rasky/redis/tree/bloomfilter}{repositorio fork di Redis}, in un branch
+chiamato \verb|bloomfilter|, e la parte principale del codice è riportata anche
+nell'Appendice~\ref{sec:modredis}).
+
+\lstset{
+	language=C,
+	rangeprefix=/*\ ---------\ ,
+	rangesuffix=\ ---------\ */,
+	includerangemarker=false,
+	escapeinside={/*@}{*/},
+	numbers=left	
+}
+
+\subsection{Strutture dati}
+
+Nel file \verb|bloom.h| vengono definite le due strutture dati principali:
+
+\lstinputlisting[caption=Strutture dati,linerange=Structures-End\ structures]{code/bloom.h}
+
+La struttura \verb|bloom| rappresenta l'intero filtro scalabile. I suoi campi sono
+così definiti:
+
+\medskip
+\begin{tabular}{ |l|l|p{280px}| }
+  \hline
+  \verb|e| & \verb|double| & La probabilità richiesta di un falso positivo. Questo è il valore richiesto
+  dall'utente, che il filtro cercherà di rispettare come margine superiore. \\
+
+  \verb|numfilters| & \verb|int| & Numero di filtri presenti nella catena. \\
+
+  \verb|first| & \verb|filter*| & Puntatore alla testa della lista concatenata di filtri. \\
+  \hline
+\end{tabular}
+\medskip
+
+Come si evince, i filtri sono conservati in una lista a catena singola, e il campo \verb|first|
+contiene il puntatore alla testa. La scelta di una lista per l'implementazione della catena di
+filtri semplifica l'implementazione ed è compatibile con gli algoritmi che la utilizzano poiché
+molto spesso è richiesto di attraversare l'intera catena, mentre per esempio l'accesso casuale non è
+mai richiesto.
+
+Ciascun filtro è rappresentato dalla struttura \verb|filter|, definita dai seguenti campi:
+
+\medskip
+\begin{tabular}{ |l|l|p{280px}| }
+  \hline
+
+  \verb|next| & \verb|filter*| & Puntatore all'elemento successivo nella lista \\
+
+  \verb|k| & \verb|uint32| & Numero di funzioni di hash (e dunque di partizioni) \\
+
+  \verb|b| & \verb|uint64| & Numero di bit attualmente impostati a $1$, considerando tutte le partizioni \\
+
+  \verb|s| & \verb|uint64| & Dimensione di ciascuna partizione in bit. L'utilizzo di memoria
+  effettivo è $\ceil{s/7}$ \\
+
+  \verb|bmax| & \verb|uint64| & Numero di bit che possono essere impostati al massimo a $1$ prima
+  che venga raggiunta la densità scelta come obiettivo (tipicamente, \SI{50}{\percent}). \\
+
+  \verb|parts| & \verb|uint8*[]| & Array di puntatori alle partizioni. \\
+
+  \hline
+\end{tabular}
+\medskip
+
+Si noti che l'array \verb|parts| è definito a dimensione variabile (anche detto \emph{array
+flessibile}), utilizzando la funzionalità introdotta nello standard C99 che consente all'ultimo
+membro di una struttura, se array, di avere una dimensione non dichiarata staticamente, ma gestita
+dinamicamente al momento di allocare la struttura stessa sullo heap. Poiché la dimensione dell'array
+è pari a \verb|k| e non cambia mai dopo l'inizializzazione della struttura, questa scelta consente
+di allocare la struttura \verb|filter| e l'array di puntatori dinamico con una sola allocazione.
+
+\subsection{Parametri di configurazione statici}
+
+All'inizio del file \verb|bloom.c|, troviamo alcune costanti di configurazione per le quali si è
+preferito non esporre una configurazione a livello utente.
+
+\lstinputlisting[caption=Parametri statici,linerange=Static\ parameters-End\ of\ static\ parameters]{code/bloom.c}
+
+Questa la descrizione dettagliata di ciascun parametro:
+
+\medskip
+\begin{itemize}
+  \item \verb|CONFIG_BLOOM_BASESIZE| (\SI{2048}{\byte}). Dimensione iniziale in byte del primo
+  filtro della catena. La dimensione è stata calcolata tenendo conto di un bilanciamento tra uso
+  della memoria, crescita del numero di filtri nella catena, e velocità (vedi il
+  Capitolo~\ref{sec:patch:basesize}).
+
+  \item \verb|CONFIG_BLOOM_DEFAULTERROR| ($\SI{0.3}{\percent}$). Probabilità di default di falso
+  positivo a cui il filtro scalabile tende asintoticamente. La scelta del valore cerca di
+  massimizzare i casi d'uso in cui il filtro può essere usato con successo (vedi il
+  Capitolo~\ref{sec:patch:defaulterror}).
+
+  \item \verb|CONFIG_BLOOM_DESIREDFILLRATIO| ($\SI{50}{\percent}$). Valore di densità massimo dei filtri
+  nella catena; quando il filtro in fondo alla catena (l'unico su cui si inseriscono nuovi elementi)
+  raggiunge questa densità, un nuovo filtro viene creato. Il valore ottimizza l'uso dei filtri di
+  Bloom, come visto nel Capitolo~\ref{sec:bloomparms}.
+
+  \item \verb|CONFIG_BLOOM_ITEMGROWTHRATIO| ($\num{2.0}$). Fattore di crescita dei filtri
+  all'interno della catena. Come visto nel Capitolo~\ref{sec:bloomscalable} dove è chiamato
+  $s$, questo fattore delinea una progressione geometrica che consente di adattare la crescita del
+  filtro all'aumentare del numero di elementi inseriti senza creare una catena troppo lunga
+  né sprecando troppa memoria.
+
+  \item \verb|CONFIG_BLOOM_TIGHTENINGRATIO| ($\num{0.85}$). Fattore di intensificazione, applicato
+  per creare una progressione geometrica tra le probabilità di falsi positivi dei filtri all'interno
+  della catena, come descritto nel Capitolo~\ref{sec:bloomscalable}. Il valore ottimale è indicato
+  essere compreso in $\interval{0.8}{0.9}$ in \cite{bloomscalable}.
+
+\end{itemize}
+\medskip
+
+\subsection{Creazione e distruzione di un filtro}
+
+La creazione e distruzione di un intero filtro scalabile è implementata dalle seguenti funzioni:
+
+\lstinputlisting[caption=Creazione e distruzione di un filtro scalabile,linerange=Bloom\ constructors-End\ of\ bloom\ constructors]{code/bloom.c}
+
+La funzione \verb|bloomNew| alloca una struttura di tipo \verb|bloom| sullo heap, utilizzando la
+funzione \verb|zmalloc|, una funzione interna di Redis che implementa un sottile strato di codice
+sopra l'allocatore standard per tracciare l'occupazione totale di memoria e fornire informazioni
+utili a livello statistico e per debugging. 
+
+Si noti che al momento di creare il filtro scalabile, alla linea~\ref{line:noallocfilter} la catena
+viene lasciata completamente vuota: ritardando la creazione del primo filtro della catena
+all'inserimento del primo elemento, è possibile infatti accorgersi velocemente se, in un dato
+momento, è stato mai inserito un elemento, caratteristica utile alla corretta implementazione del
+comando \verb|BFADD| che deve discriminare il primo inserimento per permettere la configurazione del
+parametro di errore.
+
+La funzione \verb|bloomRelease| rilascia la memoria allocata dall'intero filtro scalabile, percorrendo
+la catena e chiamando la funzione di distruzione di ciascun filtro, terminando poi rilasciando la
+memoria occupata dalla struttura del filtro stessa.
+
+\lstinputlisting[caption=Creazione e distruzione di un filtro,linerange=Filter\ constructors-End\ of\ filter\ constructors]{code/bloom.c}
+
+La funzione \verb|bloomFilterNew| riceve in input un filtro scalabile e ritorna un filtro appena
+creato con i parametri adatti ad essere l'ultimo filtro della catena.
+
+Il calcolo dei parametri del filtro ricalca quanto visto nel Capitolo~\ref{sec:bloomparms} e nel
+Capitolo~\ref{sec:bloomscalable}. Alla linea~\ref{line:allocmem}, si può notare come la memoria
+allocata tenga conto dell'array flessibile delle sezioni, lasciando lo spazio per il giusto numero
+di puntatori (uno per sezione). Nel ciclo successivo, alla linea~\ref{line:filterloopalloc}, vengono
+allocate invece le singole sezioni ed inizializzate a $0$.
+
+\subsection{Aggiunta di un elemento al filtro}
+
+Vediamo ora come viene aggiunto un elemento ad un filtro. Una prima funzione \verb|bloomAdd| si
+occupa di individuare il filtro giusto all'interno della catena:
+
+\lstinputlisting[caption=Aggiunta elemento ad un filtro scalabile,linerange=bloomAdd-End\ of\ bloomAdd]{code/bloom.c}
+
+Se la catena è vuota, viene immediatamente creato il primo filtro. Altrimenti, si percorre la catena
+fino ad arrivare all'ultimo filtro, l'unico dentro cui è possibile aggiungere elementi (poiché tutti
+gli altri avranno già raggiunto la densità massima); se anche esso ha superato la densità massima 
+configurata, viene aggiunto un nuovo filtro vuoto in fondo alla catena, usando \verb|bloomFilterNew|.
+
+\lstinputlisting[caption=Aggiunta elemento ad un filtro,linerange=bloomFilterAdd-End\ of\ bloomFilterAdd]{code/bloom.c}
+
+La funzione \verb|bloomFilterAdd| effettua invece l'inserimento vero e proprio, secondo
+l'Algoritmo~\ref{alg:bloominsert} visto nel Capitolo~\ref{sec:bloom:add}.
+
+Per le funzioni di hash, viene utilizzato l'Algoritmo~\ref{alg:ehndoublehash} di doppio hash
+avanzato, visto nel Capitolo~\ref{sec:bloom:hash}. L'algoritmo richiede in partenza due funzioni di
+hash ($h_a$ e $h_b$): nell'implementazione viene utilizzata la funzione di hash
+\verb|MurmurHash64A|, una variante a \SI{64}{\bit} della funzione MurMurHash2
+(Algoritmo~\ref{alg:murmurhash2}). Di questa funzione, è presente già un'implementazione dentro il
+codice sorgente di Redis, e poiché l'output è a \SI{64}{\bit}, consideriamo la suddivisione in due
+valori a \SI{32}{\bit} come l'output di due funzioni di hash separate, ottenendo così i due valori
+\verb|a| e \verb|b| utili come input per l'algoritmo di doppio hash avanzato. La funzione
+\verb|MurMurHash64A| viene chiamata con un seme causale, calcolato in fase di sviluppo
+(\verb|0xc5fb9af2|).
+
+Il calcolo del doppio hash, in formato iterativo, avviene alla linea~\ref{line:doublehash}, secondo
+quanto visto nell'Algoritmo~\ref{alg:ehndoublehash}. Successivamente, alla
+linea~\ref{line:hashreduction}, viene effettuata una riduzione dell'output della funzione di hash
+all'interno del dominio scelto. Invece del classico algoritmo di riduzione $idx = hash \bmod s$ (con
+$s$ dimensione in bit della sezione), utilizziamo la formula $idx = hash \times s / 2^{32}$ che
+effettua comunque la riduzione richiesta, considerando che $index \in \interval[open
+right]{0}{2^{32}}$, ma senza richiedere una divisione, che anche nei moderni processori ha una latenza
+elevata (circa $26$ cicli, contro i $4$ di una moltiplicazione). Si veda \cite{lemirereduction} per
+i dettagli relativi a questa formula di riduzione.
+
+Alla linea~\label{line:togglebit}, viene impostato a $1$ il bit corrispondente all'indice calcolato,
+dopo aver verificato il suo stato corrente e aver potuto incrementare così un contatore dei bit che
+cambiando di stato (\verb|nbits|).
+
+\subsection{Scelta della dimensione del primo filtro}
+\label{sec:patch:basesize}
+
+
+\subsection{Scelta della probabilità di falso positivo di default}
+\label{sec:patch:defaulterror}
+
+
 

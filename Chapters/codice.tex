@@ -9,14 +9,14 @@
 Il seguente listato mostra una stored procedure scritta in LUA che dato un insieme ordinato
 \verb|paying-users| in cui le stringhe sono gli ID degli utenti di un sistema, e il punteggio
 associato è il totale speso dall'utente nell'applicazione, calcola qual è la media di spesa degli
-utenti ``premium'', cioè che hanno speso più di €1000.
+utenti ``premium'', cioè che hanno speso più di \SI{1000}{\EUR}.
 
 Si veda \ref{redislua} per maggiori informazioni.
 
 \sourcecode[language={[5.0]Lua}]{code/zsetaverage.lua}
 
 
-\section{Calcolo dell'errore di cardinalit\'a di un filtro di Bloom}
+\section{Calcolo dell'errore di cardinalit\`a di un filtro di Bloom}
 
 Il seguente listato effettua una simulazione di calcolo dell'errore di cardinalità in un filtro
 di Bloom di 8192 bit, con 2 funzioni di hash.
@@ -35,4 +35,14 @@ Si veda \ref{sec:bloomparms} per maggiori informazioni.
 \sourcecode[language=Python]{code/bloomparms1.py}
 \sourcecode[language=Python]{code/bloomparms2.py}
 
+
+\section{Modifica al database Redis}
+\label{sec:modredis}
+
+I seguenti listati mostrano la parte principale della modifica al database Redis:
+l'implementazione del filtro di Bloom. Si veda \ref{sec:patchexplain} per una
+descrizione dettagliata di questo codice.
+
+\sourcecode[language=C,escapeinside={@}{@}]{code/bloom.h}
+\sourcecode[language=C,escapeinside={@}{@}]{code/bloom.c}
 

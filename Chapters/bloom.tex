@@ -300,6 +300,7 @@ vuoto composto di 11 bit:
 \end{center}
 
 \subsection{Inserimento di un elemento}
+\label{sec:bloom:add}
 
 L'inserimento di un elemento $X$ (algoritmo~\ref{alg:bloominsert}) avviene calcolando alcune
 funzioni di hash $h_i(X)$ prestabilite sull'elemento (il numero delle funzioni, chiamato $K$, è
@@ -479,6 +480,7 @@ l'elemento $F$ non era stato precedentemente inserito nel filtro.
 
 
 \subsection{Scelta delle funzioni di hash}
+\label{sec:bloom:hash}
 
 Come abbiamo visto, ogni filtro richiede l'utilizzo di un certo numero $K$ di funzioni di hash; la
 scelta del valore ideale per $K$ verrà analizzata in \ref{sec:bloomparms}, ma non è inusuale
@@ -488,7 +490,7 @@ Le caratteristiche richieste per una funzione di hash utilizzata in un filtro so
 ricercano quando la funzione viene utilizzata in una tabella hash, cioè l'uniformità e il
 determinismo. In particolare, non è strettamente necessario utilizzare una funzione crittografica di
 hash, che garantisce anche altre proprietà come la non reversibilità e la resistenza ad attacchi
-quali la collisione e la preimmagine, sebbene ovviamente ci sono scenari applicativi
+quali la collisione e la pre-immagine, sebbene ovviamente ci sono scenari applicativi
 (come in \ref{sec:bloomcdn}) in cui una funzione di hash banalmente soggetta a ricerca di collisione
 potrebbe causare attacchi di tipo avvelenamento della cache con possibili \emph{denial of service}.
 Anche il parametro della velocità di esecuzione deve essere tenuto in considerazione, e tipicamente
@@ -607,7 +609,7 @@ vedere, l'errore effettuato dalla stima non diverge anche per valori di densità
 	\centering
 
 	\begin{subfigure}[t]{280px}
-	\centering\includegraphics[width=280px]{bloom_card_error_1h}
+	\centering\includegraphics[width=280px]{../img/bloom_card_error_1h}
 	\subcaption{M=8192, K=1}
 	\end{subfigure}
 
