@@ -75,7 +75,7 @@ Un'implementazione classica di un'insieme prevede l'utilizzo di una tabella hash
 di un elemento avviene codificandolo con una funzione hash, memorizzandolo all'interno della
 tabella, gestendo in modo opportuno le collisioni; il test di appartenenza può essere fatto così in
 modo efficiente effettuando una ricerca nella tabella hash. Entrambe queste operazioni così 
-implementate richiedono quindi un tempo d'esecuzione ammortizzato costante (\verb|O(k)|).
+implementate richiedono quindi un tempo d'esecuzione ammortizzato costante ($\mathcal{O}(k)$).
 
 Al contrario di un array associativo, un insieme non ha dati associati all'elemento stesso, ma
 nonostante questo è spesso possibile riutilizzare la stessa implementazione di tabella hash,
@@ -797,14 +797,20 @@ esattamente al 50\%, cioè metà dei bit è impostato a 1.
 Sostituendo quindi $p=0.5$ come valore ottimo, otteniamo:
 
 $$ N \approx -M\frac{\ln(0.5)^2}{\ln(P)} $$
-$$ N \approx \ceil*{M\frac{0.480453014}{|\ln(P)|}} $$
+\begin{equation} \label{eq:bloomn}
+N \approx \ceil*{M\frac{0.480453014}{|\ln(P)|}}
+\end{equation}
 
 che ci permette di calcolare il numero di elementi memorizzabili in un filtro prima di raggiungere
 la densità di 0.5 e dunque la probabilità $P$ di falsi positivi richiesta. Oppure, ricavando
 le altre variabili:
 
-$$ M = \ceil*{n\frac{|\ln(P)|}{0.480453014}} $$
-$$ P = e^{-\ln(0.5)^2\frac{M}{N}} = 0.5^{\ln(2)\frac{M}{N}} \approx 0.6185^{\frac{M}{N}} $$
+\begin{equation} \label{eq:bloomm}
+M = \ceil*{n\frac{|\ln(P)|}{0.480453014}} 
+\end{equation}
+\begin{equation} \label{eq:bloomp}
+P = e^{-\ln(0.5)^2\frac{M}{N}} = 0.5^{\ln(2)\frac{M}{N}} \approx 0.6185^{\frac{M}{N}}
+\end{equation}
 
 possiamo calcolare la dimensione ottimale di un filtro dato il numero di elementi che si vuole
 memorizzare e la probabilità di falsi positivi attesa, oppure ancora i falsi positivi attesi
@@ -812,7 +818,9 @@ data la dimensione di un filtro e il numero di elementi inseriti.
 
 Inoltre, da $P = p^k$, sostituendo nuovamente $p=0.5$, possiamo ricavare:
 
-$$ K = \ceil*{\log_2{\frac{1}{P}}} = \ceil*{-\log_2{P}} $$
+\begin{equation} \label{eq:bloomk}
+ K = \ceil*{\log_2{\frac{1}{P}}} = \ceil*{-\log_2{P}}
+\end{equation}
 
 con cui calcolare il numero ottimale di funzioni di hash per un data probabilità attesa di falso
 positivo.
@@ -894,7 +902,9 @@ Ricavando $P_0$, possiamo calcolare il valore di probabilità di falsi positivi 
 il primo filtro della catena, in base al fattore di intensificazione $r$ e la probabilità finale
 attesa $P$:
 
-$$ P_0 = (1-r)P $$
+\begin{equation} \label{eq:p0fromp}
+P_0 = (1-r)P
+\end{equation}
 
 Possiamo anche calcolare il numero ottimale di funzioni di hash che deve usare ogni filtro nella
 catena:

@@ -1,0 +1,131 @@
+
+% Nessun testo che esce dal paragrafo
+\tolerance=10000
+
+% Vari pacchetti utilizzati
+\usepackage{interval}  % Gestione intervalli aperti/chiusi
+\usepackage{colortbl}  % Tabelle con celle colorate
+\usepackage[binary-units]{siunitx}  % Unità di misura
+\usepackage{algorithm,algpseudocode}  % Algoritmi in pseudo-codice
+\usepackage{pifont}  % numeri cerchiati su sfondo nero
+
+% Definisci \EUR come unità di misura con il simbolo dell'euro
+\usepackage{eurosym}  
+\DeclareSIUnit{\EUR}{\text{\euro}}
+
+% Definisci \ceil per fare il ceiling 
+\usepackage{mathtools} 
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+
+% Supporto per UTF-8 nei listati
+% Non usiamo il pacchetto listingutf8 e inputencoding=utf-8 perché
+% rallenta la compilazione (di minuti...)
+\lstset{literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+  {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+  {ű}{{\H{u}}}1 {Ű}{{\H{U}}}1 {ő}{{\H{o}}}1 {Ő}{{\H{O}}}1
+  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+  {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
+  {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1
+}
+
+% Colore di sfondo (definito da xcolor, copiato qui), usato
+% per lo sfondo dei listati.
+\definecolor{LemonChiffon1}{RGB}{255,250,205}
+
+% Configurazione estetica di default dei listati
+\lstset{
+  stepnumber=1,
+  frame=tb,
+  framexleftmargin=0.5em,
+  framexrightmargin=0.5em,
+  aboveskip=3mm,
+  belowskip=3mm,
+  columns=flexible,
+  stringstyle=\color{red},
+  basicstyle=\ttfamily\footnotesize,
+  tabsize=4,
+  backgroundcolor=\color{LemonChiffon1},
+}
+
+% Definzione della colorazione per le sessioni Redis
+\lstdefinelanguage{Redis}{
+  morekeywords={
+    OK, QUEUED,
+    SET, GET, DEL, STRLEN, INCR, INCRBY, DECRBY, GETRANGE, APPEND,
+    RPUSH, LINDEX, LPOP, LLEN, LINSERT, LRANGE,
+    HSET, HMSET, HLEN, HGET, HGETALL, HKEYS, HVALS, HEXISTS,
+    SADD, SISMEMBER, SREM, SCARD, SDIFF, SINTER,
+    ZADD, ZCARD, ZSCORE, ZRANGE, ZREVRANGE, ZRANGEBYSCORE, ZINCRBY, ZREM,
+    PFADD, PFCOUNT, 
+    SCRIPT, LOAD,
+    EVALSHA,
+    WATCH, MULTI, EXEC,
+    EXPIREAT, TTL, PTTL, PEXPIRE,
+    BFADD, BFCOUNT, BFEXIST, ELEMENTS, ERROR, BFDEBUG, STATUS, FILTER,
+  }, 
+  sensitive=true,
+  moredelim=[s][\color{Maroon}\itshape]{127}{>},
+  morestring=[b]", 
+}
+
+\lstnewenvironment{redis}[1][]
+  {\lstset{
+    language=Redis,
+    escapechar=|,
+    #1
+  }}{}
+
+\lstdefinestyle{redis}{
+    language=Redis,
+    escapechar=|,
+}
+
+\lstdefinestyle{csource}{
+    language=C,
+    rangeprefix=/*\ ---------\ ,
+    rangesuffix=\ ---------\ */,
+    includerangemarker=false,
+    escapeinside={/*@}{@*/},
+    numbers=left,
+}
+
+% Macro per caricare un listato da file, inserendo come caption il suo nome
+\newcommand{\sourcecode}[2][]{%
+    \lstinputlisting[
+      caption={\texttt{\detokenize{#2}}},
+      basicstyle=\ttfamily\scriptsize, % un po' più piccolo, visto che è l'intero file
+      #1
+    ]{#2}%
+}
+
+% Sistema di macro per commentare il codice sorgente, aggiungendo dei riferimenti
+% progressivi numerici a margine per indicare specifiche linee del codice.
+% https://zuttobenkyou.wordpress.com/2010/12/05/latex-saner-source-code-listings-no-starch-press-style/
+\newcounter{lstNoteCounter}
+\newcommand{\lnnum}[1]
+    {\raisebox{-.1ex}
+    {\ifthenelse{#1 =  1}{\ding{182}}
+    {\ifthenelse{#1 =  2}{\ding{183}}
+    {\ifthenelse{#1 =  3}{\ding{184}}
+    {\ifthenelse{#1 =  4}{\ding{185}}
+    {\ifthenelse{#1 =  5}{\ding{186}}
+    {\ifthenelse{#1 =  6}{\ding{187}}
+    {\ifthenelse{#1 =  7}{\ding{188}}
+    {\ifthenelse{#1 =  8}{\ding{189}}
+    {\ifthenelse{#1 =  9}{\ding{190}}
+    {\ifthenelse{#1 = 10}{\ding{191}}
+    {NUM TOO HIGH}}}}}}}}}}}}
+\newcommand*{\lnote}{\stepcounter{lstNoteCounter}\vbox{\llap{{\large\lnnum{\thelstNoteCounter}}\hskip 1em}}}
+
+\lstnewenvironment{commentedsource}[1][]{
+    \setcounter{lstNoteCounter}{0}
+    \lstset{#1,numbers=none}
+}{}

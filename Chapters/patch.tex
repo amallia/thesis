@@ -102,46 +102,45 @@ versione, in modo che sia sempre possibile aggiornare il server senza causare pr
 Vediamo ora un esempio di sessione utilizzando i comandi appena descritti:
 
 \medskip
-\begin{redis}[numbers=left,caption=Esempio di utilizzo dei nuovi comandi per i filtri di Bloom]
-127.0.0.1:6379> BFADD prova ELEMENTS a b c d e |\label{line:bfadd}|
+\begin{commentedsource}[style=redis,caption=Esempio di utilizzo dei nuovi comandi per i filtri di Bloom]
+|\lnote|127.0.0.1:6379> BFADD prova ELEMENTS a b c d e
 (integer) 5
-127.0.0.1:6379> BFCOUNT prova |\label{line:bfcount}|
+|\lnote|127.0.0.1:6379> BFCOUNT prova
 (integer) 5
-127.0.0.1:6379> BFADD prova ELEMENTS f g a |\label{line:bfadd2}|
+|\lnote|127.0.0.1:6379> BFADD prova ELEMENTS f g a
 (integer) 2
 127.0.0.1:6379> BFCOUNT prova
 (integer) 7
-127.0.0.1:6379> BFEXIST prova b |\label{line:bfexist}|
+|\lnote|127.0.0.1:6379> BFEXIST prova b
 (integer) 1
 127.0.0.1:6379> BFEXIST prova z
 (integer) 0
-127.0.0.1:6379> BFDEBUG STATUS prova |\label{line:bfdebugstatus}|
+|\lnote|127.0.0.1:6379> BFDEBUG STATUS prova
 "n:1 e:0.003"
-127.0.0.1:6379> BFDEBUG FILTER prova 0 |\label{line:bfdebugfilter}|
+|\lnote|127.0.0.1:6379> BFDEBUG FILTER prova 0
 "k:11 s:1798 b:77"
-\end{redis}
+\end{commentedsource}
 
-Per cominciare, alla \autoref{line:bfadd} viene creato un filtro chiamato \verb|prova| in cui
-vengono inseriti 5 elementi (ciascun elemento è una stringa di un solo carattere, corrispondenti
-alle prime cinque lettere dell'alfabeto). Il comando restituisce il valore $5$, corrispondente al
-numero di elementi inseriti. Alla \autoref{line:bfcount}, viene effettuato un calcolo della 
-cardinalità stimata, che restituisce il valore corretto $5$.
+Per cominciare, viene creato un filtro chiamato \verb|prova| \lnnum{1} in cui vengono inseriti 5
+elementi (ciascun elemento è una stringa di un solo carattere, corrispondenti alle prime cinque
+lettere dell'alfabeto). Il comando restituisce il valore $5$, corrispondente al numero di elementi
+inseriti. Viene poi effettuato un calcolo della cardinalità stimata \lnnum{2}, che
+restituisce il valore corretto $5$.
 
-Alla \autoref{line:bfadd2} viene fatto un secondo inserimento; questa volta, oltre a due
+Successivamente, viene fatto un secondo inserimento \lnnum{3}; questa volta, oltre a due
 elementi nuovi (stringhe \verb|f| e \verb|g|), viene inserito anche un elemento che era stato
 già precedentemente inserito: la lettera \verb|a|. Il comando restituisce $2$, riportando
 correttamente il numero di nuovi elementi inseriti, e anche il successivo calcolo della
-cardinalità è corretto, poiché restituisce $7$
+cardinalità è corretto, poiché restituisce $7$.
 
-Alla \autoref{line:bfexist} viene effettuato un primo test di appartenenza al filtro tramite
-il comando \verb|BFEXIST|, richiedendo
-se l'elemento corrispondente alla stringa \verb|b| è presente; l'elemento era stato inserito
-precedentemente (\autoref{line:bfadd}), ed infatti il comando restituisce correttamente $1$ per
-indicare che l'elemento è presente. Successivamente, viene effettuato un secondo test con
-l'elemento \verb|z| che non era stato mai inserito, e il comando questa volta restituisce $0$.
+Poi viene effettuato un primo test di appartenenza al filtro tramite il comando \verb|BFEXIST|
+\lnnum{4}, richiedendo se l'elemento corrispondente alla stringa \verb|b| è presente; l'elemento era
+stato inserito precedentemente \lnnum{1}, ed infatti il comando restituisce correttamente $1$ per
+indicare che l'elemento è presente. Successivamente, viene effettuato un secondo test con l'elemento
+\verb|z| che non era stato mai inserito, e il comando questa volta restituisce $0$.
 
-Alla \autoref{line:bfdebugstatus} viene usato il comando \verb|BFDEBUG STATUS| per ispezionare lo
-stato del filtro. La stringa restituita è composta da due valori:
+Il comando \verb|BFDEBUG STATUS| viene usato per ispezionare lo
+stato del filtro \lnnum{5}. La stringa restituita è composta da due valori:
 
 \medskip
 \begin{tabular}{ |l|l|p{280pt}| }
@@ -152,8 +151,8 @@ stato del filtro. La stringa restituita è composta da due valori:
 \end{tabular}
 \medskip
 
-Alla \autoref{line:bfdebugfilter}, viene eseguito il comando \verb|BFDEBUG FILTER| per
-ispezionare lo stato del primo filtro della catena. La stringa restituita contiene tre valori:
+Per finire, il comando \verb|BFDEBUG FILTER| serve a ispezionare lo stato del primo filtro della
+catena \lnnum{6}. La stringa restituita contiene tre valori:
 
 \medskip
 \begin{tabular}{ |l|l|p{280pt}| }
@@ -173,22 +172,28 @@ ispezionare lo stato del primo filtro della catena. La stringa restituita contie
 Le modifiche effettuate a Redis sono disponibili su GitHub, all'interno del
 \href{https://github.com/rasky/redis/tree/bloomfilter}{repositorio fork di Redis}, in un branch
 chiamato \verb|bloomfilter|, e la parte principale del codice è riportata anche
-nella \autoref{sec:modredis}).
-
-\lstset{
-	language=C,
-	rangeprefix=/*\ ---------\ ,
-	rangesuffix=\ ---------\ */,
-	includerangemarker=false,
-	escapeinside={/*@}{*/},
-	numbers=left,
-}
+nella \autoref{sec:modredis}.
 
 \subsection{Strutture dati}
 
 Nel file \verb|bloom.h| vengono definite le due strutture dati principali:
 
-\lstinputlisting[caption=Strutture dati,linerange=Structures-End\ structures]{code/bloom.h}
+\begin{commentedsource}[style=csource,caption=Strutture dati]
+typedef struct filter {
+    struct filter *next;  /* next filter in chain */
+    uint64_t s;           /* size of each partition in bits */
+    uint64_t b;           /* number of bits set in this filter */
+    uint64_t bmax;        /* maximum number of bits that should be set */
+    uint32_t k;           /* number of partitions */
+    uint8_t *parts[];
+} filter;
+
+typedef struct bloom {
+	double e;             /* requested false positive probability */
+	int numfilters;       /* number of filters in the chain */
+	filter *first;        /* first filter in the chain */
+} bloom;
+\end{commentedsource}
 
 La struttura \verb|bloom| rappresenta l'intero filtro scalabile. I suoi campi sono
 così definiti:
@@ -248,7 +253,27 @@ di allocare la struttura \verb|filter| e l'array di puntatori dinamico con una s
 All'inizio del file \verb|bloom.c|, troviamo alcune costanti di configurazione per le quali si è
 preferito non esporre una configurazione a livello utente.
 
-\lstinputlisting[caption=Parametri statici,linerange=Static\ parameters-End\ of\ static\ parameters]{code/bloom.c}
+\begin{commentedsource}[style=csource,caption=Parametri statici]
+/* Initial desired size of the bloom filter (in bytes). */
+#define CONFIG_BLOOM_BASESIZE 2048 
+
+/* Default false-positive error rate */
+#define CONFIG_BLOOM_DEFAULTERROR 0.003
+
+/* Fill ratio of a filter before it is considered full. We also call this P */
+#define CONFIG_BLOOM_DESIREDFILLRATIO 0.5
+
+/* Desired growth for items, for each new allocated filter.
+ * Default is 2.0, which means that each new filter should hold
+ * twice as many items as the previous one. */
+#define CONFIG_BLOOM_ITEMGROWTHRATIO 2.0
+
+/* Desired tightening ratio for false-positive error.
+ * Each new filter must have a tighten error ratio compared to
+ * the previous one, to asymptotically approach the user-requested
+ * ratio. */
+#define CONFIG_BLOOM_TIGHTENINGRATIO 0.85
+\end{commentedsource}
 
 Questa la descrizione dettagliata di ciascun parametro:
 
@@ -287,48 +312,177 @@ Questa la descrizione dettagliata di ciascun parametro:
 
 La creazione e distruzione di un intero filtro scalabile è implementata dalle seguenti funzioni:
 
-\lstinputlisting[caption=Creazione e distruzione di un filtro scalabile,linerange=Bloom\ constructors-End\ of\ bloom\ constructors]{code/bloom.c}
+\begin{commentedsource}[style=csource,caption=Creazione e distruzione di un filtro scalabile]
+bloom *bloomNew(void) {
+/*@\lnote@*/	bloom *bf = zmalloc(sizeof(bloom));
+	bf->numfilters = 0; 
+    bf->e = CONFIG_BLOOM_DEFAULTERROR;
+/*@\lnote@*/    bf->first = NULL; /* do not create filter here, because user might change error */ 
+	return bf;
+}
 
-La funzione \verb|bloomNew| alloca una struttura di tipo \verb|bloom| sullo heap, utilizzando la
-funzione \verb|zmalloc|, una funzione interna di Redis che implementa un sottile strato di codice
-sopra l'allocatore standard per tracciare l'occupazione totale di memoria e fornire informazioni
-utili a livello statistico e per debugging. 
+void bloomRelease(bloom *bf) {
+    filter *flt = bf->first;
+/*@\lnote@*/    while (flt) { 
+        filter *next = flt->next;
+/*@\lnote@*/        bloomFilterRelease(flt); 
+        flt = next;
+    }
+/*@\lnote@*/    zfree(bf); 
+}
+\end{commentedsource}
 
-Si noti che al momento di creare il filtro scalabile, alla \autoref{line:noallocfilter} la catena
-viene lasciata completamente vuota: ritardando la creazione del primo filtro della catena
-all'inserimento del primo elemento, è possibile infatti accorgersi velocemente se, in un dato
-momento, è stato mai inserito un elemento, caratteristica utile alla corretta implementazione del
-comando \verb|BFADD| che deve discriminare il primo inserimento per permettere la configurazione del
-parametro di errore.
+La funzione \verb|bloomNew| alloca una struttura di tipo \verb|bloom| sullo heap \lnnum{1},
+utilizzando la funzione \verb|zmalloc|, una funzione interna di Redis che implementa un sottile
+strato di codice sopra l'allocatore standard per tracciare l'occupazione totale di memoria e fornire
+informazioni utili a livello statistico e per debugging.
 
-La funzione \verb|bloomRelease| rilascia la memoria allocata dall'intero filtro scalabile, percorrendo
-la catena e chiamando la funzione di distruzione di ciascun filtro, terminando poi rilasciando la
-memoria occupata dalla struttura del filtro stessa.
+Si noti che durante la creazione del filtro scalabile, la catena viene lasciata completamente vuota
+\lnnum{2}: ritardando la creazione del primo filtro della catena all'inserimento del primo elemento,
+è possibile infatti accorgersi velocemente se, in un dato momento, è stato mai inserito un elemento,
+caratteristica utile alla corretta implementazione del comando \verb|BFADD| che deve discriminare il
+primo inserimento per permettere la configurazione del parametro di errore.
 
-\lstinputlisting[caption=Creazione e distruzione di un filtro,linerange=Filter\ constructors-End\ of\ filter\ constructors]{code/bloom.c}
+La funzione \verb|bloomRelease| rilascia la memoria allocata dall'intero filtro scalabile,
+percorrendo la catena \lnnum{3} e chiamando la funzione di distruzione di ciascun filtro \lnnum{4},
+terminando poi rilasciando la memoria occupata dalla struttura del filtro stessa \lnnum{5}.
+
+\begin{commentedsource}[style=csource,caption=Creazione e distruzione di un filtro]
+filter* bloomFilterNew(bloom *bf) {
+    int idx = bf->numfilters;
+
+    /* Compute N0 (N for the first filter) so that the first M (memory size)
+     * will match BLOOM_BASE_SIZE. */
+    uint32_t n0 = CONFIG_BLOOM_BASESIZE*8 * ((log(CONFIG_BLOOM_DESIREDFILLRATIO) * log(1-CONFIG_BLOOM_DESIREDFILLRATIO)) / fabs(log(bf->e)));
+
+    /* Compute E0 (E for the first filter) so that the composed probability converges to E. */
+/*@\lnote@*/    double e0 = bf->e * (1 - CONFIG_BLOOM_TIGHTENINGRATIO);
+
+    /* Compute input parameters for the new filter, iterating exponentially
+     * given the configured ratios. */
+    uint32_t n = n0 * pow(CONFIG_BLOOM_ITEMGROWTHRATIO, idx);
+    double e = e0 * pow(CONFIG_BLOOM_TIGHTENINGRATIO, idx);
+
+    /* Compute derived parameters */
+/*@\lnote@*/    int k = ceil(-log2(e));
+/*@\lnote@*/    uint64_t m = (double)n / ((log(CONFIG_BLOOM_DESIREDFILLRATIO) * log(1-CONFIG_BLOOM_DESIREDFILLRATIO)) / fabs(log(e)));
+    uint64_t s = m / k;
+    uint64_t bmax = (s*k) * CONFIG_BLOOM_DESIREDFILLRATIO;
+
+/*@\lnote@*/    filter *flt = zmalloc(sizeof(filter) + k*sizeof(void*));
+    flt->next = NULL;
+    flt->s = s;
+    flt->k = k;
+    flt->b = 0;
+    flt->bmax = bmax;
+/*@\lnote@*/    for (int i=0;i<k;i++) {
+        uint32_t bsize = (flt->s + 7) / 8;
+        flt->parts[i] = zmalloc(bsize);
+        memset(flt->parts[i],0,bsize);
+    }
+    bf->numfilters++;
+    return flt;
+}
+
+void bloomFilterRelease(filter *flt) {
+/*@\lnote@*/    for (unsigned int i=0;i<flt->k;i++)
+        zfree(flt->parts[i]);
+/*@\lnote@*/    zfree(flt);
+}
+\end{commentedsource}
 
 La funzione \verb|bloomFilterNew| riceve in input un filtro scalabile e ritorna un filtro appena
 creato con i parametri adatti ad essere l'ultimo filtro della catena.
 
 Il calcolo dei parametri del filtro ricalca quanto visto nella \autoref{sec:bloomparms} e nella
-\autoref{sec:bloomscalable}. Alla \autoref{line:allocmem}, si può notare come la memoria
-allocata tenga conto dell'array flessibile delle sezioni, lasciando lo spazio per il giusto numero
-di puntatori (uno per sezione). Nel ciclo successivo, alla \autoref{line:filterloopalloc}, vengono
-allocate invece le singole sezioni ed inizializzate a $0$.
+\autoref{sec:bloomscalable}. In particolare, \lnnum{1} segue la \autoref{eq:p0fromp}, \lnnum{2} 
+segue la \autoref{eq:bloomk}, e \lnnum{3} segue la \autoref{eq:bloomm}.
+
+Si può notare come la memoria allocata tenga conto dell'array flessibile delle sezioni, lasciando lo
+spazio per il giusto numero di puntatori (uno per sezione) \lnnum{4}. Nel ciclo successivo
+\lnnum{5}, vengono allocate invece le singole sezioni ed inizializzate a $0$.
+
+La cancellazione di un filtro avviene tramite la funzione \verb|bloomFilterRelease|, che
+semplicemente rilascia la memoria di tutte le sezioni \lnnum{6}, e infine la memoria del filtro
+stesso \lnnum{7}.
 
 \subsection{Aggiunta di un elemento al filtro}
 
 Vediamo ora come viene aggiunto un elemento ad un filtro. Una prima funzione \verb|bloomAdd| si
 occupa di individuare il filtro giusto all'interno della catena:
 
-\lstinputlisting[caption=Aggiunta elemento ad un filtro scalabile,linerange=bloomAdd-End\ of\ bloomAdd]{code/bloom.c}
+\begin{commentedsource}[style=csource,caption=Aggiunta elemento ad un filtro scalabile]
+int bloomAdd(bloom *bf, unsigned char *ele, size_t elesize) {
+    /* Go to the last filter, which is the current one */
+    filter *flt = bf->first;
+    if (!flt)
+/*@\lnote@*/        flt = bf->first = bloomFilterNew(bf);
+    else {
+/*@\lnote@*/        while (flt->next)
+            flt = flt->next;
 
-Se la catena è vuota, viene immediatamente creato il primo filtro. Altrimenti, si percorre la catena
-fino ad arrivare all'ultimo filtro, l'unico dentro cui è possibile aggiungere elementi (poiché tutti
-gli altri avranno già raggiunto la densità massima); se anche esso ha superato la densità massima 
-configurata, viene aggiunto un nuovo filtro vuoto in fondo alla catena, usando \verb|bloomFilterNew|.
+        /* Check if this bloom filter is full; if so, allocate
+         * a new one */
+        if (flt->b >= flt->bmax) {
+/*@\lnote@*/            flt->next = bloomFilterNew(bf);
+            flt = flt->next;
+        }
+    }
 
-\lstinputlisting[caption=Aggiunta elemento ad un filtro,linerange=bloomFilterAdd-End\ of\ bloomFilterAdd]{code/bloom.c}
+    /* Add the element to the filter */
+/*@\lnote@*/    return bloomFilterAdd(flt, ele, elesize);
+}
+\end{commentedsource}
+
+L'obiettivo della funzione è identificare il filtro corrente nella catena, cioè l'unico dentro cui è
+possibile aggiungere elementi (poiché tutti gli altri avranno già raggiunto la densità massima), per
+poi aggiungervi l'elemento tramite la funzione \verb|bloomFilterAdd| \lnnum{4}.
+
+Se la catena è vuota, viene immediatamente creato il primo filtro \lnnum{1}, che diventa il
+corrente. Altrimenti, si percorre la catena fino ad arrivare all'ultimo filtro \lnnum{2}; se anche
+esso ha superato la densità massima configurata, viene aggiunto un nuovo filtro vuoto in fondo alla
+catena, usando \verb|bloomFilterNew| \lnnum{3}: questo è il momento in cui il filtro scalabile
+cresce.
+
+Vediamo ora il dettaglio dell'aggiunta dell'elemento ad un singolo filtro.
+
+\begin{commentedsource}[style=csource,caption=Aggiunta elemento ad un filtro]
+uint64_t bloomFilterHash(unsigned char *ele, size_t elesize) {
+/*@\lnote@*/    return MurmurHash64A(ele,elesize,0xc5fb9af2ULL);
+}
+
+int bloomFilterAdd(filter *flt, unsigned char *ele, size_t elesize) {
+    /* Calculate initial hash for the element. Since 32-bit index is enough,
+       we use a 64-bit hash as two 32-bit hashes. */
+    uint64_t hash = bloomFilterHash(ele,elesize);
+/*@\lnote@*/    uint32_t a = (uint32_t)hash;
+    uint32_t b = (uint32_t)(hash>>32);
+    int nbits = 0;
+
+    for (unsigned int i=0;i<flt->k;i++) {
+        /* To compute multiple hash functions from two hashes,
+         * we use the algorithm described here:
+         * http://www.eecs.harvard.edu/~michaelm/postscripts/rsa2008.pdf
+         */
+/*@\lnote@*/        uint64_t index = a;
+        a += b; b += i; 
+
+        /* Use fast unbiased modulo reduction, instead of "% size".
+         * See http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/ */
+/*@\lnote@*/        index = (index * flt->s) >> 32;
+
+        /* Turn on the correct bit in each partition */
+        nbits += (flt->parts[i][index>>3] & (1 << (index&7))) ? 0 : 1;
+/*@\lnote@*/        flt->parts[i][index>>3] |= 1 << (index&7);
+    }
+
+    /* Keep count of total bits set to 1 */
+    flt->b += nbits;
+
+    /* If at least one bit was turned off, we consider the item really added. */
+    return nbits > 0;
+}
+\end{commentedsource}
 
 La funzione \verb|bloomFilterAdd| effettua invece l'inserimento vero e proprio, secondo
 l'\autoref{alg:bloominsert} visto nella \autoref{sec:bloom:add}.
@@ -336,30 +490,31 @@ l'\autoref{alg:bloominsert} visto nella \autoref{sec:bloom:add}.
 Per le funzioni di hash, viene utilizzato l'\autoref{alg:ehndoublehash} di doppio hash
 avanzato, visto nella \autoref{sec:bloom:hash}. L'algoritmo richiede in partenza due funzioni di
 hash ($h_a$ e $h_b$): nell'implementazione viene utilizzata la funzione di hash
-\verb|MurmurHash64A|, una variante a \SI{64}{\bit} della funzione MurMurHash2
+\verb|MurmurHash64A| \lnnum{1}, una variante a \SI{64}{\bit} della funzione MurMurHash2
 (\autoref{alg:murmurhash2}). Di questa funzione, è presente già un'implementazione dentro il
 codice sorgente di Redis, e poiché l'output è a \SI{64}{\bit}, consideriamo la suddivisione in due
 valori a \SI{32}{\bit} come l'output di due funzioni di hash separate, ottenendo così i due valori
-\verb|a| e \verb|b| utili come input per l'algoritmo di doppio hash avanzato. La funzione
+\verb|a| e \verb|b| \lnnum{2} utili come input per l'algoritmo di doppio hash avanzato. La funzione
 \verb|MurMurHash64A| viene chiamata con un seme causale, calcolato in fase di sviluppo
 (\verb|0xc5fb9af2|).
 
-Il calcolo del doppio hash, in formato iterativo, avviene alla \autoref{line:doublehash}, secondo
-quanto visto nell'\autoref{alg:ehndoublehash}. Successivamente, alla
-\autoref{line:hashreduction}, viene effettuata una riduzione dell'output della funzione di hash
-all'interno del dominio scelto. Invece del classico algoritmo di riduzione $idx = hash \bmod s$ (con
-$s$ dimensione in bit della sezione), utilizziamo la formula $idx = hash \times s / 2^{32}$ che
-effettua comunque la riduzione richiesta, considerando che $index \in \interval[open
-right]{0}{2^{32}}$, ma senza richiedere una divisione, che anche nei moderni processori ha una latenza
-elevata (circa $26$ cicli, contro i $4$ di una moltiplicazione). Si veda \cite{lemire-reduction} per
-i dettagli relativi a questa formula di riduzione.
+Il calcolo del doppio hash avviene in formato iterativo \lnnum{3}, secondo quanto visto
+nell'\autoref{alg:ehndoublehash}. Successivamente, viene effettuata una riduzione dell'output della
+funzione di hash all'interno del dominio scelto \lnnum{4}. Invece del classico algoritmo di
+riduzione $idx = hash \bmod s$ (con $s$ dimensione in bit della sezione), utilizziamo la formula
+$idx = hash \times s / 2^{32}$ che effettua comunque la riduzione richiesta, considerando che $index
+\in \interval[open right]{0}{2^{32}}$, ma senza richiedere una divisione, che anche nei moderni
+processori ha una latenza elevata (circa $26$ cicli, contro i $4$ di una moltiplicazione). Si veda
+\cite{lemire-reduction} per i dettagli relativi a questa formula di riduzione.
 
-Alla linea~\label{line:togglebit}, viene impostato a $1$ il bit corrispondente all'indice calcolato,
-dopo aver verificato il suo stato corrente e aver potuto incrementare così un contatore dei bit che
-cambiando di stato (\verb|nbits|).
+Infine, viene impostato a $1$ il bit corrispondente all'indice calcolato \lnnum{5}, dopo aver
+verificato il suo stato corrente e aver potuto incrementare così un contatore dei bit che cambiando
+di stato (\verb|nbits|).
 
 \subsection{Scelta della dimensione del primo filtro}
 \label{sec:patch:basesize}
+
+
 
 
 \subsection{Scelta della probabilità di falso positivo di default}

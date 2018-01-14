@@ -402,8 +402,8 @@ su ciascun bit.
 
 In Redis, le liste sono strutture dati assimilabili, come complessità computazionale,
 alle normali liste con puntatore doppio; i valori contenuti nella lista sono stringhe.
-L'accesso al primo e all'ultimo elemento ha una complessità di O(1), mentre
-l'accesso all'elemento N richiede O(N). I comandi principali per manipolare una
+L'accesso al primo e all'ultimo elemento ha una complessità di $\mathcal{O}(1)$, mentre
+l'accesso all'elemento $N$ richiede $\mathcal{O}(N)$. I comandi principali per manipolare una
 lista sono i seguenti:
 
 \begin{itemize}
@@ -666,13 +666,13 @@ Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
 	nell'insieme. È possibile usare gli indici negativi per fare riferimento alla fine della
 	sequenza (per esempio, \verb|-1| indica l'elemento con punteggio più alto).
 	\item \textbf{ZRANGEBYSCORE}: restituisce gli elementi all'interno dell'intervallo specificato
-	come punteggi. Per esempio, specificando come intervallo \verb|100.2 100.8|, si ottengono tutti
-	gli elementi i cui punteggi sono compresi tra 100.2 e 100.8. Gli estremi dell'intervallo
+	come punteggi. Per esempio, specificando come intervallo ``\verb|100.2 100.8|'', si ottengono tutti
+	gli elementi i cui punteggi sono $\in \interval{100.2}{100.8}$. Gli estremi dell'intervallo
 	possono essere specificati come aperti o chiusi. È possibile inoltre specificare un numero
 	massimo di elementi restituiti per evitare trasferimenti troppo pesanti (consentendo quindi la
 	paginazione).
 	\item \textbf{ZRANGEBYLEX}: restituisce gli elementi all'interno dell'intervallo specificato
-	come prefissi lessicografici. Per esempio, specificando come intervallo \verb|AZ C|, si
+	come prefissi lessicografici. Per esempio, specificando come intervallo ``\verb|AZ C|'', si
 	ottengono tutti gli elementi che seguono lessicograficamente la stringa ``AZ'' e precedono la
 	stringa ``C''. Come per il comando precedente, è possibile specificare se gli estremi
 	dell'intervallo sono aperti o chiusi, e indicare un limite massimo agli elementi restituiti.
@@ -711,10 +711,11 @@ della struttura dati, indichiamo alcuni possibili scenari applicativi.
 	(\verb|ZINCR|); non è necessario gestire in modo diverso il primo acquisto, perché \verb|ZINCR|
 	funziona anche se l'elemento non è ancora presente. Se vogliamo contattare tutti gli utenti che
 	hanno speso più di €1000 sul nostro e-commerce, possiamo utilizzare \verb|ZRANGEBYSCORE|
-	specificando l'intervallo \verb|1000.00 +inf| per estrarre gli ID. In alternativa, supponendo di
-	voler premiare i 100 utenti che hanno speso di più, possiamo estrarre i loro ID con
-	\verb|ZREVRANGE| usando l'intervallo \verb|0 99| (essendo l'insieme in ordine crescente,
-	dobbiamo usare \verb|ZREVRANGE| per estrarre facilmente gli elementi con punteggio più grosso).
+	specificando l'intervallo $\interval{1000.00}{\infty}$ (tramite la stringa 
+	``\verb|1000.00 +inf|'') per estrarre gli ID. In alternativa, supponendo di voler premiare i 100 utenti che
+	hanno speso di più, possiamo estrarre i loro ID con \verb|ZREVRANGE| usando l'intervallo
+	``\verb|0 99|'' (essendo l'insieme in ordine crescente, dobbiamo usare \verb|ZREVRANGE| per
+	estrarre facilmente gli elementi con punteggio più grosso).
 \end{itemize}
 
 Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordinati:
