@@ -10,138 +10,161 @@
 % - based on Classic Thesis Style Copyright (C) 2008
 %   Andr\'e Miede http://www.miede.de
 %--------------------------------------------------------------
-\documentclass[twoside,openright,titlepage,fleqn,
-	headinclude,12pt,a4paper,BCOR=5mm,footinclude]{scrbook}
-% \documentclass[oneside,openany,titlepage,fleqn,
-% 	headinclude,12pt,a4paper,BCOR5=mm,footinclude]{scrbook}
-%--------------------------------------------------------------
-\newcommand{\myItalianTitle}{Aggiunta dei filtri di Bloom al database NoSQL Redis\xspace}
-\newcommand{\myEnglishTitle}{Adding Bloom filters to the NoSQL Database Redis\xspace}
-\newcommand{\myDegree}{Corso di Laurea in Informatica\xspace}
-\newcommand{\myName}{Giovanni Bajo\xspace}
-\newcommand{\myProf}{Donatella Merlini\xspace}
-\newcommand{\myOtherProf}{Correlatore\xspace}
-\newcommand{\mySupervisor}{Nome Cognome\xspace}
-\newcommand{\myFaculty}{
-	Scuola di Scienze Matematiche, Fisiche e Naturali\xspace}
-\newcommand{\myUni}{\protect{
-	Universit\`a degli Studi di Firenze}\xspace}
-\newcommand{\myLocation}{Firenze\xspace}
-\newcommand{\myTime}{Anno Accademico 2016-2017\xspace}
-\newcommand{\myVersion}{Version 0.1\xspace}
-%--------------------------------------------------------------
-\usepackage[italian]{babel}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[square,numbers]{natbib}
-\usepackage[fleqn]{amsmath}
-\usepackage{ellipsis}
-\usepackage{listings}
-\usepackage{listingsutf8}
-\usepackage{caption,subcaption}
-\usepackage[toc,page]{appendix}
-\usepackage[binary-units]{siunitx}
-\usepackage{mathtools}
-\usepackage{colortbl}
-\usepackage{interval}
-\usepackage{eurosym}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
+% **************************************************************************************************************
+\RequirePackage{silence} % :-\
+    \WarningFilter{scrreprt}{Usage of package `titlesec'}
+    \WarningFilter{scrreprt}{Activating an ugly workaround}
+    \WarningFilter{titlesec}{Non standard sectioning command detected}
+\documentclass[ twoside,openright,titlepage,numbers=noenddot,%1headlines,
+                headinclude,footinclude,cleardoublepage=empty,
+                BCOR=5mm,paper=a4,fontsize=11pt
+                ]{scrreprt}
+
+%********************************************************************
+% Note: Make all your adjustments in here
+%*******************************************************
+\input{classicthesis-config}
+
+% Nessun testo che esce dal paragrafo
+\tolerance=10000
+
+% Vari pacchetti utilizzati
+\usepackage{interval}  % Gestione intervalli aperti/chiusi
+\usepackage{colortbl}  % Tabelle con celle colorate
+\usepackage[binary-units]{siunitx}  % Unità di misura
+\usepackage{algorithm,algpseudocode}  % Algoritmi in pseudo-codice
+
+% Definisci \EUR come unità di misura con il simbolo dell'euro
+\usepackage{eurosym}  
+\DeclareSIUnit{\EUR}{\text{\euro}}
+
+% Definisci \ceil per fare il ceiling 
+\usepackage{mathtools} 
 \DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
-%--------------------------------------------------------------
-\usepackage{dia-classicthesis-ldpkg}
-%--------------------------------------------------------------
-% Options for classicthesis.sty:
-% tocaligned eulerchapternumbers drafting linedheaders
-% listsseparated subfig nochapters beramono eulermath parts
-% minionpro pdfspacing
-\usepackage[eulerchapternumbers,linedheaders,beramono,eulermath,parts]{classicthesis}
-%--------------------------------------------------------------
-\newlength{\abcd} % for ab..z string length calculation
-% how all the floats will be aligned
-\newcommand{\myfloatalign}{\centering}
-\setlength{\extrarowheight}{3pt} % increase table row height
-\captionsetup{format=hang,font=small}
-%--------------------------------------------------------------
-% Layout setting
-%--------------------------------------------------------------
-\usepackage{geometry}
-\geometry{
-	a4paper,
-	ignoremp,
-	bindingoffset = 1cm,
-	textwidth     = 13.5cm,
-	textheight    = 21.5cm,
-	lmargin       = 3.5cm, % left margin
-	tmargin       = 4cm    % top margin
+
+% Supporto per UTF-8 nei listati
+% Non usiamo il pacchetto listingutf8 e inputencoding=utf-8 perché
+% rallenta la compilazione (di minuti...)
+\lstset{literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+  {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+  {ű}{{\H{u}}}1 {Ű}{{\H{U}}}1 {ő}{{\H{o}}}1 {Ő}{{\H{O}}}1
+  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+  {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
+  {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1
 }
 
+% Configurazione estetica di default dei listati
 \lstset{
-  	frame=tb,
-  	aboveskip=3mm,
-  	belowskip=3mm,
-  	showstringspaces=false,
-  	columns=flexible,
-  	basicstyle={\small\ttfamily},
-  	stringstyle=\color{red},
-  	breaklines=true,
-  	breakatwhitespace=true,
-  	tabsize=4,
-	inputencoding=utf8/latin1,
-	escapechar=|,
-	stepnumber=1
+  escapechar=|,
+  stepnumber=1,
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  columns=flexible,
+  stringstyle=\color{red},
+  breakatwhitespace=true,
+  tabsize=4
 }
-%--------------------------------------------------------------
+
+% Macro per caricare un listato inserendo come caption il suo nome
+\newcommand{\sourcecode}[2][]{%
+    \lstinputlisting[caption={\texttt{\detokenize{#2}}},#1]{#2}%
+}
+
+%********************************************************************
 % Translations
-%--------------------------------------------------------------
+%*******************************************************
 \makeatletter
-	\addto\captionsitalian{
-	\renewcommand{\ALG@name}{Algoritmo}
-	\renewcommand{\listalgorithmname}{Elenco degli algoritmi}
-	\renewcommand{\algorithmicrequire}{\textbf{Precondizione:}}
-	\renewcommand{\appendixtocname}{Appendici}
-	\renewcommand{\appendixpagename}{Appendici}
-	}
+\@ifpackageloaded{babel}{%
+  \newcaptionname{italian}{\lstlistingname}{Listato}
+  \newcaptionname{italian}{\lstlistlistingname}{Elenco dei listati}
+  \newcaptionname{italian}{\ALG@name}{Algoritmo}
+  \newcaptionname{italian}{\listalgorithmname}{Elenco degli algoritmi}
+}{\relax}
 \makeatother
-\DeclareSIUnit{\EUR}{\text{\euro}}
-%--------------------------------------------------------------
+
+\renewcommand{\algorithmicrequire}{\textbf{Precondizione:}}
+
+% Consente \autoref anche sulle linee
+% https://tex.stackexchange.com/questions/351225/create-a-smart-cross-reference-to-a-line-in-an-algorithmic-environment-using/351228
+\makeatletter
+  \patchcmd{\ALG@step}{\addtocounter{ALG@line}{1}}{\refstepcounter{ALG@line}}{}{}
+  \newcommand{\ALG@lineautorefname}{Linea}
+\makeatother
+\newcommand{\algorithmautorefname}{Algoritmo}%
+
+% \autoref per le linee nei listati
+\newcommand{\lstnumberautorefname}{Linea}
+
+%********************************************************************
+% Bibliographies
+%*******************************************************
+\addbibresource{Bibliography.bib}
+
+
+%********************************************************************
+% Hyphenation
+%*******************************************************
+%\hyphenation{put special hyphenation here}
+
+% ********************************************************************
+% GO!GO!GO! MOVE IT!
+%*******************************************************
 \begin{document}
-\graphicspath{ {img/} }
 \frenchspacing
 \raggedbottom
+\selectlanguage{italian} % american ngerman
+%\renewcommand*{\bibname}{new name}
+%\setbibpreamble{}
 \pagenumbering{roman}
 \pagestyle{plain}
-%--------------------------------------------------------------
+%********************************************************************
 % Frontmatter
-%--------------------------------------------------------------
-\include{titlePage}
-\pagestyle{scrheadings}
-%--------------------------------------------------------------
+%*******************************************************
+\include{FrontBackmatter/DirtyTitlepage}
+\include{FrontBackmatter/Titlepage}
+\include{FrontBackmatter/Titleback}
+\cleardoublepage\include{FrontBackmatter/Dedication}
+%\cleardoublepage\include{FrontBackmatter/Foreword}
+\cleardoublepage\include{FrontBackmatter/Abstract}
+\cleardoublepage\include{FrontBackmatter/Publications}
+\cleardoublepage\include{FrontBackmatter/Acknowledgments}
+\cleardoublepage\include{FrontBackmatter/Contents}
+%********************************************************************
 % Mainmatter
-%--------------------------------------------------------------
-\pagenumbering{arabic}
-% use \cleardoublepage here to avoid problems with pdfbookmark
-%\include{intro} % use \myChapter command instead of \chapter
-\tableofcontents
-\listoffigures
-\lstlistoflistings
-\listofalgorithms
+%*******************************************************
 \cleardoublepage
-\thispagestyle{empty}
-\begin{flushright}
-\null\vspace{\stretch {1}}
-\emph{Ex quo exsistit et illud multa esse probabilia, quae, quamquam non perciperentur, tamen, quia visum quendam haberent insignem et inlustrem, his sapientis vita regeretur.} \break
-Ne deriva che vi sono delle conoscenze probabili le quali, benché non possano essere compiutamente accertate, appaiono così nobili ed elevate da poter fungere da guida per il saggio. \break --- \textbf{Cicerone}, De Natura Deorum, I, 12  \vspace{\stretch{2}}\null
-\end{flushright}
+\pagestyle{scrheadings}
+\pagenumbering{arabic}
+%\setcounter{page}{90}
+% use \cleardoublepage here to avoid problems with pdfbookmark
 \cleardoublepage
 \include{Chapters/introduzione}
 \include{Chapters/redis}
 \include{Chapters/bloom}
 \include{Chapters/patch}
-\begin{appendices}
+% ********************************************************************
+% Backmatter
+%*******************************************************
+\appendix
+\cleardoublepage
 \include{Chapters/codice}
-\end{appendices}
-\include{Chapters/bibliografia}
-%--------------------------------------------------------------
+%********************************************************************
+% Other Stuff in the Back
+%*******************************************************
+\cleardoublepage\include{FrontBackmatter/Bibliography}
+\cleardoublepage\include{FrontBackmatter/Declaration}
+\cleardoublepage\include{FrontBackmatter/Colophon}
+% ********************************************************************
+% Game Over: Restore, Restart, or Quit?
+%*******************************************************
 \end{document}
-%--------------------------------------------------------------
+% ********************************************************************

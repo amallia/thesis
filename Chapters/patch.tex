@@ -294,7 +294,7 @@ funzione \verb|zmalloc|, una funzione interna di Redis che implementa un sottile
 sopra l'allocatore standard per tracciare l'occupazione totale di memoria e fornire informazioni
 utili a livello statistico e per debugging. 
 
-Si noti che al momento di creare il filtro scalabile, alla linea~\ref{line:noallocfilter} la catena
+Si noti che al momento di creare il filtro scalabile, alla \autoref{line:noallocfilter} la catena
 viene lasciata completamente vuota: ritardando la creazione del primo filtro della catena
 all'inserimento del primo elemento, è possibile infatti accorgersi velocemente se, in un dato
 momento, è stato mai inserito un elemento, caratteristica utile alla corretta implementazione del

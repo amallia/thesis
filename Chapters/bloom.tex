@@ -302,7 +302,7 @@ vuoto composto di 11 bit:
 \subsection{Inserimento di un elemento}
 \label{sec:bloom:add}
 
-L'inserimento di un elemento $X$ (algoritmo~\ref{alg:bloominsert}) avviene calcolando alcune
+L'inserimento di un elemento $X$ (\autoref{alg:bloominsert}) avviene calcolando alcune
 funzioni di hash $h_i(X)$ prestabilite sull'elemento (il numero delle funzioni, chiamato $K$, è
 anch'esso un parametro del filtro). I $K$ valori risultanti $h_0(X), h_1(X), ... , h_{K-1}(X)$ sono
 utilizzati per identificare singoli bit all'interno dell'array (per esempio, scegliendo il bit con
@@ -607,21 +607,23 @@ vedere, l'errore effettuato dalla stima non diverge anche per valori di densità
 
 \begin{figure}
 	\centering
-
-	\begin{subfigure}[t]{280pt}
-	\centering\includegraphics[width=280pt]{../img/bloom_card_error_1h}
-	\subcaption{M=8192, K=1}
-	\end{subfigure}
-
-	\begin{subfigure}[t]{280pt}
-	\centering\includegraphics[width=280pt]{bloom_card_error_2h}
-	\subcaption{M=8192, K=2}
-	\end{subfigure}
-
-	\begin{subfigure}[t]{280pt}
-	\centering\includegraphics[width=280pt]{bloom_card_error_3h}
-	\subcaption{M=8192, K=3}
-	\end{subfigure}
+	\begin{minipage}[c]{0.7\textwidth}
+		\subfloat[][M=8192, K=1]{
+			\includegraphics[width=\textwidth]{img/bloom_card_error_1h}
+		}
+	\end{minipage}
+	\qquad
+	\begin{minipage}[c]{0.7\textwidth}
+		\subfloat[][M=8192, K=2]{
+			\includegraphics[width=\textwidth]{img/bloom_card_error_2h}
+		}
+	\end{minipage}
+	\qquad
+	\begin{minipage}[c]{0.7\textwidth}
+		\subfloat[][M=8192, K=3]{
+			\includegraphics[width=\textwidth]{img/bloom_card_error_3h}
+		}
+	\end{minipage}
 
 	\caption{Errore sulla cardinalità nei filtri di Bloom}
 	\label{fig:bloomerror}
@@ -843,20 +845,20 @@ Vediamo ora due esempi di derivazione di parametri ottimali.
 
 \begin{figure}
 	\centering
-
-	\begin{subfigure}[t]{280pt}
-	\centering\includegraphics[width=280pt]{bloom_parms_1}
-	\subcaption{Numero di elementi in base alla probabilità attesa}
-	\end{subfigure}
-
-	\begin{subfigure}[t]{280pt}
-	\centering\includegraphics[width=280pt]{bloom_parms_2}
-	\subcaption{Probabilità attesa in base al numero di elementi}
-	\end{subfigure}
+	\begin{minipage}[c]{\textwidth}
+		\subfloat[][Numero di elementi in base alla probabilità attesa]{
+			\includegraphics[width=\textwidth]{img/bloom_parms_1}
+		}
+	\end{minipage}
+	\qquad
+	\begin{minipage}[c]{\textwidth}
+		\subfloat[][Probabilità attesa in base al numero di elementi]{
+			\includegraphics[width=\textwidth]{img/bloom_parms_2}
+		}
+	\end{minipage}
 
 	\caption{Andamento dei parametri ottimale in un filtro di \SI{64}{\mebi\byte}}
 \end{figure}
-
 
 \section{Filtri scalabili}
 \label{sec:bloomscalable}
