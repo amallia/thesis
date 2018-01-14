@@ -84,15 +84,16 @@
 
 \usepackage{csquotes}
 \PassOptionsToPackage{%
-  %backend=biber,bibencoding=utf8, %instead of bibtex
-  backend=bibtex8,bibencoding=ascii,%
+  backend=biber,bibencoding=utf8, %instead of bibtex
+  %backend=bibtex8,bibencoding=ascii,%
   language=auto,%
-  style=numeric-comp,%
+  %style=numeric-comp,%
+  style=alphabetic,
   %style=authoryear-comp, % Author 1999, 2010
   %bibstyle=authoryear,dashed=false, % dashed: substitute rep. author with ---
   sorting=nyt, % name, year, title
   maxbibnames=10, % default: 3, et al.
-  %backref=true,%
+  backref=true,%
   natbib=true % natbib compatibility mode (\citep and \citet still work)
 }{biblatex}
     \usepackage{biblatex}

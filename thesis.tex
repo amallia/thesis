@@ -65,7 +65,6 @@
 
 % Configurazione estetica di default dei listati
 \lstset{
-  escapechar=|,
   stepnumber=1,
   frame=tb,
   framexleftmargin=0.5em,
@@ -100,9 +99,9 @@
   morestring=[b]", 
 }
 \lstnewenvironment{redis}[1][]
-  {\lstset{language=Redis,#1}}{}
+  {\lstset{language=Redis,escapechar=|,#1}}{}
 
-% Macro per caricare un listato inserendo come caption il suo nome
+% Macro per caricare un listato da file, inserendo come caption il suo nome
 \newcommand{\sourcecode}[2][]{%
     \lstinputlisting[
       caption={\texttt{\detokenize{#2}}},

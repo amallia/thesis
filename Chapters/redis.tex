@@ -23,7 +23,7 @@ utilizzare il modello relazionale.
 \subsection{Tipologie di database}
 
 Posto che una tassonomia esaustiva dei database NoSQL sarebbe impossibile in virtù
-dell'ampiezza della definizione, ne proponiamo una \cite{corbellini} sufficiente a coprire le
+dell'ampiezza della definizione, ne proponiamo una \cite{corbellini17} sufficiente a coprire le
 principali tipologie e sottolinearne le differenze:
 
 \begin{itemize}
@@ -1042,13 +1042,13 @@ pipelining risulta particolarmente comodo perché l'intera transazione (comprens
 
 Si noti che, se si è interessati ad ottenere la massima performance, è consigliabile anche
 disattivare il controllo della congestione del TCP, descritto in
-\href{https://tools.ietf.org/html/rfc896}{RFC896} (detto anche \emph{algoritmo di Nagle} dal nome
+\cite{rfc896} (detto anche \emph{algoritmo di Nagle} dal nome
 dell'autore), che rallenta l'invio di pacchetti piccoli di dati aggregandoli in ``segmenti'',
 diminuendo il traffico sulla rete ma aumentando la latenza fino anche a \SI{500}{\milli\second}), ed
 utilizzare le opzioni \verb|TCP_NODELAY| e \verb|TCP_CORK| per gestire manualmente il buffering
 \cite{tcp-cork}. Molte librerie client Redis per i principali linguaggi di programmazione si
-occupano di questi dettagli automaticamente; si veda a titolo di esempio i sorgenti della libreria
-\verb|redis-py| \cite{tcp-cork-redispy}.
+occupano di questi dettagli automaticamente; si veda a titolo di esempio i 
+\href{https://github.com/andymccurdy/redis-py/blob/8a186ebd9cecf466624803bdf215030158c7c776/redis/connection.py\#L517}{sorgenti della libreria \texttt{redis-py}}.
 
 \section{Stored procedure in LUA}
 \label{redislua}
@@ -1218,8 +1218,10 @@ venisse inviato prima del termine del precedente, tramite pipelining.
 Per quanto concerne comandi inviati da clienti diversi (e quindi tramite più connessioni TCP) in
 parallelo, Redis provvede a serializzarli tra loro in automatico poiché il codice del server si
 basa su un singolo thread di esecuzione, e gestisce l'accesso ai socket in parallelo tramite
-programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive quali \verb|select| 
-\cite{select}, \verb|epoll| \cite{epoll} o \verb|kqueue|.
+programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive quali 
+\href{https://www.gnu.org/software/libc/manual/html_node/Waiting-for-I_002fO.html}{\texttt{select}},
+\href{https://linux.die.net/man/4/epoll}{\texttt{epoll}} o 
+\href{https://www.freebsd.org/cgi/man.cgi?query=kqueue&sektion=2}{\texttt{kqueue}}.
 
 Questa architettura rende il codice di Redis più semplice e veloce, perché non è necessario
 acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale per

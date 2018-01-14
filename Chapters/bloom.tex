@@ -86,7 +86,7 @@ struttura dati (un array associativo implementato con tabella hash), mentre l'``
 aggiunto nella versione 2.3; prima di allora, era comune implementare l'insieme con un dizionario i
 cui valori erano semplicemente valori booleani (di solito \verb|True|).
 
-\section{Propriet\`a dei filtri di Bloom}
+\section{Proprietà dei filtri di Bloom}
 
 Un filtro di Bloom \cite{bloomfilters} è una rappresentazione probabilistica di un insieme. Nel
 filtro infatti non vengono memorizzati per intero tutti gli elementi, ma ne viene memorizzata solo
@@ -147,7 +147,7 @@ di esistenza di un elemento, sia trasferita in modo efficiente via rete ad un al
 fornire una vista parziale di un set di dati.
 
 Un approfondimento degli scenari applicativi presentati qui può essere trovata in
-\cite{bloomnetwork}.
+\cite{bloom-network}.
 
 \subsection{Controllo ortografico e sillabazione}
 
@@ -171,7 +171,7 @@ accettabile.
 
 \subsection{Proxy Cache distribuita}
 
-In \cite{bloomproxy}, viene introdotto uno dei primi casi di utilizzo dei filtri di Bloom per
+In \cite{bloom-proxy}, viene introdotto uno dei primi casi di utilizzo dei filtri di Bloom per
 ottimizzare i trasferimenti di rete. Lo scenario prevedeva una rete di proxy web, che comunicavano
 tra loro. Nel momento in cui veniva effettuata una richiesta ad un proxy per una pagina web non
 presente nella cache, il proxy poteva comunicare con gli altri proxy della rete, chiedendo loro
@@ -227,7 +227,7 @@ di apertura dei siti.
 
 Con il passare del tempo, la lista è cresciuta troppo, e di conseguenza il filtro ha iniziato
 ad avere dimensioni importanti; di conseguenza, è stato scelto di usare un'altra struttura dati
-probabilistica (gli insiemi di Golomb-Rice \cite{golomb}), che ha una rappresentazione in memoria
+probabilistica (gli insiemi di Golomb-Rice \cite{golomb,rice,golomb-rice}), che ha una rappresentazione in memoria
 compressa, dunque più compatta, sebbene più lenta da utilizzare \cite{golomb-safebrowsing}. 
 
 \subsection{Riconciliazione di una rete di distribuzione contenuti}
@@ -253,7 +253,7 @@ elevata per non impattare sulle prestazioni: infatti $N1$ non avrà il dato disp
 della prima richiesta, e si occuperà di scaricarlo in quel momento. 
 
 L'azienda Akamai (leader di mercato nel settore delle CDN) utilizza i filtri di Bloom anche per
-evitare di memorizzare contenuti richiesti una sola volta (come descritto in \cite{bloomakamai}).
+evitare di memorizzare contenuti richiesti una sola volta (come descritto in \cite{bloom-akamai}).
 Infatti ogni nodo conserva un filtro di Bloom dei contenuti richiesti almeno una volta. Alla prima
 richiesta, il contenuto non è ancora presente nel filtro e viene aggiunto ma non viene cachato
 dal nodo. In questo modo, si evita di inserire in cache contenuti non popolari che possono 
@@ -507,7 +507,7 @@ creando così una famiglia di funzioni di hash, utilizzabili nel filtro.
 
 Questo approccio però richiede di eseguire la funzione di hash $K$ volte per ogni elemento che si
 vuole inserire nel filtro, impattando quindi in modo significativo sulla velocità di esecuzione al
-crescere di $K$. Una soluzione alternativa (proposta per la prima volta in \cite{bloomdoublehash}) è
+crescere di $K$. Una soluzione alternativa (proposta per la prima volta in \cite{bloom-doublehash}) è
 quella di utilizzare l'\autoref{alg:doublehash} di hash doppio, utilizzato comunemente come
 metodo per la risoluzione di collisioni nelle tabelle hash. In termini matematici, date 2 funzioni
 di hash $h_a$ e $h_b$ (magari generate con un seme da una medesima funzione, come visto in
@@ -544,7 +544,7 @@ sempre dispari, ma questo riduce l'uniformità della funzione. Per finire, ci sa
 cui le sequenze di indici tra due elementi potrebbe essere parzialmente sovrapposte sebbene gli hash
 siano diversi; si pensi per esempio a $h_b(x_1) = 2h_b(x_2) \bmod M$.
 
-Per risolvere questi problemi, \cite{bloomdoublehash} propone di usare
+Per risolvere questi problemi, \cite{bloom-doublehash} propone di usare
 l'\autoref{alg:ehndoublehash} per la composizione degli hash, chiamato  ``hash doppio
 avanzato''. Volendo derivare matematicamente la formula, otteniamo $$ h_i(x) = h_a(x) + ih_b(x) +
 \frac{i^3-i}{6} \pmod M $$.
@@ -571,7 +571,7 @@ avanzato''. Volendo derivare matematicamente la formula, otteniamo $$ h_i(x) = h
 \label{sec:bloomcard}
 
 È possibile effettuare una stima della cardinalità \verb|N| di un filtro di Bloom, derivandola
-dalla densità, come descritto in \cite{bloomscalable}.
+dalla densità, come descritto in \cite{bloom-scalable}.
 
 Si noti che un filtro di dimensione $M$ con $K$ funzioni di hash può essere implementato, senza
 perdita di genericità, con $K$ array distinti di $m=\frac{M}{K}$ bit ciascuno, chiamati
@@ -773,7 +773,7 @@ tabella.
 \medskip
 
 Vediamo ora come è possibile ottimizzare i parametri, cercando di minimizzare $P$, la probabilità
-di un falso positivo, come descritto in \cite{bloomscalable}.
+di un falso positivo, come descritto in \cite{bloom-scalable}.
 
 La probabilità di trovare un bit impostato a 1 in una sezione è $p$, di conseguenza la probabilità 
 di un falso positivo, cioè di trovare i bit di tutte le sezioni già impostati, è:
@@ -870,7 +870,7 @@ l'utilizzo in diversi scenari applicativi, poiché, volendo mantenere la probabi
 positivo contenuta entro una soglia, è necessario spesso sovradimensionare il filtro a causa della 
 impossibilità di prevedere il numero di elementi che sarà necessario memorizzare.
 
-Per risolvere questo problema, \cite{bloomscalable} propone di creare un \emph{filtro di Bloom
+Per risolvere questo problema, \cite{bloom-scalable} propone di creare un \emph{filtro di Bloom
 scalabile} (SBF) formato da uno o più filtri in catena; quando i filtri raggiungono la densità
 scelta come obiettivo (di solito $p=0.5$), un nuovo filtro viene aggiunto in coda alla catena,
 facendo spazio così per l'inserimento nuovi elementi. Il test di appartenenza dovrà quindi ricercare
@@ -907,7 +907,7 @@ una progressione geometrica (il cui fattore è chiamato $s$), che si adatta velo
 crescita importante di elementi nel filtro senza aumentare troppo la lunghezza della catena (che
 impatterebbe sulla velocità del test di appartenenza). 
 
-Per quanto concerne i valori ottimali dei parametri $r$ e $s$, rimandiamo a \cite{bloomscalable} per
+Per quanto concerne i valori ottimali dei parametri $r$ e $s$, rimandiamo a \cite{bloom-scalable} per
 l'analisi sperimentale che mostra che i valori ottimali di $r$ sono $r \in \interval{0.8}{0.9}$,
 mentre il parametro $s$ può essere usato normalmente con valore \num{2}, aumentando magari a \num{4}
 se si prevede un numero molto elevato di elementi.

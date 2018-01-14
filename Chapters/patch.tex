@@ -278,7 +278,7 @@ Questa la descrizione dettagliata di ciascun parametro:
   \item \verb|CONFIG_BLOOM_TIGHTENINGRATIO| ($\num{0.85}$). Fattore di intensificazione, applicato
   per creare una progressione geometrica tra le probabilità di falsi positivi dei filtri all'interno
   della catena, come descritto nella \autoref{sec:bloomscalable}. Il valore ottimale è indicato
-  essere compreso in $\interval{0.8}{0.9}$ in \cite{bloomscalable}.
+  essere compreso in $\interval{0.8}{0.9}$ in \cite{bloom-scalable}.
 
 \end{itemize}
 \medskip
@@ -351,7 +351,7 @@ all'interno del dominio scelto. Invece del classico algoritmo di riduzione $idx 
 $s$ dimensione in bit della sezione), utilizziamo la formula $idx = hash \times s / 2^{32}$ che
 effettua comunque la riduzione richiesta, considerando che $index \in \interval[open
 right]{0}{2^{32}}$, ma senza richiedere una divisione, che anche nei moderni processori ha una latenza
-elevata (circa $26$ cicli, contro i $4$ di una moltiplicazione). Si veda \cite{lemirereduction} per
+elevata (circa $26$ cicli, contro i $4$ di una moltiplicazione). Si veda \cite{lemire-reduction} per
 i dettagli relativi a questa formula di riduzione.
 
 Alla linea~\label{line:togglebit}, viene impostato a $1$ il bit corrispondente all'indice calcolato,
