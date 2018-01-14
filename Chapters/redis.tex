@@ -210,7 +210,7 @@ Redis implementa un array associativo (tramite tabella hash) in cui le chiavi so
 valori associati sono oggetti di vari tipi (stringhe o strutture dati). Essendo un database
 chiave-valore in RAM, l'intero dataset di chiavi e valori viene memorizzato primariamente in RAM, e
 solo successivamente serializzato su disco con alcune politiche di persistenza configurabili (si
-veda la sezione Persistenza \ref{sec:persistence}).
+veda \autoref{sec:persistence}).
 
 Per comunicare con Redis, un client si deve connettere via TCP (la porta di default è la 6379) e
 comunicare tramite un protocollo testuale di tipo master/slave. È possibile utilizzare
@@ -222,14 +222,14 @@ Come esempio, la seguente sessione mostra come scrivere e leggere un valore di t
 stringa:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> SET abc provavalore
 OK
 127.0.0.1:6379> GET abc
 "provavalore"
 127.0.0.1:6379> GET abcd
 (nil)
-\end{lstlisting}
+\end{redis}
 
 Il valore di ritorno visualizzato dalla console è fortemente tipizzato nel protocollo;
 nei precedenti casi, il valore di ritorno è sempre una stringa (compreso l'ultimo
@@ -239,22 +239,22 @@ Il comando \verb|DEL| può essere utilizzato per cancellare un oggetto di tipo
 arbitrario:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> DEL abc
 (integer) 1
 127.0.0.1:6379> DEL notexisting
 (integer) 0
-\end{lstlisting}
+\end{redis}
 
 In questo caso, il valore di ritorno è un intero, dal quale si può desumere se il comando
 ha effettivamente cancellato un oggetto o meno. Gli errori sono anch'essi tipizzati in
 modo separato. Per esempio, un comando inesistente restituisce un codice di errore:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> MYSQL
 (error) ERR unknown command 'MYSQL'
-\end{lstlisting}
+\end{redis}
 
 Ogni chiave in Redis è una stringa (sequenza di byte) di lunghezza arbitraria; non è
 necessario che sia stampabile, sebbene questo sia consigliabile per facilitare il
@@ -271,7 +271,7 @@ Il nome MurMur deriva dalla combinazione delle due operazioni fondamentali che c
 funzione: la moltiplicazione (``mu'' per ``multiplication'') e la rotazione di bit (``r'' per
 ``rotation''). 
 
-L'algoritmo (descritto in~\ref{alg:murmurhash2}) gode di una buona popolarità poiché unisce una
+L'algoritmo (descritto in \autoref{alg:murmurhash2}) gode di una buona popolarità poiché unisce una
 buona velocità di esecuzione a una buona diffusione dei dati in ingresso (cosiddetto ``effetto
 valanga'').
 
@@ -346,7 +346,7 @@ per concatenare, \verb|STRLEN| per leggere la lunghezza, o \verb|GETRANGE| per e
 sottostringa.
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> SET foo abcd
 OK
 127.0.0.1:6379> GET foo
@@ -357,7 +357,7 @@ OK
 (integer) 6
 127.0.0.1:6379> GETRANGE foo 2 3
 "cd"
-\end{lstlisting}
+\end{redis}
 
 Si noti come \verb|APPEND| ha restituito la nuova lunghezza della stringa, sfruttando
 la disponibilità nel protocollo del valore di ritorno come modo per veicolare una
@@ -369,7 +369,7 @@ tipo debole, cioè è possibile manipolarle come se fossero oggetti di altri tip
 tipo stringa che rappresentano degli interi in base 10:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> SET foo 123
 OK
 127.0.0.1:6379> STRLEN foo
@@ -382,7 +382,7 @@ OK
 (integer) 100
 127.0.0.1:6379> GET foo
 "100"
-\end{lstlisting}
+\end{redis}
 
 In questo esempio, alla chiave \verb|foo| è stato associato una stringa che contiene
 la rappresentazione di un numero in base 10; il comando \verb|STRLEN| ci rassicura
@@ -422,7 +422,7 @@ lista sono i seguenti:
 Qui si può vedere una sessione interattiva di esempio di uso di una lista:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> RPUSH mylist mickey minnie goofy donald
 (integer) 4
 127.0.0.1:6379> LINDEX mylist 0
@@ -440,7 +440,7 @@ Qui si può vedere una sessione interattiva di esempio di uso di una lista:
 2) "goofy"
 3) "walt"
 4) "donald"
-\end{lstlisting}
+\end{redis}
 
 Si noti che non è necessario inizializzare la lista in nessun modo: il primo riferimento alla chiave
 \verb|mylist| tramite un comando \verb|RPUSH| (che opera esclusivamente su liste) è sufficiente
@@ -501,7 +501,7 @@ I comandi principali sono i seguenti, caratterizzata dal prefisso \verb|H|:
 Qui si può vedere una sessione interattiva di esempio di uso di una tabella hash:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> HSET user:88 name giovanni
 (integer) 1
 127.0.0.1:6379> HMSET user:88 surname bajo age 38
@@ -529,7 +529,7 @@ OK
 (integer) 1
 127.0.0.1:6379> HEXISTS user:88 giovanni
 (integer) 0
-\end{lstlisting}
+\end{redis}
 
 Come si può vedere, la tabella hash è creata dinamicamente al primo uso, e non è necessario
 dimensionarla in alcun modo; Redis implementa in modo efficiente le tabelle hash e le ridimensiona
@@ -586,7 +586,7 @@ Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizza
 Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> SADD paying_users 88 37 4 66
 (integer) 4
 127.0.0.1:6379> SADD paying_users 37 111
@@ -607,7 +607,7 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
 127.0.0.1:6379> SINTER paying_users updated_users
 1) "4"
 2) "66"
-\end{lstlisting}
+\end{redis}
 
 Anche in questo caso, non è stato necessario allocare o dimensionare le strutture dati: al primo
 accesso, esse vengono create automaticamente, e si dimensionano in modo dinamico durante l'uso.
@@ -720,7 +720,7 @@ della struttura dati, indichiamo alcuni possibili scenari applicativi.
 Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordinati:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> ZADD test 10 a 20 b 30 c
 (integer) 0
 127.0.0.1:6379> ZCARD test
@@ -741,7 +741,7 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordi
 "40"
 127.0.0.1:6379> ZRANGEBYSCORE test 15 25
 (empty list or set)
-\end{lstlisting}
+\end{redis}
 
 
 \subsection{HyperLogLog}
@@ -811,7 +811,7 @@ Giugno 2017 è stato più di 2 miliardi \cite{fb-mau}.
 Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> PFADD dau 50
 (integer) 1
 127.0.0.1:6379> PFCOUNT dau
@@ -824,7 +824,7 @@ Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 (integer) 1
 127.0.0.1:6379> PFCOUNT dau
 (integer) 11
-\end{lstlisting}
+\end{redis}
 
 Inizialmente, viene aggiunto il valore $50$ all'HyperLogLog denominato \verb|dau| (che viene quindi
 creato con questo primo comando), e successivamente si può verificare che la cardinalità
@@ -871,7 +871,7 @@ transazione per evitare che altri client possano accedere ad uno stato inconsist
 l'utente è presente come record ma non nell'indice (o viceversa):
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> HMSET user:123 name Giovanni surname Bajo
 OK
 127.0.0.1:6379> ZADD paying-users 1500 123
@@ -889,7 +889,7 @@ QUEUED
 127.0.0.1:6379> EXEC
 1) (integer) 1
 2) (integer) 1
-\end{lstlisting}
+\end{redis}
 
 Come si vede, i comandi inviati al server dopo il comando \verb|MULTI| non sono stati eseguiti
 immediatamente, ma accodati in attesa della fine della definizione della transazione, delimitata
@@ -910,10 +910,10 @@ Relativamente alle proprietà ACID sopra descritte, è possibile osservare che:
 	\item \textbf{Isolamento}: la proprietà viene rispettata perché l'esecuzione dei comandi
 	della transazione è perfettamente isolata da altri client, che rimangono in attesa. Questo
 	comportamento è ottenuto semplicemente tramite l'approccio a singolo thread di esecuzione (si
-	veda la sezione sulla Concorrenza \ref{sec:concurrency} per maggiori informazioni).
+	veda la \autoref{sec:concurrency} per maggiori informazioni).
 	\item \textbf{Durabilità}: questa possibilità può essere rispettata se Redis viene configurato
-	per effettuare una piena persistenza dopo ciascun comando (si veda la sezione
-	\ref{sec:durability:aof}): in particolare, sarà necessario attivare la persistenza in formato
+	per effettuare una piena persistenza dopo ciascun comando (si veda la
+	\autoref{sec:durability:aof}): in particolare, sarà necessario attivare la persistenza in formato
 	AOF, indicando poi di eseguire un \verb|fsync| dopo l'esecuzione ciascun comando.
 \end{itemize}
 
@@ -935,12 +935,12 @@ per estrarre il valore corrente, e poi \verb|HSET| per inserire il nuovo valore 
 in questo modo:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> HGET post:589 vote
 "56"
 127.0.0.1:6379> HSET post:589 vote 57
 (integer) 0
-\end{lstlisting}
+\end{redis}
 
 Purtroppo questa sequenza è soggetta ad una race condition da parte di un altro client che volesse
 modificare lo stesso campo. Non sembra inoltre possibile inoltre utilizzare una transazione
@@ -948,13 +948,13 @@ basata su \verb|MULTI| e \verb|EXEC| perché il comando \verb|HSET| può essere 
 solo dopo che ha ricevuto la risposta al comando \verb|HGET|:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> MULTI
 OK
 127.0.0.1:6379> HGET post:589 vote
 QUEUED
 127.0.0.1:6379> HSET post:589 ???
-\end{lstlisting}
+\end{redis}
 
 Per risolvere queste situazioni, Redis utilizza un comune pattern di transazione atomica chiamato
 ``check and set'', che consente di condizionare l'esecuzione di una transazione alla verifica che un
@@ -967,7 +967,7 @@ eseguire la transazione, nella speranza di riuscire a vincere la corsa.
 Questo è l'uso corretto di \verb|WATCH| nell'esempio che stiamo analizzando:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> WATCH post:589
 OK
 127.0.0.1:6379> HGET post:589 vote
@@ -978,13 +978,13 @@ OK
 QUEUED
 127.0.0.1:6379> EXEC
 1) (integer) 0
-\end{lstlisting}
+\end{redis}
 
 Vediamo cosa succede invece simulando l'intervento di un client esterno che modifica il valore
 del post in modo concorrente:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> WATCH post:589
 OK
 127.0.0.1:6379> HGET post:589 vote
@@ -997,7 +997,7 @@ OK
 QUEUED
 127.0.0.1:6379> EXEC
 (nil)
-\end{lstlisting}
+\end{redis}
 
 In questo caso, la modifica sopraggiunta alla chiave tra \verb|WATCH| e \verb|EXEC| ha fatto sì
 che la transazione non venisse eseguita; il client può rilevare questa condizione dal valore 
@@ -1104,7 +1104,7 @@ Per provare ad eseguire lo script durante la fase di sviluppo, è consigliabile 
 dell'opzione \verb|--eval| del comando \verb|redis-cli|:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 $ redis-cli
 127.0.0.1:6379> ZADD paying_users 1000 a 2000 b 3000 c 3000 d 250 e
 (integer) 5
@@ -1112,7 +1112,7 @@ $ redis-cli --eval zsetaverage.lua k t , paying_users 1000
 (integer) 2250
 $ redis-cli --eval zsetaverage.lua k t , paying_users 2000
 (integer) 2666
-\end{lstlisting}
+\end{redis}
 
 Si noti che abbiamo passato 2 parametri: il primo con chiave \verb|k| e valore \verb|paying_users|;
 il secondo con chiave \verb|t| e valore \verb|1000| (o \verb|2000|). L'identificatore ``\verb|,|''
@@ -1126,14 +1126,14 @@ i parametri, con il comando \verb|EVALSHA|.
 In questo caso, la sequenza è la seguente:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> SCRIPT LOAD "-- zsetaverage.lua: calcola la media di spesa degli utenti paganti sopra\n-- una certa soglia.\n--\n-- Argomenti:\n--     ARGV[1] - chiave dell'insieme ordinato\n--     ARGV[2] - soglia di spesa\n\n-- Estrae tutti gli utenti con un punteggio maggiore a quello specificato.\n-- L'opzione WITHSCORES dice a redis di tornare non solo le stringhe\n-- dell'insieme ordinato (quindi gli ID degli utenti) ma anche i \n-- punteggi associati.\n-- matches sara' quindi un array contenente in sequenza ID1, SCORE1, ID2, SCORE2, ecc.\nlocal matches = redis.call('ZRANGEBYSCORE', ARGV[1], ARGV[2], '+inf', 'WITHSCORES')\n\nlocal total = 0\n\n-- Attraversa l'array a partire dal secondo elemento, fino alla sua lunghezza,\n-- con passo 2. In questo modo ad ogni passo indirizziamo direttamente i punteggi\n-- saltando gli ID\n-- Si noti che in LUA il primo elemento di un array ha indice 1\nfor idx=2, #matches, 2 do\n    total = total + tonumber(matches[idx])\nend\n\n-- Calcola la media\nreturn total / (#matches / 2)\n"
 "c8fe4ea641681f744e517b52002266ca7b4e4cdf"
 127.0.0.1:6379> EVALSHA c8fe4ea641681f744e517b52002266ca7b4e4cdf 2 k t paying_users 1000
 (integer) 2250
 127.0.0.1:6379> EVALSHA c8fe4ea641681f744e517b52002266ca7b4e4cdf 2 k t paying_users 2000
 (integer) 2666
-\end{lstlisting}
+\end{redis}
 
 Il comando \verb|EVALSHA| riceve come argomento l'ID dello script, il numero di parametri, e poi
 in sequenza tutte le chiavi (non utilizzate nel nostro esempio) e tutti i valori. 
@@ -1149,7 +1149,7 @@ come cache: poiché le operazioni sono molto più veloci di un più complesso da
 dataset su disco, è utile memorizzare in Redis il risultato di alcune complesse operazioni laddove
 si ritiene che possano venire nuovamente eseguite. 
 
-Oltre al già citato caso delle sessioni utente (\ref{sec:birth}), un'applicazione web di tipo CMS
+Oltre al già citato caso delle sessioni utente (\autoref{sec:birth}), un'applicazione web di tipo CMS
 (\emph{Content Managament System}) potrebbe utilizzare Redis per memorizzare il risultato della
 compilazione delle pagine HTML (o parti di esse) sulla base delle informazioni estratte dal database
 e dei template di pagina, così da poter più velocemente inviare la medesima pagina ad un altro
@@ -1182,7 +1182,7 @@ I comandi che manipolano la scadenza delle chiavi sono i seguenti:
 Questo è un esempio di uso dei comandi di scadenza:
 
 \medskip
-\begin{lstlisting}
+\begin{redis}
 127.0.0.1:6379> SET data 123
 OK
 127.0.0.1:6379> GET data
@@ -1199,7 +1199,7 @@ OK
 (integer) 1
 127.0.0.1:6379> GET data
 (nil)
-\end{lstlisting}
+\end{redis}
 
 \section{Concorrenza}
 \label{sec:concurrency}

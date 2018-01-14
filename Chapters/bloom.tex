@@ -283,7 +283,7 @@ dei filtri).
 \section{Funzionamento dei filtri}
 
 Un filtro di Bloom è un array di bit, utilizzato come tabella hash, di dimensione arbitraria
-\verb|M| fissata al momento della creazione in base ai parametri (vedi \ref{sec:bloomparms}).
+\verb|M| fissata al momento della creazione in base ai parametri (vedi la \autoref{sec:bloomparms}).
 Quando il filtro è vuoto, tutti i bit sono impostati a 0. La seguente tabella mostra un filtro
 vuoto composto di 11 bit:
 
@@ -384,7 +384,7 @@ A questo punto, l'inserimento dei 3 elementi è terminato.
 
 \subsection{Test di appartenenza}
 
-L'algoritmo~\ref{alg:bloomtest} per il test di appartenenza di un elemento segue un processo
+L'\autoref{alg:bloomtest} per il test di appartenenza di un elemento segue un processo
 simmetrico: vengono eseguite le $K$ funzioni di hash e si identificano così $K$ bit dell'array di
 cui verificare lo stato. Se tutti i bit sono impostati a 1, l'elemento è \emph{probabilmente
 presente} all'interno del filtro; se almeno uno dei bit è impostato a 0, l'elemento è
@@ -483,7 +483,7 @@ l'elemento $F$ non era stato precedentemente inserito nel filtro.
 \label{sec:bloom:hash}
 
 Come abbiamo visto, ogni filtro richiede l'utilizzo di un certo numero $K$ di funzioni di hash; la
-scelta del valore ideale per $K$ verrà analizzata in \ref{sec:bloomparms}, ma non è inusuale
+scelta del valore ideale per $K$ verrà analizzata nella \autoref{sec:bloomparms}, ma non è inusuale
 utilizzare filtri configurati con più di 5 funzioni (e a volte più di 10). 
 
 Le caratteristiche richieste per una funzione di hash utilizzata in un filtro sono le stesse che si
@@ -491,7 +491,7 @@ ricercano quando la funzione viene utilizzata in una tabella hash, cioè l'unifo
 determinismo. In particolare, non è strettamente necessario utilizzare una funzione crittografica di
 hash, che garantisce anche altre proprietà come la non reversibilità e la resistenza ad attacchi
 quali la collisione e la pre-immagine, sebbene ovviamente ci sono scenari applicativi
-(come in \ref{sec:bloomcdn}) in cui una funzione di hash banalmente soggetta a ricerca di collisione
+(come nella \autoref{sec:bloomcdn}) in cui una funzione di hash banalmente soggetta a ricerca di collisione
 potrebbe causare attacchi di tipo avvelenamento della cache con possibili \emph{denial of service}.
 Anche il parametro della velocità di esecuzione deve essere tenuto in considerazione, e tipicamente
 le funzioni crittografiche di hash sono più lente delle funzioni non crittografiche.
@@ -508,7 +508,7 @@ creando così una famiglia di funzioni di hash, utilizzabili nel filtro.
 Questo approccio però richiede di eseguire la funzione di hash $K$ volte per ogni elemento che si
 vuole inserire nel filtro, impattando quindi in modo significativo sulla velocità di esecuzione al
 crescere di $K$. Una soluzione alternativa (proposta per la prima volta in \cite{bloomdoublehash}) è
-quella di utilizzare l'algoritmo~\ref{alg:doublehash} di hash doppio, utilizzato comunemente come
+quella di utilizzare l'\autoref{alg:doublehash} di hash doppio, utilizzato comunemente come
 metodo per la risoluzione di collisioni nelle tabelle hash. In termini matematici, date 2 funzioni
 di hash $h_a$ e $h_b$ (magari generate con un seme da una medesima funzione, come visto in
 precedenza) è possibile definire la seguente famiglia di funzioni:
@@ -545,7 +545,7 @@ cui le sequenze di indici tra due elementi potrebbe essere parzialmente sovrappo
 siano diversi; si pensi per esempio a $h_b(x_1) = 2h_b(x_2) \bmod M$.
 
 Per risolvere questi problemi, \cite{bloomdoublehash} propone di usare
-l'algoritmo~\ref{alg:ehndoublehash} per la composizione degli hash, chiamato  ``hash doppio
+l'\autoref{alg:ehndoublehash} per la composizione degli hash, chiamato  ``hash doppio
 avanzato''. Volendo derivare matematicamente la formula, otteniamo $$ h_i(x) = h_a(x) + ih_b(x) +
 \frac{i^3-i}{6} \pmod M $$.
 
@@ -601,7 +601,7 @@ $$ n \approx -\frac{M}{K}\ln(1-p) $$
 che è possibile valutare quindi estraendo la densità $p$ del filtro da un semplice conteggio
 dei bit impostati ad 1 in un dato momento.
 
-I grafici nella figura \ref{fig:bloomerror} mostrano l'errore di calcolo della cardinalità
+I grafici nella \autoref{fig:bloomerror} mostrano l'errore di calcolo della cardinalità
 effettuato in un filtro al crescere della densità, e al numero di funzioni di hash. Come si può
 vedere, l'errore effettuato dalla stima non diverge anche per valori di densità elevati.
 
@@ -632,7 +632,7 @@ vedere, l'errore effettuato dalla stima non diverge anche per valori di densità
 \subsection{Unione ed intersezione}
 
 Dati due filtri creati con gli stessi parametri ed utilizzanti le stesse funzioni di hash, è
-possibile calcolare l'unione come da algoritmo~\ref{alg:bloomunion}, semplicemente applicando
+possibile calcolare l'unione come mostrato nell'\autoref{alg:bloomunion}, semplicemente applicando
 l'operazione di \verb|OR| bit a bit agli array. Questa operazione non causa alcuna perdita di
 informazione né pessimizzazione, poiché l'array risultante è il medesimo che si sarebbe ottenuto
 aggiungendo in un solo filtro tutti gli elementi presenti nel primo e nel secondo filtro in input.
@@ -653,7 +653,7 @@ aggiungendo in un solo filtro tutti gli elementi presenti nel primo e nel second
 
 
 È possibile in modo simile calcolare l'intersezione tra due filtri applicando l'operazione di
-\verb|AND| bit a bit agli array, come da algoritmo~\ref{alg:bloomintersection}. In questo caso però
+\verb|AND| bit a bit agli array, come nell'\autoref{alg:bloomintersection}. In questo caso però
 il risultato non è ottimale: l'array risultante potrebbe contenere alcuni bit impostati a 1 che non
 risulterebbero tali se si fosse creato direttamente un filtro aggiungendo solo gli elementi facenti
 parte dell'intersezione, e di conseguenza la probabilità di falsi positivi risultante dal filtro

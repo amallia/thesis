@@ -61,22 +61,54 @@
   {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1
 }
 
+\definecolor{LemonChiffon1}{RGB}{255,250,205}
+
 % Configurazione estetica di default dei listati
 \lstset{
   escapechar=|,
   stepnumber=1,
   frame=tb,
+  framexleftmargin=0.5em,
+  framexrightmargin=0.5em,
   aboveskip=3mm,
   belowskip=3mm,
   columns=flexible,
   stringstyle=\color{red},
-  breakatwhitespace=true,
-  tabsize=4
+  basicstyle=\ttfamily\footnotesize,
+  tabsize=4,
+  backgroundcolor=\color{LemonChiffon1},
 }
+
+% Definzione della colorazione per le sessioni Redis
+\lstdefinelanguage{Redis}{
+  morekeywords={
+    OK, QUEUED,
+    SET, GET, DEL, STRLEN, INCR, INCRBY, DECRBY, GETRANGE, APPEND,
+    RPUSH, LINDEX, LPOP, LLEN, LINSERT, LRANGE,
+    HSET, HMSET, HLEN, HGET, HGETALL, HKEYS, HVALS, HEXISTS,
+    SADD, SISMEMBER, SREM, SCARD, SDIFF, SINTER,
+    ZADD, ZCARD, ZSCORE, ZRANGE, ZREVRANGE, ZRANGEBYSCORE, ZINCRBY, ZREM,
+    PFADD, PFCOUNT, 
+    SCRIPT, LOAD,
+    EVALSHA,
+    WATCH, MULTI, EXEC,
+    EXPIREAT, TTL, PTTL, PEXPIRE,
+    BFADD, BFCOUNT, BFEXIST, ELEMENTS, ERROR, BFDEBUG, STATUS, FILTER,
+  }, 
+  sensitive=true,
+  moredelim=[s][\color{Maroon}\itshape]{127}{>},
+  morestring=[b]", 
+}
+\lstnewenvironment{redis}[1][]
+  {\lstset{language=Redis,#1}}{}
 
 % Macro per caricare un listato inserendo come caption il suo nome
 \newcommand{\sourcecode}[2][]{%
-    \lstinputlisting[caption={\texttt{\detokenize{#2}}},#1]{#2}%
+    \lstinputlisting[
+      caption={\texttt{\detokenize{#2}}},
+      basicstyle=\ttfamily\scriptsize, % un po' più piccolo, visto che è l'intero file
+      #1
+    ]{#2}%
 }
 
 %********************************************************************

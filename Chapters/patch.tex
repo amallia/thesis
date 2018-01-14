@@ -35,8 +35,8 @@ In particolare, abbiamo identificato i seguenti requisiti:
 	oculate.
 \end{itemize}
 
-Per soddisfare i requisiti, ci siamo orientati su implementare i {filtri di Bloom
-scalabili}~\ref{sec:bloomscalable}, i quali eliminano la necessità di determinare in anticipo il
+Per soddisfare i requisiti, ci siamo orientati su implementare i filtri di Bloom
+scalabili (\autoref{sec:bloomscalable}), i quali eliminano la necessità di determinare in anticipo il
 dimensionamento della struttura (in termini di byte o di numero di elementi), e la cui crescita
 esponenziale di occupazione della memoria consente una sostanziale scalabilità.
 
@@ -102,7 +102,7 @@ versione, in modo che sia sempre possibile aggiornare il server senza causare pr
 Vediamo ora un esempio di sessione utilizzando i comandi appena descritti:
 
 \medskip
-\begin{lstlisting}[numbers=left,frame=single,caption=Esempio di utilizzo dei nuovi comandi per i filtri di Bloom]
+\begin{redis}[numbers=left,caption=Esempio di utilizzo dei nuovi comandi per i filtri di Bloom]
 127.0.0.1:6379> BFADD prova ELEMENTS a b c d e |\label{line:bfadd}|
 (integer) 5
 127.0.0.1:6379> BFCOUNT prova |\label{line:bfcount}|
@@ -119,28 +119,28 @@ Vediamo ora un esempio di sessione utilizzando i comandi appena descritti:
 "n:1 e:0.003"
 127.0.0.1:6379> BFDEBUG FILTER prova 0 |\label{line:bfdebugfilter}|
 "k:11 s:1798 b:77"
-\end{lstlisting}
+\end{redis}
 
-Per cominciare, alla linea~\ref{line:bfadd} viene creato un filtro chiamato \verb|prova| in cui
+Per cominciare, alla \autoref{line:bfadd} viene creato un filtro chiamato \verb|prova| in cui
 vengono inseriti 5 elementi (ciascun elemento è una stringa di un solo carattere, corrispondenti
 alle prime cinque lettere dell'alfabeto). Il comando restituisce il valore $5$, corrispondente al
-numero di elementi inseriti. Alla linea~\ref{line:bfcount}, viene effettuato un calcolo della 
+numero di elementi inseriti. Alla \autoref{line:bfcount}, viene effettuato un calcolo della 
 cardinalità stimata, che restituisce il valore corretto $5$.
 
-Alla linea~\ref{line:bfadd2} viene fatto un secondo inserimento; questa volta, oltre a due
+Alla \autoref{line:bfadd2} viene fatto un secondo inserimento; questa volta, oltre a due
 elementi nuovi (stringhe \verb|f| e \verb|g|), viene inserito anche un elemento che era stato
 già precedentemente inserito: la lettera \verb|a|. Il comando restituisce $2$, riportando
 correttamente il numero di nuovi elementi inseriti, e anche il successivo calcolo della
 cardinalità è corretto, poiché restituisce $7$
 
-Alla linea~\ref{line:bfexist} viene effettuato un primo test di appartenenza al filtro tramite
+Alla \autoref{line:bfexist} viene effettuato un primo test di appartenenza al filtro tramite
 il comando \verb|BFEXIST|, richiedendo
 se l'elemento corrispondente alla stringa \verb|b| è presente; l'elemento era stato inserito
-precedentemente (linea~\ref{line:bfadd}), ed infatti il comando restituisce correttamente $1$ per
+precedentemente (\autoref{line:bfadd}), ed infatti il comando restituisce correttamente $1$ per
 indicare che l'elemento è presente. Successivamente, viene effettuato un secondo test con
 l'elemento \verb|z| che non era stato mai inserito, e il comando questa volta restituisce $0$.
 
-Alla linea~\ref{line:bfdebugstatus} viene usato il comando \verb|BFDEBUG STATUS| per ispezionare lo
+Alla \autoref{line:bfdebugstatus} viene usato il comando \verb|BFDEBUG STATUS| per ispezionare lo
 stato del filtro. La stringa restituita è composta da due valori:
 
 \medskip
@@ -152,7 +152,7 @@ stato del filtro. La stringa restituita è composta da due valori:
 \end{tabular}
 \medskip
 
-Alla linea ~\ref{line:bfdebugfilter}, viene eseguito il comando \verb|BFDEBUG FILTER| per
+Alla \autoref{line:bfdebugfilter}, viene eseguito il comando \verb|BFDEBUG FILTER| per
 ispezionare lo stato del primo filtro della catena. La stringa restituita contiene tre valori:
 
 \medskip
@@ -173,7 +173,7 @@ ispezionare lo stato del primo filtro della catena. La stringa restituita contie
 Le modifiche effettuate a Redis sono disponibili su GitHub, all'interno del
 \href{https://github.com/rasky/redis/tree/bloomfilter}{repositorio fork di Redis}, in un branch
 chiamato \verb|bloomfilter|, e la parte principale del codice è riportata anche
-nell'Appendice~\ref{sec:modredis}).
+nella \autoref{sec:modredis}).
 
 \lstset{
 	language=C,
@@ -181,7 +181,7 @@ nell'Appendice~\ref{sec:modredis}).
 	rangesuffix=\ ---------\ */,
 	includerangemarker=false,
 	escapeinside={/*@}{*/},
-	numbers=left	
+	numbers=left,
 }
 
 \subsection{Strutture dati}
@@ -256,28 +256,28 @@ Questa la descrizione dettagliata di ciascun parametro:
 \begin{itemize}
   \item \verb|CONFIG_BLOOM_BASESIZE| (\SI{2048}{\byte}). Dimensione iniziale in byte del primo
   filtro della catena. La dimensione è stata calcolata tenendo conto di un bilanciamento tra uso
-  della memoria, crescita del numero di filtri nella catena, e velocità (vedi il
-  Capitolo~\ref{sec:patch:basesize}).
+  della memoria, crescita del numero di filtri nella catena, e velocità (vedi la
+  \autoref{sec:patch:basesize}).
 
   \item \verb|CONFIG_BLOOM_DEFAULTERROR| ($\SI{0.3}{\percent}$). Probabilità di default di falso
   positivo a cui il filtro scalabile tende asintoticamente. La scelta del valore cerca di
-  massimizzare i casi d'uso in cui il filtro può essere usato con successo (vedi il
-  Capitolo~\ref{sec:patch:defaulterror}).
+  massimizzare i casi d'uso in cui il filtro può essere usato con successo (vedi la
+  \autoref{sec:patch:defaulterror}).
 
   \item \verb|CONFIG_BLOOM_DESIREDFILLRATIO| ($\SI{50}{\percent}$). Valore di densità massimo dei filtri
   nella catena; quando il filtro in fondo alla catena (l'unico su cui si inseriscono nuovi elementi)
   raggiunge questa densità, un nuovo filtro viene creato. Il valore ottimizza l'uso dei filtri di
-  Bloom, come visto nel Capitolo~\ref{sec:bloomparms}.
+  Bloom, come visto nella \autoref{sec:bloomparms}.
 
   \item \verb|CONFIG_BLOOM_ITEMGROWTHRATIO| ($\num{2.0}$). Fattore di crescita dei filtri
-  all'interno della catena. Come visto nel Capitolo~\ref{sec:bloomscalable} dove è chiamato
+  all'interno della catena. Come visto nella \autoref{sec:bloomscalable} dove è chiamato
   $s$, questo fattore delinea una progressione geometrica che consente di adattare la crescita del
   filtro all'aumentare del numero di elementi inseriti senza creare una catena troppo lunga
   né sprecando troppa memoria.
 
   \item \verb|CONFIG_BLOOM_TIGHTENINGRATIO| ($\num{0.85}$). Fattore di intensificazione, applicato
   per creare una progressione geometrica tra le probabilità di falsi positivi dei filtri all'interno
-  della catena, come descritto nel Capitolo~\ref{sec:bloomscalable}. Il valore ottimale è indicato
+  della catena, come descritto nella \autoref{sec:bloomscalable}. Il valore ottimale è indicato
   essere compreso in $\interval{0.8}{0.9}$ in \cite{bloomscalable}.
 
 \end{itemize}
@@ -310,10 +310,10 @@ memoria occupata dalla struttura del filtro stessa.
 La funzione \verb|bloomFilterNew| riceve in input un filtro scalabile e ritorna un filtro appena
 creato con i parametri adatti ad essere l'ultimo filtro della catena.
 
-Il calcolo dei parametri del filtro ricalca quanto visto nel Capitolo~\ref{sec:bloomparms} e nel
-Capitolo~\ref{sec:bloomscalable}. Alla linea~\ref{line:allocmem}, si può notare come la memoria
+Il calcolo dei parametri del filtro ricalca quanto visto nella \autoref{sec:bloomparms} e nella
+\autoref{sec:bloomscalable}. Alla \autoref{line:allocmem}, si può notare come la memoria
 allocata tenga conto dell'array flessibile delle sezioni, lasciando lo spazio per il giusto numero
-di puntatori (uno per sezione). Nel ciclo successivo, alla linea~\ref{line:filterloopalloc}, vengono
+di puntatori (uno per sezione). Nel ciclo successivo, alla \autoref{line:filterloopalloc}, vengono
 allocate invece le singole sezioni ed inizializzate a $0$.
 
 \subsection{Aggiunta di un elemento al filtro}
@@ -331,22 +331,22 @@ configurata, viene aggiunto un nuovo filtro vuoto in fondo alla catena, usando \
 \lstinputlisting[caption=Aggiunta elemento ad un filtro,linerange=bloomFilterAdd-End\ of\ bloomFilterAdd]{code/bloom.c}
 
 La funzione \verb|bloomFilterAdd| effettua invece l'inserimento vero e proprio, secondo
-l'Algoritmo~\ref{alg:bloominsert} visto nel Capitolo~\ref{sec:bloom:add}.
+l'\autoref{alg:bloominsert} visto nella \autoref{sec:bloom:add}.
 
-Per le funzioni di hash, viene utilizzato l'Algoritmo~\ref{alg:ehndoublehash} di doppio hash
-avanzato, visto nel Capitolo~\ref{sec:bloom:hash}. L'algoritmo richiede in partenza due funzioni di
+Per le funzioni di hash, viene utilizzato l'\autoref{alg:ehndoublehash} di doppio hash
+avanzato, visto nella \autoref{sec:bloom:hash}. L'algoritmo richiede in partenza due funzioni di
 hash ($h_a$ e $h_b$): nell'implementazione viene utilizzata la funzione di hash
 \verb|MurmurHash64A|, una variante a \SI{64}{\bit} della funzione MurMurHash2
-(Algoritmo~\ref{alg:murmurhash2}). Di questa funzione, è presente già un'implementazione dentro il
+(\autoref{alg:murmurhash2}). Di questa funzione, è presente già un'implementazione dentro il
 codice sorgente di Redis, e poiché l'output è a \SI{64}{\bit}, consideriamo la suddivisione in due
 valori a \SI{32}{\bit} come l'output di due funzioni di hash separate, ottenendo così i due valori
 \verb|a| e \verb|b| utili come input per l'algoritmo di doppio hash avanzato. La funzione
 \verb|MurMurHash64A| viene chiamata con un seme causale, calcolato in fase di sviluppo
 (\verb|0xc5fb9af2|).
 
-Il calcolo del doppio hash, in formato iterativo, avviene alla linea~\ref{line:doublehash}, secondo
-quanto visto nell'Algoritmo~\ref{alg:ehndoublehash}. Successivamente, alla
-linea~\ref{line:hashreduction}, viene effettuata una riduzione dell'output della funzione di hash
+Il calcolo del doppio hash, in formato iterativo, avviene alla \autoref{line:doublehash}, secondo
+quanto visto nell'\autoref{alg:ehndoublehash}. Successivamente, alla
+\autoref{line:hashreduction}, viene effettuata una riduzione dell'output della funzione di hash
 all'interno del dominio scelto. Invece del classico algoritmo di riduzione $idx = hash \bmod s$ (con
 $s$ dimensione in bit della sezione), utilizziamo la formula $idx = hash \times s / 2^{32}$ che
 effettua comunque la riduzione richiesta, considerando che $index \in \interval[open
