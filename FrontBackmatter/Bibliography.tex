@@ -4,6 +4,12 @@
 % work-around to have small caps also here in the headline
 % https://tex.stackexchange.com/questions/188126/wrong-header-in-bibliography-classicthesis
 % Thanks to Enrico Gregorio
+
+% Improve URL splitting:
+% https://tex.stackexchange.com/questions/134191/line-breaks-of-long-urls-in-biblatex-bibliography/134281
+\setcounter{biburllcpenalty}{7000}
+\setcounter{biburlucpenalty}{8000}
+
 \defbibheading{bibintoc}[\bibname]{%
   \phantomsection
   \manualmark
