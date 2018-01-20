@@ -180,15 +180,15 @@ alla base dell'architettura di Redis.
 
 Redis è stato scritto per funzionare su sistemi UNIX e supporta ufficialmente la
 compilazione sotto Linux, macOS, OpenBSD, NetBSD e FreeBSD. Il codice è stato scritto
-per essere compatibile anche con architetture a 32-bit, sebbene la versione a 64-bit
-sia di gran lunga la più utilizzata in virtù della maggiore capacità di indirizzamento
-di memoria.
+per essere compatibile anche con architetture a \SI{32}{\bit}, sebbene la versione a 
+\SI{64}{\bit} sia di gran lunga la più utilizzata in virtù della maggiore capacità di 
+indirizzamento di memoria.
 
 La compilazione da codice sorgente è molto semplice: Redis è scritto nel linguaggio ANSI C90, e le
 pochissime dipendenze a livello di librerie sono distribuite con il codice sorgente stesso, quindi è
 sufficiente disporre sul sistema del compilatore GCC. Una volta scaricato l'archivio di codice
-sorgente dalla \href{https://redis.io/download}{pagina di scaricamento ufficiale} o tramite
-\verb|git| dal \href{https://github.com/antirez/redis}{repositorio ufficiale su GitHub}, è
+sorgente dalla \fnhref{https://redis.io/download}{pagina di scaricamento ufficiale} o tramite
+\verb|git| dal \fnhref{https://github.com/antirez/redis}{repositorio ufficiale su GitHub}, è
 sufficiente lanciare il comando \verb|make|. Questa l'intera sequenza:
 
 \medskip
@@ -222,39 +222,44 @@ Come esempio, la seguente sessione mostra come scrivere e leggere un valore di t
 stringa:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> SET abc provavalore
 OK
 127.0.0.1:6379> GET abc
 "provavalore"
-127.0.0.1:6379> GET abcd
+|\lnote|127.0.0.1:6379> GET abcd
 (nil)
-\end{redis}
+\end{commentedsource}
 
 Il valore di ritorno visualizzato dalla console è fortemente tipizzato nel protocollo;
-nei precedenti casi, il valore di ritorno è sempre una stringa (compreso l'ultimo
-caso in cui la stringa è vuota, e viene dunque visualizzata come ``<nil>``).
+nel precedente esempio, il valore di ritorno è sempre una stringa. Quando viene
+richiesto il valore di una stringa che non esiste \lnnum{1}, il valore restituito
+è una stringa vuota, che viene visualizzata da \verb|redis-cli| come \verb|<nil>|,
+invece di \verb|""|.
 
 Il comando \verb|DEL| può essere utilizzato per cancellare un oggetto di tipo
 arbitrario:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> DEL abc
-(integer) 1
+|\lnote|(integer) 1
 127.0.0.1:6379> DEL notexisting
-(integer) 0
-\end{redis}
+|\lnote|(integer) 0
+\end{commentedsource}
 
-In questo caso, il valore di ritorno è un intero, dal quale si può desumere se il comando
-ha effettivamente cancellato un oggetto o meno. Gli errori sono anch'essi tipizzati in
-modo separato. Per esempio, un comando inesistente restituisce un codice di errore:
+In questo caso, il valore di ritorno è un intero, dal quale si può desumere se il comando ha
+effettivamente cancellato un oggetto \lnnum{1}, oppure se l'oggetto non esisteva \lnnum{2}.
+
+Alcuni comandi possono, in alcuni casi, tornare invece un errore. Gli errori non hanno dei
+tipi definiti nel protocollo, ma contengono semplicemente un messaggio di errore. In questo
+esempio, si vede un errore generato dall'invio di un comando inesistente:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> MYSQL
 (error) ERR unknown command 'MYSQL'
-\end{redis}
+\end{commentedsource}
 
 Ogni chiave in Redis è una stringa (sequenza di byte) di lunghezza arbitraria; non è
 necessario che sia stampabile, sebbene questo sia consigliabile per facilitare il
@@ -263,24 +268,22 @@ chiamata MurMurHash2.
 
 \subsection{Funzione di hash MurMurHash2}
 
-La funzione di hash \href{https://sites.google.com/site/murmurhash/}{MurMurHash2} è una funzione di
-hash non crittografica creata nel 2008 da Austin Appleby, un ingegnere di Google, seconda versione
-della famiglia MurMur.
+\fnhref{https://sites.google.com/site/murmurhash/}{MurMurHash2} è una funzione di hash non
+crittografica creata nel 2008 da Austin Appleby, un ingegnere di Google, ed è la seconda versione
+della famiglia MurMur. Il nome MurMur deriva dalla combinazione delle due operazioni fondamentali
+che compongono la funzione: la moltiplicazione (``mu'' per ``multiplication'') e la rotazione di bit
+(``r'' per ``rotation'').
 
-Il nome MurMur deriva dalla combinazione delle due operazioni fondamentali che compongono la
-funzione: la moltiplicazione (``mu'' per ``multiplication'') e la rotazione di bit (``r'' per
-``rotation''). 
-
-L'algoritmo (descritto in \autoref{alg:murmurhash2}) gode di una buona popolarità poiché unisce una
-buona velocità di esecuzione a una buona diffusione dei dati in ingresso (cosiddetto ``effetto
+MurMurHash2 è descritto in \autoref{alg:murmurhash2}) e gode di una buona popolarità poiché unisce
+una buona velocità di esecuzione a una buona diffusione dei dati in ingresso (cosiddetto ``effetto
 valanga'').
 
 \begin{algorithm}
 \caption{Funzione di hash MurMurHash2}
 \label{alg:murmurhash2}
-\begin{algorithmic}[1]
+\begin{algorithmic}
 \Procedure{MurMurHash2}{$msg$, $seed$}
-	\State $m \gets \mathtt{0x5bd1e995}$ \Comment{Costante moltiplicativa suggerita}
+	\State \lnote[2em]$m \gets \mathtt{0x5bd1e995}$ \Comment{Costante moltiplicativa suggerita}
 	\State $r \gets 24$ \Comment{Costante di shift suggerita}
 
 	\State $len \gets \textbf{length of}$ $msg$
@@ -346,7 +349,7 @@ per concatenare, \verb|STRLEN| per leggere la lunghezza, o \verb|GETRANGE| per e
 sottostringa.
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> SET foo abcd
 OK
 127.0.0.1:6379> GET foo
@@ -357,7 +360,7 @@ OK
 (integer) 6
 127.0.0.1:6379> GETRANGE foo 2 3
 "cd"
-\end{redis}
+\end{commentedsource}
 
 Si noti come \verb|APPEND| ha restituito la nuova lunghezza della stringa, sfruttando
 la disponibilità nel protocollo del valore di ritorno come modo per veicolare una
@@ -369,7 +372,7 @@ tipo debole, cioè è possibile manipolarle come se fossero oggetti di altri tip
 tipo stringa che rappresentano degli interi in base 10:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> SET foo 123
 OK
 127.0.0.1:6379> STRLEN foo
@@ -382,7 +385,7 @@ OK
 (integer) 100
 127.0.0.1:6379> GET foo
 "100"
-\end{redis}
+\end{commentedsource}
 
 In questo esempio, alla chiave \verb|foo| è stato associato una stringa che contiene
 la rappresentazione di un numero in base 10; il comando \verb|STRLEN| ci rassicura
@@ -422,7 +425,7 @@ lista sono i seguenti:
 Qui si può vedere una sessione interattiva di esempio di uso di una lista:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> RPUSH mylist mickey minnie goofy donald
 (integer) 4
 127.0.0.1:6379> LINDEX mylist 0
@@ -440,7 +443,7 @@ Qui si può vedere una sessione interattiva di esempio di uso di una lista:
 2) "goofy"
 3) "walt"
 4) "donald"
-\end{redis}
+\end{commentedsource}
 
 Si noti che non è necessario inizializzare la lista in nessun modo: il primo riferimento alla chiave
 \verb|mylist| tramite un comando \verb|RPUSH| (che opera esclusivamente su liste) è sufficiente
@@ -459,7 +462,7 @@ lista da controllare, restando in attesa finché non viene inserito un elemento 
 delle liste specificate; così facendo è possibile quindi suddividere meglio i attività per priorità
 o per tipologia, consentendo comunque flessibilità su quali attività eseguire da parte dei
 consumatori. A titolo di esempio di utilizzo di questa funzionalità, si veda il software
-\href{http://celery.readthedocs.io/en/latest/}{Celery}, una coda di attività distribuita per
+\fnhref{http://celery.readthedocs.io/en/latest/}{Celery}, una coda di attività distribuita per
 programmi scritti in Python, che consente di utilizzare Redis come database.
 
 
@@ -501,7 +504,7 @@ I comandi principali sono i seguenti, caratterizzata dal prefisso \verb|H|:
 Qui si può vedere una sessione interattiva di esempio di uso di una tabella hash:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> HSET user:88 name giovanni
 (integer) 1
 127.0.0.1:6379> HMSET user:88 surname bajo age 38
@@ -529,7 +532,7 @@ OK
 (integer) 1
 127.0.0.1:6379> HEXISTS user:88 giovanni
 (integer) 0
-\end{redis}
+\end{commentedsource}
 
 Come si può vedere, la tabella hash è creata dinamicamente al primo uso, e non è necessario
 dimensionarla in alcun modo; Redis implementa in modo efficiente le tabelle hash e le ridimensiona
@@ -586,7 +589,7 @@ Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizza
 Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> SADD paying_users 88 37 4 66
 (integer) 4
 127.0.0.1:6379> SADD paying_users 37 111
@@ -607,7 +610,7 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
 127.0.0.1:6379> SINTER paying_users updated_users
 1) "4"
 2) "66"
-\end{redis}
+\end{commentedsource}
 
 Anche in questo caso, non è stato necessario allocare o dimensionare le strutture dati: al primo
 accesso, esse vengono create automaticamente, e si dimensionano in modo dinamico durante l'uso.
@@ -664,7 +667,7 @@ Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
 	indice di sequenza. Per esempio, specificando come intervallo inclusivo \verb|0 4|, si
 	ottengono i primi 5 elementi, cioè i 5 elementi con minor punteggio attualmente presenti
 	nell'insieme. È possibile usare gli indici negativi per fare riferimento alla fine della
-	sequenza (per esempio, \verb|-1| indica l'elemento con punteggio più alto).
+	sequenza (per esempio, ``\verb|-1|'' indica l'elemento con punteggio più alto).
 	\item \textbf{ZRANGEBYSCORE}: restituisce gli elementi all'interno dell'intervallo specificato
 	come punteggi. Per esempio, specificando come intervallo ``\verb|100.2 100.8|'', si ottengono tutti
 	gli elementi i cui punteggi sono $\in \interval{100.2}{100.8}$. Gli estremi dell'intervallo
@@ -721,7 +724,7 @@ della struttura dati, indichiamo alcuni possibili scenari applicativi.
 Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordinati:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> ZADD test 10 a 20 b 30 c
 (integer) 0
 127.0.0.1:6379> ZCARD test
@@ -742,7 +745,7 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordi
 "40"
 127.0.0.1:6379> ZRANGEBYSCORE test 15 25
 (empty list or set)
-\end{redis}
+\end{commentedsource}
 
 
 \subsection{HyperLogLog}
@@ -777,7 +780,7 @@ risultante è pari a $1.04 / \sqrt{m}$, con $m$ pari al numero di registri.
 Per distribuire uniformemente le stringhe in input, Redis utilizza una funzione di hash a
 \SI{64}{\bit} (come suggerito in \cite{hyperloglog-plusplus}), in particolare scegliendo
 MurMurHash64, una versione a \SI{64}{\bit} del già citato
-\href{https://github.com/aappleby/smhasher/wiki/MurmurHash3}{MurMurHash3}. Essendo quindi il
+\fnhref{https://github.com/aappleby/smhasher/wiki/MurmurHash3}{MurMurHash3}. Essendo quindi il
 prefisso massimo lungo appunto 64 bit, i registri richiedono 6 bit. Redis sceglie di usare $2^{14}$
 registri, ottenendo quindi un errore pari a $1.04 / \sqrt{2^{14}} = \SI{0.8}{\percent}$, e
 utilizzando un totale di $2^{14} * 6 / 8 = \num{12228}$ byte di memoria necessaria, come già
@@ -812,7 +815,7 @@ Giugno 2017 è stato più di 2 miliardi \cite{fb-mau}.
 Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> PFADD dau 50
 (integer) 1
 127.0.0.1:6379> PFCOUNT dau
@@ -825,7 +828,7 @@ Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 (integer) 1
 127.0.0.1:6379> PFCOUNT dau
 (integer) 11
-\end{redis}
+\end{commentedsource}
 
 Inizialmente, viene aggiunto il valore $50$ all'HyperLogLog denominato \verb|dau| (che viene quindi
 creato con questo primo comando), e successivamente si può verificare che la cardinalità
@@ -872,7 +875,7 @@ transazione per evitare che altri client possano accedere ad uno stato inconsist
 l'utente è presente come record ma non nell'indice (o viceversa):
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> HMSET user:123 name Giovanni surname Bajo
 OK
 127.0.0.1:6379> ZADD paying-users 1500 123
@@ -890,7 +893,7 @@ QUEUED
 127.0.0.1:6379> EXEC
 1) (integer) 1
 2) (integer) 1
-\end{redis}
+\end{commentedsource}
 
 Come si vede, i comandi inviati al server dopo il comando \verb|MULTI| non sono stati eseguiti
 immediatamente, ma accodati in attesa della fine della definizione della transazione, delimitata
@@ -936,12 +939,12 @@ per estrarre il valore corrente, e poi \verb|HSET| per inserire il nuovo valore 
 in questo modo:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> HGET post:589 vote
 "56"
 127.0.0.1:6379> HSET post:589 vote 57
 (integer) 0
-\end{redis}
+\end{commentedsource}
 
 Purtroppo questa sequenza è soggetta ad una race condition da parte di un altro client che volesse
 modificare lo stesso campo. Non sembra inoltre possibile inoltre utilizzare una transazione
@@ -949,13 +952,13 @@ basata su \verb|MULTI| e \verb|EXEC| perché il comando \verb|HSET| può essere 
 solo dopo che ha ricevuto la risposta al comando \verb|HGET|:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> MULTI
 OK
 127.0.0.1:6379> HGET post:589 vote
 QUEUED
 127.0.0.1:6379> HSET post:589 ???
-\end{redis}
+\end{commentedsource}
 
 Per risolvere queste situazioni, Redis utilizza un comune pattern di transazione atomica chiamato
 ``check and set'', che consente di condizionare l'esecuzione di una transazione alla verifica che un
@@ -968,7 +971,7 @@ eseguire la transazione, nella speranza di riuscire a vincere la corsa.
 Questo è l'uso corretto di \verb|WATCH| nell'esempio che stiamo analizzando:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> WATCH post:589
 OK
 127.0.0.1:6379> HGET post:589 vote
@@ -979,13 +982,13 @@ OK
 QUEUED
 127.0.0.1:6379> EXEC
 1) (integer) 0
-\end{redis}
+\end{commentedsource}
 
 Vediamo cosa succede invece simulando l'intervento di un client esterno che modifica il valore
 del post in modo concorrente:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> WATCH post:589
 OK
 127.0.0.1:6379> HGET post:589 vote
@@ -998,7 +1001,7 @@ OK
 QUEUED
 127.0.0.1:6379> EXEC
 (nil)
-\end{redis}
+\end{commentedsource}
 
 In questo caso, la modifica sopraggiunta alla chiave tra \verb|WATCH| e \verb|EXEC| ha fatto sì
 che la transazione non venisse eseguita; il client può rilevare questa condizione dal valore 
@@ -1049,7 +1052,7 @@ diminuendo il traffico sulla rete ma aumentando la latenza fino anche a \SI{500}
 utilizzare le opzioni \verb|TCP_NODELAY| e \verb|TCP_CORK| per gestire manualmente il buffering
 \cite{tcp-cork}. Molte librerie client Redis per i principali linguaggi di programmazione si
 occupano di questi dettagli automaticamente; si veda a titolo di esempio i 
-\href{https://github.com/andymccurdy/redis-py/blob/8a186ebd9cecf466624803bdf215030158c7c776/redis/connection.py\#L517}{sorgenti della libreria \texttt{redis-py}}.
+\fnhref{https://github.com/andymccurdy/redis-py/blob/8a186ebd9cecf466624803bdf215030158c7c776/redis/connection.py\#L517}{sorgenti della libreria \texttt{redis-py}}.
 
 \section{Stored procedure in LUA}
 \label{redislua}
@@ -1070,9 +1073,9 @@ aggregazione di dati (es: calcolo di una media), non è necessario trasferire vi
 ma solamente il risultato.
 
 Invece che utilizzare un linguaggio di programmazione progettato ad-hoc (come per esempio il
-\href{https://www.postgresql.org/docs/9.6/static/plpgsql.html}{linguaggio PL/pgSQL} utilizzato dal
+\fnhref{https://www.postgresql.org/docs/9.6/static/plpgsql.html}{linguaggio PL/pgSQL} utilizzato dal
 famoso database PostgreSQL), Redis utilizza un linguaggio già esistente:
-\href{https://www.lua.org}{LUA}. LUA è un linguaggio di scripting, tipizzato dinamicamente,
+\fnhref{https://www.lua.org}{LUA}. LUA è un linguaggio di scripting, tipizzato dinamicamente,
 normalmente eseguito tramite un interprete molto efficiente e compatto, facilmente adatto
 all'integrazione (embedding). Già dai primi anni 2000, ha ottenuto molto popolarità nell'industria
 di videogiochi come linguaggio di scripting, proprio in virtù del profilo di performance e
@@ -1105,7 +1108,7 @@ Per provare ad eseguire lo script durante la fase di sviluppo, è consigliabile 
 dell'opzione \verb|--eval| del comando \verb|redis-cli|:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 $ redis-cli
 127.0.0.1:6379> ZADD paying_users 1000 a 2000 b 3000 c 3000 d 250 e
 (integer) 5
@@ -1113,7 +1116,7 @@ $ redis-cli --eval zsetaverage.lua k t , paying_users 1000
 (integer) 2250
 $ redis-cli --eval zsetaverage.lua k t , paying_users 2000
 (integer) 2666
-\end{redis}
+\end{commentedsource}
 
 Si noti che abbiamo passato 2 parametri: il primo con chiave \verb|k| e valore \verb|paying_users|;
 il secondo con chiave \verb|t| e valore \verb|1000| (o \verb|2000|). L'identificatore ``\verb|,|''
@@ -1127,14 +1130,14 @@ i parametri, con il comando \verb|EVALSHA|.
 In questo caso, la sequenza è la seguente:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> SCRIPT LOAD "-- zsetaverage.lua: calcola la media di spesa degli utenti paganti sopra\n-- una certa soglia.\n--\n-- Argomenti:\n--     ARGV[1] - chiave dell'insieme ordinato\n--     ARGV[2] - soglia di spesa\n\n-- Estrae tutti gli utenti con un punteggio maggiore a quello specificato.\n-- L'opzione WITHSCORES dice a redis di tornare non solo le stringhe\n-- dell'insieme ordinato (quindi gli ID degli utenti) ma anche i \n-- punteggi associati.\n-- matches sara' quindi un array contenente in sequenza ID1, SCORE1, ID2, SCORE2, ecc.\nlocal matches = redis.call('ZRANGEBYSCORE', ARGV[1], ARGV[2], '+inf', 'WITHSCORES')\n\nlocal total = 0\n\n-- Attraversa l'array a partire dal secondo elemento, fino alla sua lunghezza,\n-- con passo 2. In questo modo ad ogni passo indirizziamo direttamente i punteggi\n-- saltando gli ID\n-- Si noti che in LUA il primo elemento di un array ha indice 1\nfor idx=2, #matches, 2 do\n    total = total + tonumber(matches[idx])\nend\n\n-- Calcola la media\nreturn total / (#matches / 2)\n"
 "c8fe4ea641681f744e517b52002266ca7b4e4cdf"
 127.0.0.1:6379> EVALSHA c8fe4ea641681f744e517b52002266ca7b4e4cdf 2 k t paying_users 1000
 (integer) 2250
 127.0.0.1:6379> EVALSHA c8fe4ea641681f744e517b52002266ca7b4e4cdf 2 k t paying_users 2000
 (integer) 2666
-\end{redis}
+\end{commentedsource}
 
 Il comando \verb|EVALSHA| riceve come argomento l'ID dello script, il numero di parametri, e poi
 in sequenza tutte le chiavi (non utilizzate nel nostro esempio) e tutti i valori. 
@@ -1174,8 +1177,8 @@ I comandi che manipolano la scadenza delle chiavi sono i seguenti:
 	millisecondi dalla cosiddetta \emph{UNIX epoch}, cioè il 1° Gennaio 1970.
 	\item \textbf{TTL} e \textbf{PTTL}: restituiscono il tempo di vita rimasto di una chiave,
 	rispettivamente in secondi o millisecondi. Se la chiave non esiste viene restituito il
-	valore speciale \verb|-2|, mentre se la chiave esiste ma non ha una data di scadenza viene
-	restituito il valore \verb|-1|.
+	valore speciale $-2$, mentre se la chiave esiste ma non ha una data di scadenza viene
+	restituito il valore $-1$.
 	\item \textbf{PERSIST}: elimina la data di scadenza dalla chiave specificata, trasformandola
 	così in una chiave persistente.
 \end{itemize}
@@ -1183,7 +1186,7 @@ I comandi che manipolano la scadenza delle chiavi sono i seguenti:
 Questo è un esempio di uso dei comandi di scadenza:
 
 \medskip
-\begin{redis}
+\begin{commentedsource}[style=redis]
 127.0.0.1:6379> SET data 123
 OK
 127.0.0.1:6379> GET data
@@ -1200,7 +1203,7 @@ OK
 (integer) 1
 127.0.0.1:6379> GET data
 (nil)
-\end{redis}
+\end{commentedsource}
 
 \section{Concorrenza}
 \label{sec:concurrency}
@@ -1220,9 +1223,9 @@ Per quanto concerne comandi inviati da clienti diversi (e quindi tramite più co
 parallelo, Redis provvede a serializzarli tra loro in automatico poiché il codice del server si
 basa su un singolo thread di esecuzione, e gestisce l'accesso ai socket in parallelo tramite
 programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive quali 
-\href{https://www.gnu.org/software/libc/manual/html_node/Waiting-for-I_002fO.html}{\texttt{select}},
-\href{https://linux.die.net/man/4/epoll}{\texttt{epoll}} o 
-\href{https://www.freebsd.org/cgi/man.cgi?query=kqueue&sektion=2}{\texttt{kqueue}}.
+\fnhref{https://www.gnu.org/software/libc/manual/html_node/Waiting-for-I_002fO.html}{\texttt{select}},
+\fnhref{https://linux.die.net/man/4/epoll}{\texttt{epoll}} o 
+\fnhref{https://www.freebsd.org/cgi/man.cgi?query=kqueue&sektion=2}{\texttt{kqueue}}.
 
 Questa architettura rende il codice di Redis più semplice e veloce, perché non è necessario
 acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale per

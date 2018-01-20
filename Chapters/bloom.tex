@@ -189,7 +189,7 @@ una piccola frazione rispetto alla quantità di traffico generato in precedenza 
 \subsection{Google SafeBrowsing}
 
 Il browser Chrome di Google utilizzava (fino al 2012) i filtri di Bloom per implementare
-efficientemente la funzionalità \href{https://safebrowsing.google.com}{``SafeBrowsing''}, che
+efficientemente la funzionalità \fnhref{https://safebrowsing.google.com}{``SafeBrowsing''}, che
 protegge gli utenti bloccando automaticamente l'accesso ai siti contenenti \emph{malware} o
 \emph{phishing}.
 
@@ -596,7 +596,9 @@ dal quale si deriva:
 $$ p \approx 1-(e^{-\frac{1}{m}})^n $$
 $$ \ln(1-p) \approx -\frac{n}{m} $$
 $$ n \approx -m\ln(1-p) $$
-$$ n \approx -\frac{M}{K}\ln(1-p) $$
+\begin{equation} \label{eq:bloomcard}
+n \approx -\frac{M}{K}\ln(1-p)
+\end{equation}
 
 che è possibile valutare quindi estraendo la densità $p$ del filtro da un semplice conteggio
 dei bit impostati ad 1 in un dato momento.
@@ -625,7 +627,7 @@ vedere, l'errore effettuato dalla stima non diverge anche per valori di densità
 		}
 	\end{minipage}
 
-	\caption{Errore sulla cardinalità nei filtri di Bloom}
+	\caption{Errore sulla cardinalità nei filtri di Bloom commesso dall'\autoref{eq:bloomcard}}
 	\label{fig:bloomerror}
 \end{figure}
 
