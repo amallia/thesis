@@ -1,5 +1,6 @@
 .DS_Store
 thesis.pdf
+*.sublime-workspace
 
 # Boilerplate TeX .gitignore taken from:
 # https://github.com/github/gitignore/blob/master/TeX.gitignore
