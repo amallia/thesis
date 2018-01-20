@@ -129,3 +129,14 @@
     \setcounter{lstNoteCounter}{0}
     \lstset{#1,numbers=none}
 }{}
+
+
+% Parole che non possono essere sillabate
+\hyphenation{macOS}
+
+% Mostra le URL come note a pié di pagina, per essere leggibili anche in caso
+% di stampa.
+% https://tex.stackexchange.com/questions/115479/insert-footnotes-with-href
+\newcommand\fnhref[2]{%
+  \href{#1}{#2}\footnote{\url{#1}}%
+}
