@@ -6,7 +6,8 @@
 \usepackage{interval}  % Gestione intervalli aperti/chiusi
 \usepackage{colortbl}  % Tabelle con celle colorate
 \usepackage[binary-units]{siunitx}  % Unità di misura
-\usepackage{algorithm,algpseudocode}  % Algoritmi in pseudo-codice
+\usepackage{algpseudocode}  % Algoritmi in pseudo-codice
+\usepackage[chapter]{algorithm}
 \usepackage{pifont}  % numeri cerchiati su sfondo nero
 
 % Definisci \EUR come unità di misura con il simbolo dell'euro
@@ -123,7 +124,7 @@
     {\ifthenelse{#1 =  9}{\ding{190}}
     {\ifthenelse{#1 = 10}{\ding{191}}
     {NUM TOO HIGH}}}}}}}}}}}}
-\newcommand*{\lnote}{\stepcounter{lstNoteCounter}\vbox{\llap{{\large\lnnum{\thelstNoteCounter}}\hskip 1em}}}
+\newcommand*{\lnote}[1][1em]{\stepcounter{lstNoteCounter}\vbox{\llap{{\large\lnnum{\thelstNoteCounter}}\hskip #1}}}
 
 \lstnewenvironment{commentedsource}[1][]{
     \setcounter{lstNoteCounter}{0}

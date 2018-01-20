@@ -58,10 +58,14 @@
     %*******************************************************
     % List of Algorithms
     %*******************************************************
+    % NOTA: classicthesis non supporta list of algorithm:
+    % https://bitbucket.org/amiede/classicthesis/issues/37/new-feature-list-of-algorithms
+    % Lo includiamo con un hack per cambiare "Figura" in "Algoritmo"
     %\phantomsection
     \refstepcounter{dummy}
     %\addcontentsline{toc}{chapter}{\listalgorithmname}
     \pdfbookmark[1]{\listalgorithmname}{loa}
+    \renewcommand{\cftfigpresnum}{\algorithmname~}  %hack
     \listofalgorithms
 
     \vspace{8ex}
