@@ -144,4 +144,7 @@
 }
 
 % Spegni warning su inclusione immagini PDF
-\pdfsuppresswarningpagegroup=1
+\ifpdf
+  \pdfsuppresswarningpagegroup=1
+\fi
+
