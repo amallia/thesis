@@ -147,7 +147,7 @@ quindi di una latenza molto bassa) perché possano condividere la stessa cache, 
 che prima utilizzava una tabella in RAM dentro il processo con una libreria che acceda alla stessa
 tabella tramite chiamate TCP.
 
-Memcached è il primo database NoSQL chiave-valore, ante-litteram, ed è oggi in uso presso alcuni
+Memcached è il primo database NoSQL chiave-valore, \emph{ante-litteram}, ed è oggi in uso presso alcuni
 dei più popolari siti al mondo quali YouTube, Reddit, Facebook, Twitter, Tumblr, Wikipedia.
 
 
@@ -573,9 +573,9 @@ Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizza
 	\medskip
 	\item \textbf{SADD}. Aggiunge una stringa ad un insieme.
 	\item \textbf{SREM}. Rimuove una stringa da un insieme.
-	\item \textbf{SISMEMBER}. Controlla se una stringa è presente in un insieme.
+	\item \textbf{SISMEMBER}. Controlla se una stringa è presente in un in\-sie\-me.
 	\item \textbf{SMEMBERS}. Elenca tutte le stringhe contenute nell'insieme.
-	\item \textbf{SRANDMEMBER}. Restituisce una o più stringhe scelte casualmente tra quelle
+	\item \textbf{SRANDMEMBER}. Restituisce una o più stringhe scelte ca\-sual\-men\-te tra quelle
 	presenti.
 	\item \textbf{SPOP}. Come ``SRANDMEMBER'', ma rimuove le stringhe scelte dall'insieme.
 	\item \textbf{SUNION}. Restituisce l'unione tra due o più insiemi.
@@ -632,7 +632,7 @@ questa proprietà, è comune utilizzare un insieme ordinato in cui tutti i valor
 punteggio (di solito 0), utilizzando quindi le stringhe stesse per l'ordinamento, e ottenendo di
 fatto l'equivalente di una lista di stringhe univoche ordinate alfabeticamente.
 
-Come precedentemente accennato, è possibile estrarre sotto-sequenze dell'insieme ordinato tramite
+Come precedentemente accennato, è possibile estrarre sotto\-se\-quen\-ze dell'insieme ordinato tramite
 alcuni comandi che lavorano su intervalli ordinati di stringhe. Secondo il principio di massima
 flessibilità, ci sono tre diversi tipi di intervalli che possono essere specificati: intervallo di
 punteggio (es: estrai tutte le stringhe i cui punteggi sono compresi tra 10 e 20), intervallo di
@@ -681,10 +681,10 @@ Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
 	dell'intervallo sono aperti o chiusi, e indicare un limite massimo agli elementi restituiti.
 	Come già descritto, questo comando funziona correttamente solo con insiemi ordinati in cui
 	tutti gli elementi hanno lo stesso punteggio.
-	\item \textbf{ZREVRANGE}, \textbf{ZREVRANGEBYSCORE}, \textbf{ZREVRANGEBYLEX}: simili ai
+	\item \textbf{ZREVRANGE}, \textbf{ZREV\-RANGE\-BY\-SCORE}, \textbf{ZREV\-RANGE\-BY\-LEX}: simili ai
 	precedenti comandi, ma considerano l'insieme ordinato al contrario, cioè in ordine decrescente
 	di punteggio.
-	\item \textbf{ZREMRANGEBYRANK}, \textbf{ZREMRANGEBYSCORE}, \textbf{ZREMRANGEBYLEX}: simili ai
+	\item \textbf{ZREMRANGEBYRANK}, \textbf{ZREM\-RANGE\-BY\-SCORE}, \textbf{ZREM\-RANGE\-BY\-LEX}: simili ai
 	precedenti comandi, ma rimuovono gli elementi all'interno degli intervalli specificati invece
 	che restituirli.
 \end{itemize}
@@ -790,7 +790,7 @@ Questi sono i comandi esistenti, identificati dal prefisso \verb|PF|:
 
 \begin{itemize}
 	\medskip
-	\item \textbf{PFADD}: aggiunge una o più stringhe all'HyperLogLog specificato, creandone uno
+	\item \textbf{PFADD}: aggiunge una o più stringhe all'HyperLogLog spe\-ci\-fi\-ca\-to, creandone uno
 	se non esiste già.
 	\item \textbf{PFCOUNT}: restituisce l'attuale stima di cardinalità dell'HyperLogLog
 	specificato.
@@ -968,7 +968,7 @@ viene eseguito e il momento in cui la transazione viene eseguita, cioè se si è
 verificata una race condition. In questo caso, il client vorrà probabilmente provare nuovamente ad
 eseguire la transazione, nella speranza di riuscire a vincere la corsa.
 
-Questo è l'uso corretto di \verb|WATCH| nell'esempio che stiamo analizzando:
+Questo è l'uso corretto di \verb|WATCH| nell'esempio che stiamo a\-na\-liz\-zan\-do:
 
 \medskip
 \begin{commentedsource}[style=redis]
@@ -1080,7 +1080,7 @@ pipelining risulta particolarmente comodo perché l'intera transazione (comprens
 	\end{minipage}
 
 	\caption{Diagramma di sequenza che mostra l'uso del \emph{pipelining} per diminuire
-		il tempo totale d'esecuzione di 3 comandi}
+		il tempo totale d'e\-se\-cu\-zio\-ne di 3 comandi}
 \end{figure}
 
 Si noti che, se si è interessati ad ottenere la massima performance, è consigliabile anche
@@ -1091,7 +1091,7 @@ diminuendo il traffico sulla rete ma aumentando la latenza fino anche a \SI{500}
 utilizzare le opzioni \verb|TCP_NODELAY| e \verb|TCP_CORK| per gestire manualmente il buffering
 \cite{tcp-cork}. Molte librerie client Redis per i principali linguaggi di programmazione si
 occupano di questi dettagli automaticamente; si veda a titolo di esempio i 
-\fnhref{https://github.com/andymccurdy/redis-py/blob/8a186ebd9cecf466624803bdf215030158c7c776/redis/connection.py\#L517}{sorgenti della libreria \texttt{redis-py}}.
+\fnhref{https://github.com/andymccurdy/redis-py/blob/8a186eb/redis/connection.py\#L517}{sorgenti della libreria \texttt{redis-py}}.
 
 \section{Stored procedure in LUA}
 \label{redislua}

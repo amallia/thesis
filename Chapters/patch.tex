@@ -680,7 +680,7 @@ La registrazione di comandi in Redis avviene tramite una tabella chiamata \verb|
 Questa è la sua definizione contenuta nel file \verb|server.c|, che mostra come i comandi vengono
 registrati:
 
-\begin{commentedsource}[style=csource,caption=Registrazione nuovi comandi nella tabella comandi,label={lst:cmdtable}]
+\begin{commentedsource}[style=csource,caption=Registrazione nuovi comandi nella tabella co\-man\-di,label={lst:cmdtable}]
 struct redisCommand redisCommandTable[] = {
     {"module",moduleCommand,-2,"as",0,NULL,1,1,1,0,0},
     {"get",getCommand,2,"rF",0,NULL,1,1,1,0,0},
