@@ -36,9 +36,15 @@ Si veda \ref{sec:bloomparms} per maggiori informazioni.
 \label{sec:modredis}
 
 I seguenti listati mostrano la parte principale della modifica al database Redis:
-l'implementazione del filtro di Bloom. Si veda \ref{sec:patchexplain} per una
-descrizione dettagliata di questo codice.
+l'implementazione del filtro di Bloom, e i test automatizzati che verificano la correttezza
+del codice. Si veda \ref{sec:patchexplain} per una descrizione dettagliata di questo codice.
 
-\sourcecode[language=C,escapeinside={/*@}{*/}]{code/bloom.h}
-\sourcecode[language=C,escapeinside={/*@}{*/}]{code/bloom.c}
+\subsection{Implementazione dei filtri di Bloom}
+\sourcecode[language=C]{code/bloom.h}
+\sourcecode[language=C]{code/bloom.c}
 
+\subsection{Test di unità}
+\sourcecode[language=tcl]{code/bloom.tcl}
+
+\subsection{Analisi dei parametri del filtro scalabile}
+\sourcecode[language=Python]{code/scalingbloomparms.py}

@@ -119,7 +119,7 @@ Vediamo ora un esempio di sessione utilizzando i comandi appena descritti:
 |\lnote|127.0.0.1:6379> BFDEBUG STATUS prova
 "n:1 e:0.003"
 |\lnote|127.0.0.1:6379> BFDEBUG FILTER prova 0
-"k:11 s:1798 b:77"
+"k:12 s:1811 b:84"
 \end{commentedsource}
 
 Per cominciare, viene creato un filtro chiamato \verb|prova| \lnnum{1} in cui vengono inseriti 5
@@ -166,6 +166,27 @@ catena \lnnum{6}. La stringa restituita contiene tre valori:
   \hline
 \end{tabular}
 \medskip
+
+Per modificare la probabilità di falso positivo di un filtro, è possibile specificare un valore
+durante il primo inserimento:
+
+\medskip
+\begin{commentedsource}[style=redis,caption=Filtro con probabilità configurata dall'utente]
+|\lnote|127.0.0.1:6379> BFADD esempio ERROR 0.05 ELEMENTS a b c d e f g
+(integer) 7
+127.0.0.1:6379> BFDEBUG STATUS esempio
+"n:1 e:0.05"
+127.0.0.1:6379> BFDEBUG FILTER esempio 0
+|\lnote|"k:8 s:3344 b:56"
+\end{commentedsource}
+
+In questo caso il filtro viene creato con una probabilità di falso positivo del \SI{5}{\%},
+specificata tramite il parametro \verb|ERROR 0.05| \lnnum{1}. Vengono poi inseriti i medesimi
+elementi dell'esempio precedente, ed è possibile verificare che i parametri del primo filtro 
+della catena sono ora diversi \lnnum{2}: in particolare, sono sufficienti $8$ funzioni di hash
+contro le $12$ usate precedentemente; il numero di bit impostati è quindi anch'esso inferiore
+($56$), portando quindi ad un uso minore di memoria a parità di elementi, come ci si aspetta
+aumentando l'errore consentito.
 
 \section{Analisi delle modifiche effettuate}
 \label{sec:patchexplain}
@@ -250,6 +271,7 @@ dinamicamente al momento di allocare la struttura stessa sullo heap. Poiché la 
 di allocare la struttura \verb|filter| e l'array di puntatori dinamico con una sola allocazione.
 
 \subsection{Parametri di configurazione statici}
+\label{sec:patch:staticparms}
 
 All'inizio del file \verb|bloom.c|, troviamo alcune costanti di configurazione per le quali si è
 preferito non esporre una configurazione a livello utente.
@@ -758,7 +780,128 @@ degli indici delle chiavi su misura, passando il puntatore alla funzione nel ses
 \subsection{Scelta della dimensione del primo filtro}
 \label{sec:patch:basesize}
 
+La dimensione del primo filtro della catena, codificata nella costante \verb|CONFIG_BLOOM_BASESIZE|
+vista nella \autoref{sec:patch:staticparms}, deve essere regolata in base ai risultati di utilizzo
+della memoria e velocità che si vogliono ottenere. Infatti, configurando un valore inutilmente
+piccolo, cresce logaritmicamente il numero di filtri nella catena a parità di elementi, aumentando
+il numero di bit da verificare in ogni test di appartenenza. Viceversa, configurando un valore
+troppo grosso, la memoria occupata alla creazione del filtro rischia di essere inutilizzata se
+il filtro rimane molto piccolo.
+
+Durante il lavoro, è stato empiricamente scelto il valore $M_0 = \SI{2048}{\byte}$, che sembra un
+discreto bilanciamento tra la memoria occupata (staticamente) dall'implementazione di HyperLogLog in
+Redis (circa \SI{11}{\kibi\byte}) e la velocità di crescita che consente di raggiungere un milione
+di elementi con un catena di soli $11$ filtri e un totale di $141$ bit da consultare per ciascun
+test di appartenenza, come si vedrà nella \autoref{tbl:scalingbloomparms}.
+
+Un'opzione interessante per migliorare l'implementazione in futuro è quella di modificare la
+codifica degli elementi quando la struttura dati contiene pochi elementi: infatti, sarebbe possibile
+utilizzare un vettore lineare, non probabilistico, contente i valori di hash a \SI{64}{bit} degli
+elementi inseriti, ed effettuare una ricerca lineare quando si richiede il test di appartenenza.
+Vista la velocità dei moderni processori, questo test sarà probabilmente molto veloce anche per
+vettori contenenti pochi centinaia di elementi, consentendo quindi di risparmiare ancora più memoria
+per filtri molto piccoli. Questa capacità di cambiare rappresentazione interna al crescere della
+struttura dati è già utilizzata in Redis: per esempio, gli insiemi (\autoref{sec:redis:sets})
+sono implementati tramite vettori lineari fino a che il numero di elementi è inferiori a 512, e
+solo a quel punto si trasformano in tabella hash.
 
 \subsection{Scelta della probabilità di falso positivo di default}
 \label{sec:patch:defaulterror}
+
+La probabilità di falso positivo può essere configurata dall'utente durante la creazione del
+filtro, tramite il comando \verb|BFADD|, ma è consigliabile comunque scegliere un default per
+semplificare l'uso della struttura dati sopratutto in fase di sviluppo e sperimentazione. Questo
+valore non è quindi tanto sensibile quanto un parametro statico perché la sua modifica è comunque
+possibile senza dover modificare il codice sorgente.
+
+È stata fatta una analisi sperimentale dell'andamento del parametro del filtro all'interno
+dell'intervallo $\interval{\SI{0.1}{\%}}{\SI{1}{\%}}$, in cui i valori sono sufficientemente piccoli
+da poter applicarsi a diversi scenari d'uso, ma non troppo piccoli da rischiare un numero eccessivo
+di funzioni di hash risultanti, con relativo incremento dei tempi di esecuzione degli algoritmi.
+Poiché tutti i parametri derivati si comportano linearmente, non ci sono singolarità su cui basare
+la scelta, e il valore \SI{0.3}{\%} è stato dunque selezionato in modo arbitrario.
+
+Una possibile evoluzione di questo lavoro potrebbe essere quella di verificare diversi usi reali
+dei filtri di Bloom all'interno degli scenari applicativi descritti in \autoref{sec:bloom:scenari}, 
+cercando quindi un valore di default che copra in modo opportuno diversi casi.
+
+\section{Analisi della crescita del filtro}
+
+La \autoref{tbl:scalingbloomparms} e la \autoref{fig:scalingbloom} mostrano nel dettaglio
+l'andamento dei parametri del filtri al crescere del numero di elementi. La tabella riporta sia i
+parametri che vengono scelti per ciascun filtro successivo nella catena, sia i parametri finali
+risultanti per l'intero filtro scalabile.
+
+Per esempio, per vedere cosa succede all'inserimento di \num{1000000} di elementi nel filtro,
+è necessario prima individuare la prima linea della tabella in cui il valore $N$ totale è maggiore
+uguale di \num{1000000}. Questo avviene nella linea $10$: in altre parole, sono necessari $10$
+filtri nella catena per poter inserire il numero di elementi richiesto. In quella configurazione:
+
+\medskip
+\begin{itemize}
+  \item L'intero filtro scalabile occuperà $M = \SI{2448192}{\byte} \approx \SI{2.33}{\mebi\byte}$
+  di memoria, di cui l'ultimo filtro, il decimo, sarà circa la metà. Questo è ragionevole se si
+  pensa che è stato scelto un fattore di crescita esponenziale (\verb|CONFIG_BLOOM_ITEMGROWTHRATIO|)
+  pari a $2.0$.
+
+  \item Il decimo filtro avrà $K=14$, cioè $14$ sezioni, ovverosia $14$ funzioni di hash da
+  calcolare e $14$ bit da impostare quando si aggiunge elemento o da verificare quando si esegue un
+  test di appartenenza. Ma un test di appartenenza sull'intero filtro scalabile richiederà di
+  verificare la presenza dell'elemento anche in tutti i precedenti filtri, per un massimo di $K=127$
+  funzioni di hash da calcolare e bit da controllare.
+
+  \item Il decimo filtro avrà una probabilità di falso positivo pari a $E = \SI{0.010}{\%}$, ma la
+  probabilità composta dell'intero filtro sarà più alta, cioè $E = \SI{0.0241}{\%}$. Questo valore è
+  compatibile con il valore di default configurato di \SI{0.03}{\%}, al quale tende la probabilità
+  composta come si può vedere dalla tabella.
+\end{itemize}
+
+\begin{table}[htb]
+  \centering
+  \hspace*{-2cm}
+  \input{code/scalingbloomparms}
+  \caption{Analisi dell'andamento dei parametri al crescere della catena}
+  \label{tbl:scalingbloomparms}
+  \hspace*{-2cm}
+\end{table}
+
+\clearpage
+\begin{figure}
+  \centering
+  \begin{minipage}[c]{0.7\textwidth}
+    \subfloat[][Crescita dell'errore (valore configuro: \SI{0.3}{\%})]{
+      \includegraphics[width=\textwidth]{img/scalingbloom_error}
+    }
+  \end{minipage}
+  \qquad
+  \begin{minipage}[c]{0.7\textwidth}
+    \subfloat[][Crescita delle funzioni di hash]{
+      \includegraphics[width=\textwidth]{img/scalingbloom_hash}
+    }
+  \end{minipage}
+  \qquad
+  \begin{minipage}[c]{0.7\textwidth}
+    \subfloat[][Crescita del consumo di memoria]{
+      \includegraphics[width=\textwidth]{img/scalingbloom_memory}
+    }
+  \end{minipage}
+
+  \caption{Andamento dei parametri del filtro scalabile in Redis (configurazione di default)}
+  \label{fig:scalingbloom}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
