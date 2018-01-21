@@ -7,7 +7,7 @@ Il seguente listato mostra una stored procedure scritta in LUA che dato un insie
 associato è il totale speso dall'utente nell'applicazione, calcola qual è la media di spesa degli
 utenti ``premium'', cioè che hanno speso più di \SI{1000}{\EUR}.
 
-Si veda \ref{redislua} per maggiori informazioni.
+Si veda la \autoref{sec:redis:lua} per maggiori informazioni.
 
 \sourcecode[language={[5.0]Lua}]{code/zsetaverage.lua}
 
@@ -17,7 +17,7 @@ Si veda \ref{redislua} per maggiori informazioni.
 Il seguente listato effettua una simulazione di calcolo dell'errore di cardinalità in un filtro
 di Bloom di \SI{8192}{\bit}, con $2$ funzioni di hash.
 
-Si veda \ref{sec:bloomcard} per maggiori informazioni.
+Si veda la \autoref{sec:bloomcard} per maggiori informazioni.
 
 \sourcecode[language=Python]{code/cardinality.py}
 
@@ -26,7 +26,7 @@ Si veda \ref{sec:bloomcard} per maggiori informazioni.
 
 I seguenti listati effettuano il calcolo dei parametri ottimali per un filtro di Bloom da 64 MiB.
 
-Si veda \ref{sec:bloomparms} per maggiori informazioni.
+Si veda la \autoref{sec:bloomparms} per maggiori informazioni.
 
 \sourcecode[language=Python]{code/bloomparms1.py}
 \sourcecode[language=Python]{code/bloomparms2.py}
@@ -37,7 +37,7 @@ Si veda \ref{sec:bloomparms} per maggiori informazioni.
 
 I seguenti listati mostrano la parte principale della modifica al database Redis:
 l'implementazione del filtro di Bloom, e i test automatizzati che verificano la correttezza
-del codice. Si veda \ref{sec:patchexplain} per una descrizione dettagliata di questo codice.
+del codice. Si veda la \autoref{sec:patchexplain} per una descrizione dettagliata di questo codice.
 
 \subsection{Implementazione dei filtri di Bloom}
 \sourcecode[language=C]{code/bloom.h}

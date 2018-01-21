@@ -31,20 +31,22 @@ In particolare, abbiamo identificato i seguenti requisiti:
 	\item \textbf{Scarsa configurabilità}: Redis cerca di offrire strutture dati che siano
 	preconfigurate con default accettabili per la maggior parte dei casi d'uso, e offre la minima
 	configurabilità necessaria ad operare negli scenari applicativi previsti. In particolare,
-	i filtri di Bloom hanno diversi parametri a disposizione ed è quindi richiesto delle scelte
+	i filtri di Bloom hanno diversi parametri a disposizione e sono quindi richiesti scelte
 	oculate.
 \end{itemize}
 
-Per soddisfare i requisiti, ci siamo orientati su implementare i filtri di Bloom
-scalabili (\autoref{sec:bloomscalable}), i quali eliminano la necessità di determinare in anticipo il
+Per soddisfare i requisiti, ci si è orientati su implementare i filtri di Bloom scalabili
+(\autoref{sec:bloomscalable}), i quali eliminano la necessità di determinare in anticipo il
 dimensionamento della struttura (in termini di byte o di numero di elementi), e la cui crescita
 esponenziale di occupazione della memoria consente una sostanziale scalabilità.
 
-Abbiamo ritenuto essenziale esporre il parametro $P$ di probabilità di falso positivo poiché
-strettamente legato al tipo di scenario applicativo, ma nascondendo all'utente tutti i parametri più
-tecnici (fattore di intensificazione $r$, fattore di crescita $s$, tipologia di funzione di hash).
-Anche per il parametro $P$ ci siamo orientati su offrire un default, rendendo più semplice per
-l'utente iniziare l'utilizzo della struttura dati, anche in fase di sviluppo.
+Si è ritenuto essenziale esporre all'applicativo che utilizza Redis il parametro $P$ di probabilità
+di falso positivo, poiché strettamente legato al tipo di scenario e al bilanciamento richiesto di
+performance e uso della memoria, nascondendo quindi all'utente tutti i parametri più tecnici
+(fattore di intensificazione $r$, fattore di crescita $s$, tipologia di funzione di hash), che
+rimangono quindi fissati al momento della compilazione di Redis. Nonostante questo, anche per il
+parametro $P$ ci si è orientati su offrire un default, rendendo più semplice per l'utente iniziare
+l'utilizzo della struttura dati, anche in fase di sviluppo.
 
 \section{Progettazione dei nuovi comandi}
 \label{sec:patch:newcommands}
@@ -59,7 +61,7 @@ Questi sono i comandi implementati:
 
 \begin{itemize}
 	\medskip
-	\item \textbf{BFADD <key> [ERROR p] ELEMENTS <ele1> <ele2> ...}: aggiunge uno o più elementi al
+	\item \textbf{BFADD <key> [ERROR p] ELEMENTS <ele1> <ele2> \dots}: aggiunge uno o più elementi al
 	filtro di Bloom specificato, creandolo se non già esistente. Restituisce il numero degli
 	elementi che risultavano non presenti al momento dell'inserimento (dato soggetto quindi ad
 	errore).
@@ -69,22 +71,22 @@ Questi sono i comandi implementati:
 	da quello con cui il filtro è stato creato, il comando restituisce un errore senza effettuare
 	alcun inserimento.
 
-	\item \textbf{BFEXIST <key> <ele>}: Verifica la presenza di un elemento nel filtro specificato
+	\item \textbf{BFEXIST <key> <ele>}: verifica la presenza di un elemento nel filtro specificato
 	(test di appartenenza). Se il filtro non esiste, il comando restituisce falso.
 
-	\item \textbf{BFCOUNT <key>}: Restituisce una stima del numero di elementi inseriti nel filtro.
+	\item \textbf{BFCOUNT <key>}: restituisce una stima del numero di elementi inseriti nel filtro.
 	Se il filtro non esiste, il comando restituisce $0$.
 
-	\item \textbf{BFDEBUG}: Restituisce informazioni utili al debugging dell'implementazione del
+	\item \textbf{BFDEBUG}: restituisce informazioni utili al debugging dell'implementazione del
 	filtro. Questo comando accetta come primo parametro un sotto-comando; al momento, ne sono stati
 	implementati due:
 
 		\begin{itemize}
-		\item \textbf{BFDEBUG STATUS <key>}: Restituisce una stringa che contiene informazioni sullo
+		\item \textbf{BFDEBUG STATUS <key>}: restituisce una stringa che contiene informazioni sullo
 		stato attuale del filtro, e in particolare il numero di filtri presenti nella catena, e
 		l'errore che è stato specificato.
 
-		\item \textbf{BFDEBUG FILTER <key> <idx>}: Restituisce informazioni su uno specifico filtro
+		\item \textbf{BFDEBUG FILTER <key> <idx>}: restituisce informazioni su uno specifico filtro
 		della catena; il filtro che si vuole ispezionare deve essere specificato come indice 
 		nel parametro \verb|idx|. La stringa restituita mostra il numero di sezioni (o funzioni
 		di hash), la dimensione in bit di una sezione, e il numero di bit impostati a 1.
@@ -495,7 +497,7 @@ int bloomFilterAdd(filter *flt, unsigned char *ele, size_t elesize) {
 /*@\lnote@*/        index = (index * flt->s) >> 32;
 
         /* Turn on the correct bit in each partition */
-        nbits += (flt->parts[i][index>>3] & (1 << (index&7))) ? 0 : 1;
+/*@\lnote@*/        nbits += (flt->parts[i][index>>3] & (1 << (index&7))) ? 0 : 1;
 /*@\lnote@*/        flt->parts[i][index>>3] |= 1 << (index&7);
     }
 
@@ -518,8 +520,10 @@ hash ($h_a$ e $h_b$): nell'implementazione viene utilizzata la funzione di hash
 codice sorgente di Redis, e poiché l'output è a \SI{64}{\bit}, consideriamo la suddivisione in due
 valori a \SI{32}{\bit} come l'output di due funzioni di hash separate, ottenendo così i due valori
 \verb|a| e \verb|b| \lnnum{2} utili come input per l'algoritmo di doppio hash avanzato. La funzione
-\verb|MurMurHash64A| viene chiamata con un seme causale, calcolato in fase di sviluppo
-(\verb|0xc5fb9af2|).
+\verb|MurMurHash64A| richiede come abbiamo visto un seme; in questo caso è necessario poter 
+ricostruire sempre lo stesso hash a partire dallo stesso elemento, quindi il seme deve essere
+fisso. È stato quindi calcolato in fase di sviluppo un valore casuale ed inserito nel
+codice (\verb|0xc5fb9af2|).
 
 Il calcolo del doppio hash avviene in formato iterativo \lnnum{3}, secondo quanto visto
 nell'\autoref{alg:ehndoublehash}. Successivamente, viene effettuata una riduzione dell'output della
@@ -530,12 +534,15 @@ $idx = hash \times s / 2^{32}$ che effettua comunque la riduzione richiesta, con
 processori ha una latenza elevata (circa $26$ cicli, contro i $4$ di una moltiplicazione). Si veda
 \cite{lemire-reduction} per i dettagli relativi a questa formula di riduzione.
 
-Infine, viene impostato a $1$ il bit corrispondente all'indice calcolato \lnnum{5}, dopo aver
-verificato il suo stato corrente e aver potuto incrementare così un contatore dei bit che cambiando
-di stato (\verb|nbits|). Questo contatore, al termine del ciclo, viene sommato al campo \verb|b|
-del filtro \lnnum{6}, mantenendo così un conto di quanti bit sono impostati a $1$ nell'intero
-filtro, molto utile per il calcolo della cardinalità (vedi \autoref{sec:patch:card})
+A questo punto, subito prima di impostare il bit a $1$, si verifica lo stato del bit \lnnum{5}; se
+esso è impostato a zero, si incrementa un contatore chiamato \verb|nbits| che tiene conto di quanti
+bit hanno cambiato di stato (da zero ad uno) durante l'inserimento dell'elemento. Questo contatore,
+al termine del ciclo, viene sommato al campo \verb|b| del filtro \lnnum{7}, mantenendo così un conto
+di quanti bit sono impostati a $1$ nell'intero filtro, molto utile per il calcolo della cardinalità
+(vedi \autoref{sec:patch:card}).
 
+Infine, viene impostato a $1$ il bit corrispondente all'indice \lnnum{6}, operazione principale
+dell'algoritmo di inserimento.
 
 \subsection{Test di appartenenza di un elemento al filtro}
 

@@ -16,8 +16,8 @@ Ci sono due principali famiglie di algoritmi probabilistici:
 	meta per il gioco d'azzardo. Gli algoritmi di questo tipo permettono solitamente di bilanciare
 	il tempo di esecuzione con l'errore richiesto, poiché aumentando il numero di tentativi l'errore
 	scende. Un esempio di questi algoritmi sono i test di primalità (cioè i test per verificare se
-	un numero è primo) come il test di Fermat, nei quali si effettua controlli di una condizione
-	necessaria ma non sufficiente e ci si convince che il numero è il primo quando con un
+	un numero è primo) come il test di Fermat, nei quali si effettuano diversi controlli di una
+	condizione necessaria ma non sufficiente e ci si convince che il numero è primo dopo un
 	determinato numero di tentativi.
 
 	\item Gli algoritmi detti ``Las Vegas'', nei quali si utilizza la casualità durante l'algoritmo,
@@ -75,16 +75,17 @@ Un'implementazione classica di un'insieme prevede l'utilizzo di una tabella hash
 di un elemento avviene codificandolo con una funzione hash, memorizzandolo all'interno della
 tabella, gestendo in modo opportuno le collisioni; il test di appartenenza può essere fatto così in
 modo efficiente effettuando una ricerca nella tabella hash. Entrambe queste operazioni così 
-implementate richiedono quindi un tempo d'esecuzione ammortizzato costante ($\mathcal{O}(k)$).
+implementate richiedono quindi un tempo d'esecuzione ammortizzato costante ($\mathcal{O}(1)$).
 
 Al contrario di un array associativo, un insieme non ha dati associati all'elemento stesso, ma
 nonostante questo è spesso possibile riutilizzare la stessa implementazione di tabella hash,
 associando un dato nullo (non significativo) all'elemento. Questo accade comunemente nei linguaggi e
 nelle librerie che mettono a disposizione una struttura dati di tipo array associativo (poiché più
-completa); per esempio, il linguaggio Python fin dalla versione 1.0 prevedeva il ``dizionario'' come
-struttura dati (un array associativo implementato con tabella hash), mentre l'``insieme'' è stato
-aggiunto nella versione 2.3; prima di allora, era comune implementare l'insieme con un dizionario i
-cui valori erano semplicemente valori booleani (di solito \verb|True|).
+completa); per esempio, il linguaggio Python fin dalla versione 1.0 prevedeva \verb|dict| come
+struttura dati (un array associativo implementato con tabella hash), mentre \verb|set|, per la
+gestione degli insiemi di dati, è stato aggiunto nella versione 2.3; prima di allora, era comune
+implementare l'insieme con un dizionario i cui valori erano semplicemente valori booleani (di solito
+\verb|True|).
 
 \section{Proprietà dei filtri di Bloom}
 
@@ -277,7 +278,7 @@ ma probabilmente raggiungerà comunque poi la destinazione, sebbene non nel modo
 
 Le reti P2P sono per loro stessa natura dinamiche: i nodi si connettono e sconnettono con una certa
 frequenza. Quando un nodo si disconnette, i nodi collegati possono decidere di buttare via il
-filtro associato all'arco che scompare, o in alternativo unirlo ad un altro filtro di un nodo
+filtro associato all'arco che scompare, o in alternativa unirlo ad un altro filtro di un nodo
 magari ad alto traffico con molta banda a disposizione (utilizzando l'operazione di unione
 dei filtri).
 
@@ -303,12 +304,12 @@ vuoto composto di 11 bit:
 \subsection{Inserimento di un elemento}
 \label{sec:bloom:add}
 
-L'inserimento di un elemento $X$ (\autoref{alg:bloominsert}) avviene calcolando alcune
-funzioni di hash $h_i(X)$ prestabilite sull'elemento (il numero delle funzioni, chiamato $K$, è
-anch'esso un parametro del filtro). I $K$ valori risultanti $h_0(X), h_1(X), ... , h_{K-1}(X)$ sono
-utilizzati per identificare singoli bit all'interno dell'array (per esempio, scegliendo il bit con
-indice $h_i(X) \bmod M$), e i bit così identificati vengono impostati a 1. Si noti che nessuna altra
-informazione sull'elemento viene memorizzata dentro il filtro.
+L'inserimento di un elemento $X$ (\autoref{alg:bloominsert}) avviene calcolando alcune funzioni di
+hash $h_i(X)$ prestabilite sull'elemento (il numero delle funzioni $K$ è anch'esso un parametro del
+filtro). I $K$ valori risultanti $h_0(X), h_1(X), \dots , h_{K-1}(X)$ sono utilizzati per
+identificare singoli bit all'interno dell'array (per esempio, scegliendo il bit con indice $h_i(X)
+\bmod M$), e i bit così identificati vengono impostati a 1. Si noti che nessuna altra informazione
+sull'elemento viene memorizzata dentro il filtro.
 
 \begin{algorithm}
 \caption{Inserimento elemento in filtro}
@@ -637,8 +638,9 @@ vedere, l'errore effettuato dalla stima non diverge anche per valori di densità
 Dati due filtri creati con gli stessi parametri ed utilizzanti le stesse funzioni di hash, è
 possibile calcolare l'unione come mostrato nell'\autoref{alg:bloomunion}, semplicemente applicando
 l'operazione di \verb|OR| bit a bit agli array. Questa operazione non causa alcuna perdita di
-informazione né pessimizzazione, poiché l'array risultante è il medesimo che si sarebbe ottenuto
-aggiungendo in un solo filtro tutti gli elementi presenti nel primo e nel secondo filtro in input.
+informazione né peggioramento della probabilità di falsi positivi, poiché l'array risultante è il
+medesimo che si sarebbe ottenuto aggiungendo in un solo filtro tutti gli elementi presenti nel primo
+e nel secondo filtro in input.
 
 \begin{algorithm}
 \caption{Unione di due filtri di bloom}
@@ -883,12 +885,12 @@ impossibilità di prevedere il numero di elementi che sarà necessario memorizza
 Per risolvere questo problema, \cite{bloom-scalable} propone di creare un \emph{filtro di Bloom
 scalabile} (SBF) formato da uno o più filtri in catena; quando i filtri raggiungono la densità
 scelta come obiettivo (di solito $p=0.5$), un nuovo filtro viene aggiunto in coda alla catena,
-facendo spazio così per l'inserimento nuovi elementi. Il test di appartenenza dovrà quindi ricercare
-l'elemento all'interno di tutti i filtri della catena. Ogni filtro che viene creato avrà una nuova
-probabilità $P_j$ per i falsi positivi, seguendo una progressione geometrica ($P_i = rP_{i-1} =
-r^iP_0$), in modo che la probabilità composta $P$ dell'intera catena converga verso il valore
-richiesto. Il fattore $r \in \interval[open]{0}{1}$ è detto \emph{fattore di intensificazione}
-(``tighten ratio'').
+facendo spazio così per l'inserimento di nuovi elementi. Il test di appartenenza dovrà quindi
+ricercare l'elemento all'interno di tutti i filtri della catena. Ogni filtro che viene creato avrà
+una nuova probabilità $P_j$ per i falsi positivi, seguendo una progressione geometrica ($P_i =
+rP_{i-1} = r^iP_0$), in modo che la probabilità composta $P$ dell'intera catena converga verso il
+valore richiesto. Il fattore $r \in \interval[open]{0}{1}$ è detto \emph{fattore di
+intensificazione} (``tighten ratio'').
 
 La probabilità composta $P$, ottenuta ricercando l'elemento negli $l$ filtri della catena, può
 essere quindi calcolata così:

@@ -31,7 +31,7 @@ principali tipologie e sottolinearne le differenze:
 	\item
 	\textbf{Database Chiave-valore}: questi database si comportano come giganteschi array
 	associativi distribuiti, nei quali dunque è possibile risalire ad un valore data la
-	sua chiave univoca di riferimento. Vengono spessi offerti più spazi di chiavi
+	sua chiave univoca di riferimento. Vengono spesso offerti più spazi di chiavi
 	a disposizione, e l'obiettivo di scala è molto elevato (fino a petabyte di dati
 	e milioni di operazioni al secondo).
 
@@ -284,24 +284,43 @@ valanga'').
 \begin{algorithmic}
 \Procedure{MurMurHash2}{$msg$, $seed$}
 	\State \lnote[2em]$m \gets \mathtt{0x5bd1e995}$ \Comment{Costante moltiplicativa suggerita}
-	\State $r \gets 24$ \Comment{Costante di shift suggerita}
+	\State \lnote[2em]$r \gets 24$ \Comment{Costante di shift suggerita}
 
 	\State $len \gets \textbf{length of}$ $msg$
-	\State $hash \gets seed \oplus len$
+	\State \lnote[2em]$hash \gets seed \oplus len$
 	\ForAll{$k$ \textbf{word in} $msg$} \Comment{Funzione di mix principale}
-		\State $k \gets k \times m$
+		\State \lnote[38pt]$k \gets k \times m$
 		\State $k \gets k \oplus (k \gg r)$
 		\State $k \gets k \times m$
 		\State $hash \gets hash \times m$
-		\State $hash \gets hash \oplus k$
+		\State \lnote[38pt]$hash \gets hash \oplus k$
 	\EndFor
-	\State $hash \gets hash \oplus (hash \gg r)$ \Comment{Mix di chiusura}
+	\State \lnote[2em]$hash \gets hash \oplus (hash \gg r)$ \Comment{Mix di chiusura}
 	\State $hash \gets hash \times m$
 	\State $hash \gets hash \oplus (hash \gg r)$
 	\State \Return $hash$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
+
+La funzione accetta in input il messaggio su cui calcolare l'hash e un seme. Il seme può essere
+usato per variare l'output a parità di messaggio, ma è ovviamente necessario memorizzarlo
+separatamente per poter ricostruire lo stesso output. Se si desidera una funzione di hash
+riproducibile attraverso più esecuzioni, il seme può essere impostato ad una costante arbitraria,
+senza mai variarlo.
+
+La funzione utilizza due parametri principali: una costante moltiplicativa \lnnum{1} e una
+costante rotativa \lnnum{2} (in realtà utilizzata per uno shift in questa versione). I valori
+indicati qui sopra sono quelli consigliati dall'autore per un'implementazione a \SI{32}{\bit}.
+
+Prima di cominciare, il valore di hash viene inizializzato combinando il seme con la lunghezza della
+stringa \lnnum{3}, per evitare semplici collissioni basate su estensioni della stringa con suffissi
+che non modificano l'hash stesso. Durante il ciclo principale di mix, viene estratta una parola
+alla volta dal messaggio (per esempio \SI{32}{\bit}), viene processata in modo irreversibile
+tramite due moltiplicazioni ed uno shift con i parametri, e viene infine unita (sempre in
+modo irreversibile) all'hash parziale \lnnum{4}. Una volta terminato il messaggio, l'hash stesso
+viene finalizzato con dei passaggi irreversibili moltiplicativi e di shift \lnnum{5}, prima di
+restituire il valore finale.
 
 MurMurHash2 è considerata oggi obsoleta e sorpassata da MurMurHash3, poiché è stata individuata una
 falla in caso di blocchi di dati identici consecutivi \cite{murmur2flaw}. Infatti, se la chiave
@@ -450,16 +469,16 @@ Si noti che non è necessario inizializzare la lista in nessun modo: il primo ri
 per creare dinamicamente l'oggetto di tipo giusto.
 
 Oltre agli ovvi usi di memorizzazione di dati mantenendo un certo ordine di inserimento, le liste di
-Redis consentono anche di implementare un complesso meccanismo di `task queue`, cioè code di
-attività da eseguire; infatti, i comando \verb|LPOP| e \verb|RPOP| dispongono anche di una versione
+Redis consentono anche di implementare un complesso meccanismo di \emph{task queue}, cioè code di
+attività da eseguire; infatti, i comandi \verb|LPOP| e \verb|RPOP| dispongono anche di una versione
 bloccante, chiamate rispettivamente \verb|BLPOP| e \verb|BRPOP|. Se eseguiti specificando una lista
 vuota, invece di tornare un errore, sospendono il client finché un elemento viene aggiunto alla
-lista da un altro client. In questo modo, un gruppo di client produttori possono inserire i attività
-da eseguire (magari codificati da un ID) in una coda di attività pendenti, e un secondo gruppo di
+lista da un altro client. In questo modo, un gruppo di client produttori possono inserire attività
+da eseguire (magari codificate da un ID) in una coda di attività pendenti, e un secondo gruppo di
 client consumatori possono restare in attesa di attività da eseguire, ed eseguirli via via che
 vengono accodati. Si noti che \verb|BLPOP| e \verb|BRPOP| consentono anche di specificare più di una
 lista da controllare, restando in attesa finché non viene inserito un elemento in una qualunque
-delle liste specificate; così facendo è possibile quindi suddividere meglio i attività per priorità
+delle liste specificate; così facendo è possibile quindi suddividere meglio le attività per priorità
 o per tipologia, consentendo comunque flessibilità su quali attività eseguire da parte dei
 consumatori. A titolo di esempio di utilizzo di questa funzionalità, si veda il software
 \fnhref{http://celery.readthedocs.io/en/latest/}{Celery}, una coda di attività distribuita per
@@ -485,7 +504,7 @@ e dunque popolate dai medesimi campi; così come non è possibile verificare la 
 campi, poiché i valori sono esclusivamente di tipo stringa e dunque senza tipo. Se dunque è
 necessaria uniformità, l'onere è lasciato al client.
 
-I comandi principali sono i seguenti, caratterizzata dal prefisso \verb|H|:
+I comandi principali sono i seguenti, caratterizzati dal prefisso \verb|H|:
 
 \begin{itemize}
 	\medskip
@@ -556,15 +575,15 @@ coinvolgono più di un insieme, quali il calcolo dell'intersezione, dell'unione,
 Riprendendo il precedente esempio di tabella hash contenente gli utenti, un applicativo potrebbe
 voler memorizzare all'interno di un insieme l'elenco degli utenti che soddisfano una determinata
 proprietà, per esempio tutti coloro che hanno effettuato almeno un pagamento, o coloro che hanno
-aggiornato all'ultima versione dell'applicativo. In questo caso, si potrebbe quindi creare due
+aggiornato all'ultima versione dell'applicativo. In questo caso, si creerebbero due
 insiemi, associati alle chiavi \verb|paying_users| e \verb|updated_users|, e inserirvi gli ID degli
 utenti (\verb|88|, \verb|4|, \verb|37|, ecc.). Sarebbe poi possibile effettuare rapide operazioni di
 controllo di appartenenza, oppure di differenza (ottenendo quindi l'elenco degli utenti paganti che
 non hanno aggiornato all'ultima versione, in modo da poter per esempio inviare loro una email di
 sollecito).
 
-Nei database relazionali, queste operazioni sono tipicamente possibile tramite delle query SQL, che
-il database rende efficente tramite indici. Allo stesso modo, in questo esempio abbiamo utilizzato
+Nei database relazionali, queste operazioni sono tipicamente possibili tramite delle query SQL, che
+il database rende efficienti tramite indici. Allo stesso modo, in questo esempio abbiamo utilizzato
 un insieme come indice esterno di una tabella, dovendolo però aggiornare manualmente.
 
 Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizzati dal prefisso
@@ -711,7 +730,7 @@ della struttura dati, indichiamo alcuni possibili scenari applicativi.
 
 	\item Supponiamo di voler creare un sistema di fidelizzazione per un e-commerce, basato sulla
 	spesa effettuata da ciascun utente. Ogni volta che un utente effettua un acquisto, possiamo
-	memorizzarlo nell'insieme ordinato l'ID dell'utente aggiungendo l'importo del carrello
+	inserirlo nell'insieme ordinato l'ID dell'utente aggiungendo l'importo del carrello
 	(\verb|ZINCR|); non è necessario gestire in modo diverso il primo acquisto, perché \verb|ZINCR|
 	funziona anche se l'elemento non è ancora presente. Se vogliamo contattare tutti gli utenti che
 	hanno speso più di €1000 sul nostro e-commerce, possiamo utilizzare \verb|ZRANGEBYSCORE|
@@ -809,7 +828,7 @@ della giornata, è possibile stimare i \emph{DAU} tramite il comando \verb|PFCOU
 essere conservato per ragioni di analisi a posteriori, e può essere aggregato tramite
 \verb|PFMERGE| per ottenere stime di attività su finestre temporali diverse, per esempio su base
 settimanale o mensile (cosiddetti rispettivamente \emph{WAU} o \emph{MAU}). Grazie all'HyperLogLog,
-l'utilizzo di memoria è costante indipendentemente dal numero di utente attivi, anche se questi
+l'utilizzo di memoria è costante indipendentemente dal numero di utenti attivi, anche se questi
 dovessero raggiungere importanti volumi; a titolo di esempio, il numero di \emph{MAU} su Facebook in
 Giugno 2017 è stato più di 2 miliardi \cite{fb-mau}.
 
@@ -852,9 +871,9 @@ coerenza (vengono rispettati i vincoli di integrità all'inizio e alla fine dell
 isolamento (durante l'esecuzione di una transizione, lo stato che essa osserva della base di dati
 non deve essere modificato da operazioni che avvengono parallelamente), e durabilità (una
 transazione eseguita con successo modifica la base di dati in modo persistente, senza cioè che la
-modifica possa più essere persa a causa di un crash). Queste proprietà vengono comunemente chiamate
-tramite il loro acronimo ACID, e un database è detto supportare transazioni ACID se espone un
-sistema di transazioni che verifichino contemporaneamente le 4 proprietà.
+modifica possa più essere persa a causa di un arresto anomalo). Queste proprietà vengono comunemente
+chiamate tramite il loro acronimo ACID, e un database è detto supportare transazioni ACID se espone
+un sistema di transazioni che verifichino contemporaneamente le 4 proprietà.
 
 Il supporto per le transazioni di Redis è molto primitivo: è possibile infatti raggruppare
 una sequenza di comandi in modo che venga eseguita atomicamente dal server, senza possibilità che
@@ -865,7 +884,7 @@ eventualmente operate dai comandi precedenti.
 
 Per utilizzare una transazione, è sufficiente inviare il comando \verb|MULTI|, seguito dalla 
 sequenza di comandi che si vuole eseguire atomicamente, seguiti dal comando \verb|EXEC|, che dà
-il via all'esecuzione. I valori di ritorno di tutti comandi vengono concatenati e restituiti come
+il via all'esecuzione. I valori di ritorno di tutti i comandi vengono concatenati e restituiti come
 valore di ritorno del comando \verb|EXEC|. È possibile anche annullare una transazione prima di
 eseguirla, inviando il comando \verb|DISCARD|.
 
@@ -917,9 +936,8 @@ Relativamente alle proprietà ACID sopra descritte, è possibile osservare che:
 	comportamento è ottenuto semplicemente tramite l'approccio a singolo thread di esecuzione (si
 	veda la \autoref{sec:concurrency} per maggiori informazioni).
 	\item \textbf{Durabilità}: questa possibilità può essere rispettata se Redis viene configurato
-	per effettuare una piena persistenza dopo ciascun comando (si veda la
-	\autoref{sec:durability:aof}): in particolare, sarà necessario attivare la persistenza in formato
-	AOF, indicando poi di eseguire un \verb|fsync| dopo l'esecuzione ciascun comando.
+	per effettuare una piena persistenza dei dati dopo ciascun comando. Questa possibilità
+	verrà dettagliata nella	\autoref{sec:durability:aof}.
 \end{itemize}
 
 
@@ -948,7 +966,7 @@ in questo modo:
 \end{commentedsource}
 
 Purtroppo questa sequenza è soggetta ad una race condition da parte di un altro client che volesse
-modificare lo stesso campo. Non sembra inoltre possibile inoltre utilizzare una transazione
+modificare lo stesso campo. Non sembra inoltre possibile utilizzare una transazione
 basata su \verb|MULTI| e \verb|EXEC| perché il comando \verb|HSET| può essere inviato dal client
 solo dopo che ha ricevuto la risposta al comando \verb|HGET|:
 
@@ -1095,7 +1113,7 @@ occupano di questi dettagli automaticamente; si veda a titolo di esempio i
 \fnhref{https://github.com/andymccurdy/redis-py/blob/8a186eb/redis/connection.py\#L517}{sorgenti della libreria \texttt{redis-py}}.
 
 \section{Stored procedure in LUA}
-\label{redislua}
+\label{sec:redis:lua}
 
 Il \emph{pipelining} non è però in grado di essere sempre utilizzato: per esempio, può essere
 necessario verificare che un comando abbia successo prima di procedere al successivo; oppure
@@ -1117,7 +1135,7 @@ Invece che utilizzare un linguaggio di programmazione progettato ad-hoc (come pe
 famoso database PostgreSQL), Redis utilizza un linguaggio già esistente:
 \fnhref{https://www.lua.org}{LUA}. LUA è un linguaggio di scripting, tipizzato dinamicamente,
 normalmente eseguito tramite un interprete molto efficiente e compatto, facilmente adatto
-all'integrazione (embedding). Già dai primi anni 2000, ha ottenuto molto popolarità nell'industria
+all'integrazione (embedding). Già dai primi anni 2000, ha ottenuto popolarità nell'industria
 di videogiochi come linguaggio di scripting, proprio in virtù del profilo di performance e
 compatezza che lo rendeva utilizzabile anche all'interno di console con processori non troppo
 potenti e quantitativi di memoria limitati (si pensi per esempio alla Sony Playstation 2, che era
@@ -1272,7 +1290,7 @@ acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, n
 serializzare gli accessi tra diversi thread in carico di gestire ciascuna connessione. L'uso di lock
 quale per esempio un ``mutex'' implementato dalla libreria \verb|pthread| avrebbe un impatto non
 solo a livello di semplicità di codice sorgente, ma anche di performance, poiché acquisire un lock
-impiega un tempo non trascurabile rispetto alla reale esecuzione delle operazioni richiesta, anche
+impiega un tempo non trascurabile rispetto alla reale esecuzione delle operazioni richieste, anche
 nel caso in cui non è conteso.
 
 \section{Persistenza}
@@ -1314,7 +1332,7 @@ operazioni di swapping.
 Ad ogni nuovo avvio, Redis carica il contenuto del file RDB in RAM, deserializzandone il contenuto,
 prima di iniziare a ricevere comandi dai client.
 
-In aggiunta alla frequenza configurata, o client possono forzare un'operazione di salvataggio 
+In aggiunta alla frequenza configurata, i client possono forzare un'operazione di salvataggio 
 tramite il comando \verb|BGSAVE|, tramite il quale si avvia un ``fork'' che effettuerà la
 serializzazione, ed eventualmente verificare il suo completamento tramite \verb|LASTSAVE|, che
 restituisce il timestamp dell'ultimo salvataggio effettuato. Può essere usato anche il comando
