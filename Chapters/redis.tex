@@ -804,9 +804,9 @@ L'applicazione, alla mezzanotte, può creare un nuovo HyperLogLog utilizzando un
 giorno in corso (per esempio, \verb|DAU-2017-09-02|), aggiungendo via via l'ID di ciascun utente
 (tramite \verb|PFADD|) ogni volta che ne viene rilevata una qualunque attività, senza doversi
 preoccupare di tenere conto se l'utente era già stato conteggiato come attivo o meno. Al termine
-della giornata, è possibile stimare i \emph{DAU} tramite il comando \textbf{PFCOUNT}. Lo storico può
+della giornata, è possibile stimare i \emph{DAU} tramite il comando \verb|PFCOUNT|. Lo storico può
 essere conservato per ragioni di analisi a posteriori, e può essere aggregato tramite
-\textbf{PFMERGE} per ottenere stime di attività su finestre temporali diverse, per esempio su base
+\verb|PFMERGE| per ottenere stime di attività su finestre temporali diverse, per esempio su base
 settimanale o mensile (cosiddetti rispettivamente \emph{WAU} o \emph{MAU}). Grazie all'HyperLogLog,
 l'utilizzo di memoria è costante indipendentemente dal numero di utente attivi, anche se questi
 dovessero raggiungere importanti volumi; a titolo di esempio, il numero di \emph{MAU} su Facebook in
@@ -1039,9 +1039,48 @@ pipelining risulta particolarmente comodo perché l'intera transazione (comprens
 
 \begin{figure}
 	\centering
-		\includegraphics[width=0.8\textwidth]{img/pipelining}
-	\caption{Diagramma di protocollo che mostra l'utilizzo del pipelining per diminuire la latenza
-	di rete \emph{(Fonte: Wikipedia)}}
+	\begin{minipage}[t]{0.4\textwidth}
+		\subfloat[][Senza \emph{pipelining}]{
+			\begin{sequencediagram}
+			\newthread[green]{a}{:Client} \newthread[blue]{b}{:Server}
+			\mess[2]{a}{}{b}
+			\prelevel
+			\mess[2]{b}{}{a}
+			\prelevel
+			\mess[2]{a}{}{b}
+			\prelevel
+			\mess[2]{b}{}{a}
+			\prelevel
+			\mess[2]{a}{}{b}
+			\prelevel
+			\mess[2]{b}{}{a}
+			\end{sequencediagram}
+		}
+	\end{minipage}
+	\qquad
+	\begin{minipage}[t]{0.4\textwidth}
+		\subfloat[][Con \emph{pipelining}]{
+			\begin{sequencediagram}
+			\newthread[green]{a}{:Client} \newthread[blue]{b}{:Server}
+			\mess[2]{a}{}{b}
+			\prelevel\prelevel
+			\mess[2]{a}{}{b}
+			\prelevel\prelevel
+			\mess[2]{a}{}{b}
+			\prelevel\prelevel\prelevel
+			\mess[2]{b}{}{a}
+			\prelevel\prelevel
+			\mess[2]{b}{}{a}
+			\prelevel\prelevel
+			\mess[2]{b}{}{a}
+			\postlevel\postlevel\postlevel\postlevel
+			\postlevel\postlevel
+			\end{sequencediagram}
+		}
+	\end{minipage}
+
+	\caption{Diagramma di sequenza che mostra l'uso del \emph{pipelining} per diminuire
+		il tempo totale d'esecuzione di 3 comandi}
 \end{figure}
 
 Si noti che, se si è interessati ad ottenere la massima performance, è consigliabile anche

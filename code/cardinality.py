@@ -59,5 +59,5 @@ plt2.yaxis.set_major_formatter(FuncFormatter(lambda x,pos=0: "%1.2f%%" % (100*x)
 plt2.tick_params("y", colors="g")
 
 plt.tight_layout()
-plt.savefig("bloom_card_error.png")
+plt.savefig("bloom_card_error_%dh.pdf" % K)
 plt.show()

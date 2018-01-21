@@ -501,7 +501,7 @@ utilizzarla come base per generare la famiglia di $K$ funzioni di hash richieste
 h_K)$. Un primo metodo, intuitivamente semplice, è quello di creare una funzione derivata $h'$ che
 accetti un seme oltre al dato da processare; alcune funzioni di hash offrono già nativamente la
 possibilità di definire un seme, mentre per le altre si può per esempio concatenare il seme al
-contenuto, cioè definire $h'(seed, msg) = h(seed \Vert msg)$ (dove $\Vert$ indica la
+contenuto, cioè definire $h'(seed, msg) = h(seed\,\Vert\,msg)$ (dove $\Vert$ indica la
 concatenazione). Di conseguenza, è possibile banalmente definire $h_i(msg) = h'(i, msg)$,
 creando così una famiglia di funzioni di hash, utilizzabili nel filtro.
 

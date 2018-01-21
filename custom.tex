@@ -9,6 +9,7 @@
 \usepackage{algpseudocode}  % Algoritmi in pseudo-codice
 \usepackage[chapter]{algorithm}
 \usepackage{pifont}  % numeri cerchiati su sfondo nero
+\usepackage{pgf-umlsd} % UML sequence diagrams
 
 % Definisci \EUR come unità di misura con il simbolo dell'euro
 \usepackage{eurosym}  
@@ -141,3 +142,6 @@
 \newcommand\fnhref[2]{%
   \href{#1}{#2}\footnote{\url{#1}}%
 }
+
+% Spegni warning su inclusione immagini PDF
+\pdfsuppresswarningpagegroup=1

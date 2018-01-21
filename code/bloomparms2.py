@@ -28,5 +28,5 @@ plt2.set_ylabel("numero di funzioni di hash (K)", color="g")
 plt2.tick_params("y", colors="g")
 
 plt.tight_layout()
-plt.savefig("bloom_parms_2.png")
+plt.savefig("bloom_parms_2.pdf")
 plt.show()
