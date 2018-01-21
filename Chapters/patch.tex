@@ -47,6 +47,7 @@ Anche per il parametro $P$ ci siamo orientati su offrire un default, rendendo pi
 l'utente iniziare l'utilizzo della struttura dati, anche in fase di sviluppo.
 
 \section{Progettazione dei nuovi comandi}
+\label{sec:patch:newcommands}
 
 Nel progettare i nuovi comandi, abbiamo cercato di adeguarci il più possibile allo stile dei
 comandi esistenti, cercando di mantenere le proprietà evinte durante la fase di analisi.
@@ -178,7 +179,7 @@ nella \autoref{sec:modredis}.
 
 Nel file \verb|bloom.h| vengono definite le due strutture dati principali:
 
-\begin{commentedsource}[style=csource,caption=Strutture dati]
+\begin{commentedsource}[style=csource,caption=Strutture dati,label={lst:bloomStruct}]
 typedef struct filter {
     struct filter *next;  /* next filter in chain */
     uint64_t s;           /* size of each partition in bits */
@@ -347,7 +348,7 @@ La funzione \verb|bloomRelease| rilascia la memoria allocata dall'intero filtro 
 percorrendo la catena \lnnum{3} e chiamando la funzione di distruzione di ciascun filtro \lnnum{4},
 terminando poi rilasciando la memoria occupata dalla struttura del filtro stessa \lnnum{5}.
 
-\begin{commentedsource}[style=csource,caption=Creazione e distruzione di un filtro]
+\begin{commentedsource}[style=csource,caption=Creazione e distruzione di un filtro,label={lst:bloomFilterNew}]
 filter* bloomFilterNew(bloom *bf) {
     int idx = bf->numfilters;
 
@@ -446,7 +447,7 @@ cresce.
 
 Vediamo ora il dettaglio dell'aggiunta dell'elemento ad un singolo filtro.
 
-\begin{commentedsource}[style=csource,caption=Aggiunta elemento ad un filtro]
+\begin{commentedsource}[style=csource,caption=Aggiunta elemento ad un filtro,label={lst:bloomFilterAdd}]
 uint64_t bloomFilterHash(unsigned char *ele, size_t elesize) {
 /*@\lnote@*/    return MurmurHash64A(ele,elesize,0xc5fb9af2ULL);
 }
@@ -477,7 +478,7 @@ int bloomFilterAdd(filter *flt, unsigned char *ele, size_t elesize) {
     }
 
     /* Keep count of total bits set to 1 */
-    flt->b += nbits;
+/*@\lnote@*/    flt->b += nbits;
 
     /* If at least one bit was turned off, we consider the item really added. */
     return nbits > 0;
@@ -509,12 +510,253 @@ processori ha una latenza elevata (circa $26$ cicli, contro i $4$ di una moltipl
 
 Infine, viene impostato a $1$ il bit corrispondente all'indice calcolato \lnnum{5}, dopo aver
 verificato il suo stato corrente e aver potuto incrementare così un contatore dei bit che cambiando
-di stato (\verb|nbits|).
+di stato (\verb|nbits|). Questo contatore, al termine del ciclo, viene sommato al campo \verb|b|
+del filtro \lnnum{6}, mantenendo così un conto di quanti bit sono impostati a $1$ nell'intero
+filtro, molto utile per il calcolo della cardinalità (vedi \autoref{sec:patch:card})
+
+
+\subsection{Test di appartenenza di un elemento al filtro}
+
+Come nel precedente caso, anche per il test di appartenenza vi sono due funzioni da analizzare.
+La prima, \verb|bloomExist|, esegue un controllo sull'intera catena di filtri:
+
+\begin{commentedsource}[style=csource,caption=Test di appartenenza di un elemento,label={lst:bloomExist}]
+int bloomExist(bloom *bf, unsigned char *ele, size_t elesize) {
+    /* Calculate initial hash for the element */
+/*@\lnote@*/    uint64_t hash = bloomFilterHash(ele,elesize);
+
+    /* Check all bloom filters for membership. If the element is
+       found in any of them, it means it's present. */
+/*@\lnote@*/    for (filter *flt = bf->first; flt; flt = flt->next)
+        if (bloomFilterExist(flt,hash))
+/*@\lnote@*/            return 1;
+    return 0;
+}
+\end{commentedsource}
+
+Utilizzando la funzione \verb|bloomFilterHash| già vista in precedenza, viene calcolata la funzione
+di hash sull'elemento del quale si vuole effettuare il test di appartenenza \lnnum{1}. Il successivo
+ciclo \lnnum{2} scorre tutti i filtri della catena e richiama la funzione \verb|bloomFilterExist|
+su ciascun filtro, passando come argomento il valore di hash già calcolato. Non appena l'elemento
+viene trovato all'interno di un filtro, si esce immediatamente dal ciclo restituendo un valore di
+successo \lnnum{3}.
+
+La funzione \verb|bloomFilterExist| implementa invece il cuore del test, cioè 
+l'\autoref{alg:bloomtest}:
+
+\begin{commentedsource}[style=csource,caption=Test di appartenenza di un elemento ad un filtro]
+int bloomFilterExist(filter *flt, uint64_t hash) {
+/*@\lnote@*/    uint32_t a = (uint32_t)hash;
+    uint32_t b = (uint32_t)(hash>>32);
+
+    for (unsigned int i=0;i<flt->k;i++) {
+        /* See bloomFilterAdd for a description of the index calculation algorithm. */
+/*@\lnote@*/        uint64_t index = a;
+        a += b; b += i;
+        index = (index * flt->s) >> 32;
+
+        /* For each bit, if it's not set, early exit immediately */
+/*@\lnote@*/        if (~(flt->parts[i][index>>3] >> (index & 7)) & 1)
+            return 0;
+    }
+/*@\lnote@*/    return 1;
+}
+\end{commentedsource}
+
+Il calcolo dell'indice segue quanto già visto in \verb|bloomFilterAdd|
+(\autoref{lst:bloomFilterAdd}): il valore di hash a \SI{64}{\bit} viene utilizzato per estrarre due
+hash a \SI{32}{\bit} \lnnum{1}, che vengono successivamente usati per il calcolo del doppio hash
+secondo l'\autoref{alg:ehndoublehash} \lnnum{2}.
+
+Una volta identificato l'indice, si verifica se il corrispondente bit è spento \lnnum{3}, nel qual
+caso si restituisce immediatamente $0$ indicando così che l'elemento non è presente. Solo nel caso
+in cui tutti i bit corrispondenti a tutte le funzioni di hash sono accesi, è possibile restituire il
+valore $1$ \lnnum{4} che indica che il successo del test.
+
+\subsection{Stima della cardinalità}
+\label{sec:patch:card}
+
+La stima della cardinalità viene eseguita tramite la funzione \verb|bloomCard|:
+
+\begin{commentedsource}[style=csource,caption=Stima della cardinalità]
+int bloomCard(bloom *bf) {
+    int nelem = 0;
+
+    /* Sum cardinality estimation of each filter. */
+/*@\lnote@*/    for (filter *flt = bf->first; flt; flt = flt->next) {
+/*@\lnote@*/        double p = ((double)flt->b / (double)flt->bmax) * CONFIG_BLOOM_DESIREDFILLRATIO;
+/*@\lnote@*/        nelem += floor((double)flt->s * -log(1.0-p) + .5);
+    }
+    return nelem;
+}
+\end{commentedsource}
+
+Poiché un filtro scalabile è composto da una catena di filtri riempiti in sequenza, la stima
+della cardinalità è data dalla somma della cardinalità stimata in ciascun filtro, secondo 
+l'\autoref{eq:bloomcard}. Il ciclo \lnnum{1} scorre tutti i filtri della catena; per ciascun
+filtro, viene calcolata la densità $p$, evitando di dover contare i bit di tutti gli array: infatti
+nella funzione \verb|bloomFilterAdd| (\autoref{lst:bloomFilterAdd}), è stato mantenuto un contatore
+dei bit impostati a $1$ nel campo \verb|b| del filtro, ed è possibile quindi usarlo direttamente
+\lnnum{2}, rapportandolo al campo \verb|bmax| corrispondente al numero di bit necessari a
+raggiungere la densità richiesta, impostato in fase di creazione del filtro nella funzione
+\verb|bloomFilterNew| (\autoref{lst:bloomFilterNew}). 
+
+Calcolato $p$, si può implementare direttamente l'\autoref{eq:bloomcard} \lnnum{3}, ricordando che
+$s = m/k$, approssimando all'intero più vicino e accumulando il numero di elementi stimati in
+\verb|nelem|.
+
+\subsection{Implementazione dei comandi Redis}
+
+Il codice visto nei precedenti listati implementa un filtro scalabile di Bloom ma è necessario
+implementare ancora i comandi proposti in \autoref{sec:patch:newcommands}. Il codice completo è
+disponibile in \autoref{sec:modredis} e in questa sezione verrà analizzato solo un comando a titolo
+di esempio, \verb|BFEXIST|, poiché una trattazione dettagliata richiederebbe di entrare nel merito
+anche delle numerose librerie e API interne di Redis.
+
+\begin{commentedsource}[style=csource,caption=Implementazione comando BFEXIST,label={lst:bfexistCommand}]
+/* BFEXIST key elem -> 0/1 */
+void bfexistCommand(client *c) {
+/*@\lnote@*/    robj *o = lookupKeyReadOrReply(c,c->argv[1],shared.czero);
+/*@\lnote@*/    if (!o || checkType(c,o,OBJ_BLOOM)) {
+        return;
+    }
+
+    bloom *bf = (bloom*)o->ptr;
+/*@\lnote@*/    int exist = bloomExist(bf,c->argv[2]->ptr,sdslen(c->argv[2]->ptr));
+/*@\lnote@*/    addReply(c, exist ? shared.cone : shared.czero);
+}
+\end{commentedsource}
+
+La funzione \verb|bfexistCommand| viene richiamata da Redis quando il comando \verb|BFEXIST| viene
+inviato da un client (la registrazione di questa funzione nella tabella dei comandi è mostrata nel
+\autoref{lst:cmdtable}). L'oggetto \verb|c| è una struttura che rappresenta la connessione con il
+client, e contiene anche informazioni sul comando in corso di esecuzione. Il motore di Redis si è
+già occupato di dividere la linea di comando in \emph{token}, che sono disponibili nell'array di
+stringhe \verb|c->argv[]|. Per il comando \verb|BFEXIST| ci aspettiamo solo due argomento: la chiave
+del filtro in \verb|c->argv[0]| e l'elemento da ricercare in \verb|c->argv[1]|.
+
+Il primo passo è quello di ricercare nel database se esiste già un oggetto corrispondente alla
+chiave \lnnum{1}. Viene utilizzata la funzione \verb|lookupKeyReadOrReply|, la quale riceve
+tre argomenti: un riferimento al client \verb|c|, la chiave da ricercare \verb|c->argv[1]|, e 
+la risposta da inviare al client in caso la chiave non sia presente. Esiste anche in Redis una
+funzione più semplice \verb|lookupKeyRead| che effettua solo la ricerca, senza preoccuparsi
+di eventualmente inviare una risposta al client, ma in questo caso utilizziamo la funzione
+più completa per rendere il codice più compatto.
+
+Il valore da restituire al client è \verb|shared.czero|, corrispondente ad una risposta pre-allocata
+(secondo la comune tecnica denominata \emph{singleton}) con valore intero $0$. Trattandosi di un
+valore di risposta molto comune, Redis ne mette a disposizione una istanza già pronta diminuendo
+così le allocazione e deallocazioni di memoria necessarie.
+
+La funzione \verb|lookupKeyReadOrReply| effettua quindi una ricerca nella tabella hash
+rappresentante il database per la chiave specificata; in caso che la chiave non sia presente, invia
+al client il valore $0$ come risposta, e restituisce il valore \verb|NULL| al chiamante. In questo
+caso, non è necessario fare più nulla ed è possibile quindi uscire direttamente dalla funzione.
+
+Se invece viene trovato un elemento nel database, è necessario verificare se sia del tipo giusto.
+Per l'implementazione dei filtri di Bloom, è stato definito un nuovo tipo di dato chiamato 
+\verb|OBJ_BLOOM| (tutti i tipi di strutture dati hanno una macro con prefisso \verb|OBJ_| che
+si espande ad un progressivo, definite nel file \verb|server.h|). La funzione \verb|checkType| si
+occupa di verificare se il tipo è giusto \lnnum{2}, e in caso negativo prepara già un messaggio di
+errore e lo restituisce al client. Anche questa funzione infatti è pensata per essere usata nel
+contesto dell'implementazione di un comando e si occupa quindi non solo del test in sé ma anche di
+creare un messaggio di errore opportuno. Se la funzione restituisce falso, non c'è altro da fare se
+non uscire.
+
+Se il tipo è corretto, possiamo finalmente accedere al dato in memoria, che sarà un'istanza della
+struttura \verb|bloom| (\autoref{lst:bloomStruct}), e chiamare la funzione  \verb|bloomExist|
+(\autoref{lst:bloomExist}) per effettuare il test di appartenenza \lnnum{3}. L'elemento da ricercare
+è estratto da \verb|c->argv[2]|, di tipo stringa e utilizza libreria interna \verb|sdstring| di
+Redis per gestire stringhe dinamiche, per cui è necessario richiamare la funzione \verb|sdslen| per
+calcolarne la lunghezza.
+
+Il valore restituito deve essere a questo punto inviato al client come risposta, utilizzando
+la funzione \verb|addReply| \lnnum{4}, e restituendo quindi \verb|shared.czero| in caso il valore
+sia $0$, e l'equivalente \verb|shared.cone| nel caso il valore sia $1$.
+
+\subsection{Registrazione dei comandi}
+
+La registrazione di comandi in Redis avviene tramite una tabella chiamata \verb|redisCommandTable|.
+Questa è la sua definizione contenuta nel file \verb|server.c|, che mostra come i comandi vengono
+registrati:
+
+\begin{commentedsource}[style=csource,caption=Registrazione nuovi comandi nella tabella comandi,label={lst:cmdtable}]
+struct redisCommand redisCommandTable[] = {
+    {"module",moduleCommand,-2,"as",0,NULL,1,1,1,0,0},
+    {"get",getCommand,2,"rF",0,NULL,1,1,1,0,0},
+    {"set",setCommand,-3,"wm",0,NULL,1,1,1,0,0},
+    {"setnx",setnxCommand,3,"wmF",0,NULL,1,1,1,0,0},
+    {"setex",setexCommand,4,"wm",0,NULL,1,1,1,0,0},
+    {"psetex",psetexCommand,4,"wm",0,NULL,1,1,1,0,0},
+    {"append",appendCommand,3,"wm",0,NULL,1,1,1,0,0},
+    {"strlen",strlenCommand,2,"rF",0,NULL,1,1,1,0,0},
+
+/*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*/
+
+/*@\lnote@*/    {"bfadd",bfaddCommand,-2,"wmF",0,NULL,1,1,1,0,0},
+/*@\lnote@*/    {"bfexist",bfexistCommand,3,"rF",0,NULL,1,1,1,0,0},
+    {"bfcount",bfcountCommand,2,"rF",0,NULL,1,1,1,0,0},
+    {"bfdebug",bfdebugCommand,-3,"w",0,NULL,0,0,0,0,0},
+
+/*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*/
+
+};
+\end{commentedsource}
+
+L'array come definito contiene un elemento per ciascun comando conosciuto da Redis. Il listato è
+parziale per brevità, ma vengono mostrati i 4 comandi aggiunti per il supporto ai filtri di Bloom.
+
+Analizzando \verb|BFEXIST| \lnnum{2}, si può vedere che il primo campo è il nome del comando (per
+convenzione qui in minuscolo) e il secondo è il puntatore alla funzione che lo implementa. 
+
+Il terzo campo è il numero di \emph{token} di cui è composto il comando quando usato in modo
+appropriato, in questo caso $3$ (il nome del comando stesso, più i due argomenti: chiave ed
+elemento). Grazie a questo valore, Redis può automaticamente restituire un errore al client in fase
+di analisi sintattica del comando inviato, sollevando le implementazioni dei singoli comandi da tale
+onere. Infatti, l'implementazione di \verb|bfexistCommand| (vista nel \autoref{lst:bfexistCommand})
+non effettua nessun controllo prima di accedere ai due argomenti \verb|c->argv[1]| e
+\verb|c->argv[2]|, né su eventuali argomenti in eccesso.
+
+Quando il valore del terzo comando è negativo, come in \lnnum{1}, l'analizzatore sintattico verifica
+la presenza di un numero di argomenti minimo pari al valore assoluto del numero specificato, ma
+consente comunque l'esistenza di argomenti aggiuntivi. Spetterà all'implementazione del comando
+gestire questa flessibilità, restituendo errore in caso di violazione della sintassi attesa.
+
+Il quarto argomento è una stringa che codifica una serie di \emph{flag}, una per ciascun carattere.
+Le flag più comuni sono le seguenti:
+
+\medskip
+\begin{tabular}{ |l|l| }
+
+  \multicolumn{2}{c}{Flag della tabella comandi} \\
+  \hline
+  $r$ & Il comando accede al database in sola lettura \\
+  $w$ & Il comando accede al database in lettura e scrittura \\
+  $m$ & Il comando può aumentare la memoria occupata dal database \\
+  $F$ & Il comando ha un'esecuzione molto rapida (\emph{fast}) \\
+  \hline
+\end{tabular}
+\medskip
+
+Il quinto argomento e gli ultimi due (decimo ed undicesimo), impostati a \verb|0|, si riferiscono 
+a campi che vengono usati dinamicamente e devono essere inizializzati sempre a $0$.
+
+Gli argomenti rimasti si occupano di specificare all'analizzatore sintattico quali argomenti del
+comando si riferiscono a chiavi del database. In particolare, il settimo, ottavo e nono argomento
+(impostati a \verb|1,1,1| in \lnnum{2}) indicano rispettivamente che il primo argomento che è
+una chiave ha indice $1$, l'ultimo argomento che è una chiave ha indice $1$, e l'incremento da
+utilizzare per trovare tutte le chiavi tra la prima e l'ultima è $1$. In altre parole, questa
+tripletta consente in modo semplice di indicare quali argomenti sono chiavi se esse hanno una
+posizione fissa e sono disposte all'interno dell'array degli argomenti a intervalli regolari. Per
+gestire comandi con struttura più complessa, è possibile implementare un algoritmo di estrazione
+degli indici delle chiavi su misura, passando il puntatore alla funzione nel sesto argomento
+(impostato a \verb|NULL| in \lnnum{2}).
+
+
+\section{Configurazione dei parametri di default}
 
 \subsection{Scelta della dimensione del primo filtro}
 \label{sec:patch:basesize}
-
-
 
 
 \subsection{Scelta della probabilità di falso positivo di default}
