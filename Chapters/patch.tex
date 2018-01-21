@@ -144,7 +144,7 @@ Il comando \verb|BFDEBUG STATUS| viene usato per ispezionare lo
 stato del filtro \lnnum{5}. La stringa restituita è composta da due valori:
 
 \medskip
-\begin{tabular}{ |l|l|p{280pt}| }
+\begin{tabular}{ |l|l|p{240pt}| }
   \hline
   $n$ & $1$ & La catena del filtro scalabile contiene un solo filtro \\
   $e$ & $0.003$ & La probabilità di falsi positivi è impostata a \SI{0.3}{\percent} \\
@@ -156,7 +156,7 @@ Per finire, il comando \verb|BFDEBUG FILTER| serve a ispezionare lo stato del pr
 catena \lnnum{6}. La stringa restituita contiene tre valori:
 
 \medskip
-\begin{tabular}{ |l|l|p{280pt}| }
+\begin{tabular}{ |l|l|p{240pt}| }
   \hline
   $k$ & $11$ & Il filtro utilizza $11$ funzioni di hash, cioè è diviso in $11$ sezioni \\
   $s$ & $1798$ & Ciascuna sezione è formata da \SI{1798}{\bit}, per un totale di $\num{1798 x 11} =
@@ -221,7 +221,7 @@ La struttura \verb|bloom| rappresenta l'intero filtro scalabile. I suoi campi so
 così definiti:
 
 \medskip
-\begin{tabular}{ |l|l|p{280pt}| }
+\begin{tabular}{ |l|l|p{200pt}| }
   \hline
   \verb|e| & \verb|double| & La probabilità richiesta di un falso positivo. Questo è il valore richiesto
   dall'utente, che il filtro cercherà di rispettare come margine superiore. \\
@@ -242,7 +242,7 @@ mai richiesto.
 Ciascun filtro è rappresentato dalla struttura \verb|filter|, definita dai seguenti campi:
 
 \medskip
-\begin{tabular}{ |l|l|p{280pt}| }
+\begin{tabular}{ |l|l|p{210pt}| }
   \hline
 
   \verb|next| & \verb|filter*| & Puntatore all'elemento successivo nella lista \\
