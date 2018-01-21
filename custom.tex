@@ -113,7 +113,7 @@
 % progressivi numerici a margine per indicare specifiche linee del codice.
 % https://zuttobenkyou.wordpress.com/2010/12/05/latex-saner-source-code-listings-no-starch-press-style/
 \newcounter{lstNoteCounter}
-\newcommand{\lnnum}[1]
+\newcommand{\lnnumraw}[1]
     {\raisebox{-.1ex}
     {\ifthenelse{#1 =  1}{\ding{182}}
     {\ifthenelse{#1 =  2}{\ding{183}}
@@ -126,7 +126,8 @@
     {\ifthenelse{#1 =  9}{\ding{190}}
     {\ifthenelse{#1 = 10}{\ding{191}}
     {NUM TOO HIGH}}}}}}}}}}}}
-\newcommand*{\lnote}[1][1em]{\stepcounter{lstNoteCounter}\vbox{\llap{{\large\lnnum{\thelstNoteCounter}}\hskip #1}}}
+\newcommand*{\lnote}[1][1em]{\stepcounter{lstNoteCounter}\vbox{\llap{{\large\lnnumraw{\thelstNoteCounter}}\hskip #1}}}
+\newcommand*{\lnnum}[1]{\unskip\,\lnnumraw{#1}}
 
 \lstnewenvironment{commentedsource}[1][]{
     \needspace{5\baselineskip}% se non ci sono almeno 5 linee a disposizione, vai a nuova pagina
