@@ -45,27 +45,20 @@ di inserimento).
 Le operazioni principali che si possono effettuare sulla struttura dati sono le seguenti:
 
 \begin{itemize}
-	\medskip
-
-	\item
-	\textbf{Inserimento}: aggiunge un elemento all'insieme. Se l'elemento è già presente,
+	\item \textbf{Inserimento}: aggiunge un elemento all'insieme. Se l'elemento è già presente,
 	l'operazione non modifica la struttura dati. In alcune implementazioni, l'operazione può 
 	restituire un codice di errore per indicare che l'inserimento non è stato effettuato
 	perché l'elemento era già presente.
 
-	\item
-	\textbf{Test di appartenenza}: controlla se un elemento è presente nell'insieme.
+	\item \textbf{Test di appartenenza}: controlla se un elemento è presente nell'in\-sie\-me.
 
-	\item
-	\textbf{Cardinalità}: restituisce il numero di elementi presenti nell'insieme.
+	\item \textbf{Cardinalità}: restituisce il numero di elementi presenti nell'in\-sie\-me.
 
-	\item
-	\textbf{Unione}: restituisce un insieme che contiene tutti gli elementi presenti in almeno uno
-	degli insiemi forniti in ingresso.
+	\item \textbf{Unione}: restituisce un insieme che contiene tutti gli elementi presenti in almeno
+	uno degli insiemi forniti in ingresso.
 
-	\item
-	\textbf{Intersezione}: restituisce un insieme che contiene tutti gli elementi presenti in tutti
-	gli insiemi forniti in ingresso.
+	\item \textbf{Intersezione}: restituisce un insieme che contiene tutti gli e\-le\-men\-ti
+	presenti in tutti gli insiemi forniti in ingresso.
 \end{itemize}
 
 Alcune implementazioni offrono anche operazioni più avanzate legate alla teoria degli insiemi,
@@ -546,10 +539,11 @@ sempre dispari, ma questo riduce l'uniformità della funzione. Per finire, ci sa
 cui le sequenze di indici tra due elementi potrebbe essere parzialmente sovrapposte sebbene gli hash
 siano diversi; si pensi per esempio a $h_b(x_1) = 2h_b(x_2) \bmod M$.
 
-Per risolvere questi problemi, \cite{bloom-doublehash} propone di usare
-l'\autoref{alg:ehndoublehash} per la composizione degli hash, chiamato  ``hash doppio
-avanzato''. Volendo derivare matematicamente la formula, otteniamo $$ h_i(x) = h_a(x) + ih_b(x) +
-\frac{i^3-i}{6} \pmod M $$.
+Per risolvere questi problemi, \cite{bloom-doublehash} propone di usare una tecnica per la
+composizione degli hash chiamata ``hash doppio avanzato'', descritta
+nell'\autoref{alg:ehndoublehash}. Volendo derivare matematicamente la formula, otteniamo:
+
+$$ h_i(x) = h_a(x) + ih_b(x) + \frac{i^3-i}{6} \pmod M $$.
 
 \begin{algorithm}
 \caption{Generazione di indici tramite hash doppio avanzato}
@@ -629,7 +623,8 @@ vedere, l'errore effettuato dalla stima non diverge anche per valori di densità
 		}
 	\end{minipage}
 
-	\caption{Errore sulla cardinalità nei filtri di Bloom com\-mes\-so dall'\autoref{eq:bloomcard}}
+	\caption{Errore commesso dall'\autoref{eq:bloomcard} per la stima della car\-di\-na\-li\-tà nei
+	filtri di Bloom}
 	\label{fig:bloomerror}
 \end{figure}
 
@@ -646,7 +641,7 @@ e nel secondo filtro in input.
 \caption{Unione di due filtri di bloom}
 \label{alg:bloomunion}
 \begin{algorithmic}[1]
-\Require $bf_1$ e $bf_2$ devono essere costruiti con gli stessi parametri
+\Require $bf_1$ e $bf_2$ devono essere costruiti con gli stessi pa\-ra\-me\-tri
 \Procedure{BloomUnion}{$bf_1$, $bf_2$}
 	\For {$i=0$ \textbf{to} $M-1$}
 		\State $out(i) \gets bf_1(i) \lor bf_2(i)$
@@ -658,17 +653,17 @@ e nel secondo filtro in input.
 
 
 È possibile in modo simile calcolare l'intersezione tra due filtri applicando l'operazione di
-\verb|AND| bit a bit agli array, come nell'\autoref{alg:bloomintersection}. In questo caso però
-il risultato non è ottimale: l'array risultante potrebbe contenere alcuni bit impostati a 1 che non
-risulterebbero tali se si fosse creato direttamente un filtro aggiungendo solo gli elementi facenti
-parte dell'intersezione, e di conseguenza la probabilità di falsi positivi risultante dal filtro
-intersezione è potenzialmente non ottimale.
+\verb|AND| bit a bit agli array, come descritto nell'\autoref{alg:bloomintersection}. In questo caso
+però il risultato non è ottimale: l'array risultante potrebbe contenere alcuni bit impostati a 1 che
+non risulterebbero tali se si fosse creato direttamente un filtro aggiungendo solo gli elementi
+facenti parte dell'intersezione, e di conseguenza la probabilità di falsi positivi risultante dal
+filtro intersezione è potenzialmente non ottimale.
 
 \begin{algorithm}
 \caption{Intersezione di due filtri di bloom}
 \label{alg:bloomintersection}
 \begin{algorithmic}[1]
-\Require $bf_1$ e $bf_2$ devono essere costruiti con gli stessi parametri
+\Require $bf_1$ e $bf_2$ devono essere costruiti con gli stessi pa\-ra\-me\-tri
 \Procedure{BloomIntersect}{$bf_1$, $bf_2$}
 	\For {$i=0$ \textbf{to} $m-1$}
 		\State $out(i) \gets bf_1(i) \land bf_2(i)$

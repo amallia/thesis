@@ -109,7 +109,7 @@ for i in range(24):
 out.finalize()
 
 if False:
-    # Error graph ---------------------------------------------------------------------------
+    # Error graph ------------------------------------
 
     plt.plot(TNS, ES, "b-", label="Singolo filtro")
     plt.plot(TNS, TES, "r-", label="Totale")
@@ -125,7 +125,7 @@ if False:
     plt.show()
     plt.close()
 
-    # Hash graph ---------------------------------------------------------------------------
+    # Hash graph -------------------------------------
 
     plt.plot(TNS, KS, "b-", label="Singolo filtro")
     plt.plot(TNS, TKS, "r-", label="Totale")
@@ -140,7 +140,7 @@ if False:
     plt.show()
     plt.close()
 
-    # Memory graph ---------------------------------------------------------------------------
+    # Memory graph -----------------------------------
 
     plt.plot(TNS, MS, "b-", label="Singolo filtro")
     plt.plot(TNS, TMS, "r-", label="Totale")

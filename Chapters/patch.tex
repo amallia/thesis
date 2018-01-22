@@ -247,7 +247,7 @@ Ciascun filtro è rappresentato dalla struttura \verb|filter|, definita dai segu
 \begin{tabular}{ |l|l|p{210pt}| }
   \hline
 
-  \verb|next| & \verb|filter*| & Puntatore all'elemento successivo nella lista \\
+  \verb|next| & \verb|filter*| & Puntatore al filtro successivo nella catena \\
 
   \verb|k| & \verb|uint32| & Numero di funzioni di hash (e dunque di partizioni) \\
 
@@ -427,8 +427,8 @@ Si può notare come la memoria allocata tenga conto dell'array flessibile delle 
 spazio per il giusto numero di puntatori (uno per sezione) \lnnum{4}. Nel ciclo successivo
 \lnnum{5}, vengono allocate invece le singole sezioni ed inizializzate a $0$.
 
-La cancellazione di un filtro avviene tramite la funzione \verb|bloomFilterRelease|, che
-semplicemente rilascia la memoria di tutte le sezioni \lnnum{6}, e infine la memoria del filtro
+La cancellazione di un filtro avviene tramite una chiamata alla funzione \verb|bloomFilterRelease|,
+che semplicemente rilascia la memoria di tutte le sezioni \lnnum{6}, e infine la memoria del filtro
 stesso \lnnum{7}.
 
 \subsection{Aggiunta di un elemento al filtro}
@@ -541,8 +541,8 @@ al termine del ciclo, viene sommato al campo \verb|b| del filtro \lnnum{7}, mant
 di quanti bit sono impostati a $1$ nell'intero filtro, molto utile per il calcolo della cardinalità
 (vedi \autoref{sec:patch:card}).
 
-Infine, viene impostato a $1$ il bit corrispondente all'indice \lnnum{6}, operazione principale
-dell'algoritmo di inserimento.
+Infine, viene impostato a $1$ il bit corrispondente all'indice \lnnum{6}, o\-pe\-ra\-zio\-ne
+principale dell'algoritmo di inserimento.
 
 \subsection{Test di appartenenza di un elemento al filtro}
 
@@ -605,7 +605,7 @@ valore $1$ \lnnum{4} che indica che il successo del test.
 \subsection{Stima della cardinalità}
 \label{sec:patch:card}
 
-La stima della cardinalità viene eseguita tramite la funzione \verb|bloomCard|:
+La stima della cardinalità viene implementata dalla funzione qui riportata, \verb|bloomCard|:
 
 \begin{commentedsource}[style=csource,caption=Stima della cardinalità]
 int bloomCard(bloom *bf) {
@@ -735,8 +735,9 @@ struct redisCommand redisCommandTable[] = {
 L'array come definito contiene un elemento per ciascun comando conosciuto da Redis. Il listato è
 parziale per brevità, ma vengono mostrati i 4 comandi aggiunti per il supporto ai filtri di Bloom.
 
-Analizzando \verb|BFEXIST| \lnnum{2}, si può vedere che il primo campo è il nome del comando (per
-convenzione qui in minuscolo) e il secondo è il puntatore alla funzione che lo implementa. 
+Analizzando la registrazione di \verb|BFEXIST| \lnnum{2}, si può vedere che il primo campo è il nome
+del comando (per convenzione qui in minuscolo) e il secondo è il puntatore alla funzione che lo
+implementa.
 
 Il terzo campo è il numero di \emph{token} di cui è composto il comando quando usato in modo
 appropriato, in questo caso $3$ (il nome del comando stesso, più i due argomenti: chiave ed
@@ -746,10 +747,11 @@ onere. Infatti, l'implementazione di \verb|bfexistCommand| (vista nel \autoref{l
 non effettua nessun controllo prima di accedere ai due argomenti \verb|c->argv[1]| e
 \verb|c->argv[2]|, né su eventuali argomenti in eccesso.
 
-Quando il valore del terzo comando è negativo, come in \lnnum{1}, l'analizzatore sintattico verifica
-la presenza di un numero di argomenti minimo pari al valore assoluto del numero specificato, ma
-consente comunque l'esistenza di argomenti aggiuntivi. Spetterà all'implementazione del comando
-gestire questa flessibilità, restituendo errore in caso di violazione della sintassi attesa.
+Quando il valore del terzo comando è negativo, come per \verb|BFADD| \lnnum{1}, l'analizzatore
+sintattico verifica la presenza di un numero di argomenti minimo pari al valore assoluto del numero
+specificato, ma consente comunque l'esistenza di argomenti aggiuntivi. Spetterà all'implementazione
+del comando gestire questa flessibilità, restituendo errore in caso di violazione della sintassi
+attesa.
 
 Il quarto argomento è una stringa che codifica una serie di \emph{flag}, una per ciascun carattere.
 Le flag più comuni sono le seguenti:
@@ -893,7 +895,8 @@ filtri nella catena per poter inserire il numero di elementi richiesto. In quell
     }
   \end{minipage}
 
-  \caption{Andamento dei parametri del filtro scalabile in Redis (configurazione di default)}
+  \caption{Andamento dei parametri del filtro scalabile in Redis in con\-fi\-gu\-ra\-zio\-ne di
+  default}
   \label{fig:scalingbloom}
 \end{figure}
 

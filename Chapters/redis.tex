@@ -205,6 +205,7 @@ su un sistema macOS si può utilizzare il gestore di pacchetti ``Homebrew'' tram
 comando \verb|brew install redis|.
 
 \section{Architettura}
+\label{sec:redis:arch}
 
 Redis implementa un array associativo (tramite tabella hash) in cui le chiavi sono stringhe, e i
 valori associati sono oggetti di vari tipi (stringhe o strutture dati). Essendo un database
@@ -221,7 +222,6 @@ storia dei comandi inseriti, e la formattazione leggibile dei risultati.
 Come esempio, la seguente sessione mostra come scrivere e leggere un valore di tipo
 stringa:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> SET abc provavalore
 OK
@@ -240,7 +240,6 @@ invece di \verb|""|.
 Il comando \verb|DEL| può essere utilizzato per cancellare un oggetto di tipo
 arbitrario:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> DEL abc
 |\lnote|(integer) 1
@@ -255,7 +254,6 @@ Alcuni comandi possono, in alcuni casi, tornare invece un errore. Gli errori non
 tipi definiti nel protocollo, ma contengono semplicemente un messaggio di errore. In questo
 esempio, si vede un errore generato dall'invio di un comando inesistente:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> MYSQL
 (error) ERR unknown command 'MYSQL'
@@ -267,6 +265,7 @@ debugging. La funzione hash con la quale la stringa viene convertita in indice �
 chiamata MurMurHash2.
 
 \subsection{Funzione di hash MurMurHash2}
+\label{sec:redis:murmur}
 
 \fnhref{https://sites.google.com/site/murmurhash/}{MurMurHash2} è una funzione di hash non
 crittografica creata nel 2008 da Austin Appleby, un ingegnere di Google, ed è la seconda versione
@@ -309,29 +308,29 @@ separatamente per poter ricostruire lo stesso output. Se si desidera una funzion
 riproducibile attraverso più esecuzioni, il seme può essere impostato ad una costante arbitraria,
 senza mai variarlo.
 
-La funzione utilizza due parametri principali: una costante moltiplicativa \lnnum{1} e una
-costante rotativa \lnnum{2} (in realtà utilizzata per uno shift in questa versione). I valori
+La funzione utilizza due parametri principali: una costante moltiplicativa $m$ \lnnum{1} e una
+costante rotativa $r$ \lnnum{2} (in realtà utilizzata per uno shift in questa versione). I valori
 indicati qui sopra sono quelli consigliati dall'autore per un'implementazione a \SI{32}{\bit}.
 
 Prima di cominciare, il valore di hash viene inizializzato combinando il seme con la lunghezza della
 stringa \lnnum{3}, per evitare semplici collissioni basate su estensioni della stringa con suffissi
-che non modificano l'hash stesso. Durante il ciclo principale di mix, viene estratta una parola
-alla volta dal messaggio (per esempio \SI{32}{\bit}), viene processata in modo irreversibile
-tramite due moltiplicazioni ed uno shift con i parametri, e viene infine unita (sempre in
-modo irreversibile) all'hash parziale \lnnum{4}. Una volta terminato il messaggio, l'hash stesso
-viene finalizzato con dei passaggi irreversibili moltiplicativi e di shift \lnnum{5}, prima di
-restituire il valore finale.
+che non modificano l'hash stesso. Durante il ciclo principale di mix, viene estratta una parola alla
+volta dal messaggio (per esempio \SI{32}{\bit}), viene processata in modo irreversibile tramite due
+moltiplicazioni ed uno shift con $m$ e $r$, e viene infine unita (sempre in modo irreversibile)
+all'hash parziale \lnnum{4}. Una volta terminato il messaggio, l'hash stesso viene finalizzato con
+dei passaggi irreversibili moltiplicativi e di shift con $m$ e $r$ \lnnum{5}, prima di restituire il
+valore finale.
 
 MurMurHash2 è considerata oggi obsoleta e sorpassata da MurMurHash3, poiché è stata individuata una
 falla in caso di blocchi di dati identici consecutivi \cite{murmur2flaw}. Infatti, se la chiave
 contiene due blocchi da \SI{32}{\bit} (es: \verb|abcdabcd|), ciascun blocco viene modificato nello
 stesso modo tramite le costanti, e poi mixato al valore di hash tramite un semplice \verb|XOR|, che
-applicato due volte in sequenza provoca una possibile cancellazione di informazione. La
-moltiplicazione del valore di hash per la costante \verb|m| attutisce un po' l'effetto ma non del
-tutto: per esempio, per la costante \verb|0x5bd1e995| utilizzata come default, si può misurare
-sperimentalmente una cancellazione di circa \SI{4.6}{\bit} su \num{32}, che corrisponde quindi a
-collisioni con una probabilità di \num{1} su $2 ^ {27.4}$ invece che l'ottimale \num{1} su $2 ^
-{32}$.
+applicato due volte in sequenza provoca una possibile cancellazione di informazione (si ricordi che
+$A \oplus B \oplus B = A$). La moltiplicazione del valore di hash per la costante \verb|m| attutisce
+un po' l'effetto ma non del tutto: per esempio, per la costante \verb|0x5bd1e995| utilizzata come
+default, si può misurare sperimentalmente una cancellazione di circa \SI{4.6}{\bit} su \num{32}, che
+corrisponde quindi a collisioni con una probabilità di \num{1} su $2 ^ {27.4}$ invece che l'ottimale
+\num{1} su $2 ^ {32}$.
 
 \section{Tipologie di oggetti memorizzabili}
 
@@ -355,7 +354,7 @@ associato alla chiave \verb|test1|, contenente i due elementi \verb|elem1| e \ve
 Se \verb|test1| esistesse già nella base di dati ma fosse di tipo diverso (per esempio,
 una lista), il comando \verb|SADD| ritornerebbe un errore (\verb|WRONGTYPE|).
 
-Viceversa, come già visto nel precedente paragrafo, è previsto un comando di cancellazione
+Viceversa, come già visto nella \autoref{sec:redis:arch}, è previsto un comando di cancellazione
 generale (\verb|DEL|) che rimuove la chiave e l'oggetto ad essa associato dal database,
 qualunque sia il tipo dell'oggetto stesso.
 
@@ -367,58 +366,86 @@ più comuni per manipolarle sono, come visto, \verb|SET| e \verb|GET|, ma anche 
 per concatenare, \verb|STRLEN| per leggere la lunghezza, o \verb|GETRANGE| per estrarre una
 sottostringa.
 
-\medskip
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> SET foo abcd
+|\lnote|127.0.0.1:6379> SET foo abcd
 OK
 127.0.0.1:6379> GET foo
 "abcd"
-127.0.0.1:6379> APPEND foo ef
+|\lnote|127.0.0.1:6379> APPEND foo ef
 (integer) 6
 127.0.0.1:6379> STRLEN foo
 (integer) 6
-127.0.0.1:6379> GETRANGE foo 2 3
+|\lnote|127.0.0.1:6379> GETRANGE foo 2 3
 "cd"
 \end{commentedsource}
 
-Si noti come \verb|APPEND| ha restituito la nuova lunghezza della stringa, sfruttando
-la disponibilità nel protocollo del valore di ritorno come modo per veicolare una
-informazione possibilmente utile.
+In questo esempio, la chiave \verb|foo| viene associata ad una stringa con valore \verb|abcd|
+\lnnum{1}, come verificato subito dopo con il comando \verb|GET|. 
 
-Le stringhe sono in realtà l'unico tipo primario supportato da Redis, ma vengono spesso usate come
-tipo debole, cioè è possibile manipolarle come se fossero oggetti di altri tipi. Infatti, i comandi
-\verb|INCR|, \verb|DECR|,  \verb|INCRBY| e \verb|DECRBY| ci permettono di interagire con oggetti di
-tipo stringa che rappresentano degli interi in base 10:
+Il comando \verb|APPEND| \lnnum{2} concatena la stringa \verb|ef| al valore attuale \verb|foo|,
+ottenendo quindi una nuova stringa \verb|abcdef| che viene associata sempre alla chiave \verb|foo|.
+Si noti come \verb|APPEND| ha restituito la nuova lunghezza della stringa (\verb|abcdef| è composta
+da $6$ caratteri), sfruttando la disponibilità nel protocollo del valore di ritorno come modo per
+veicolare una informazione possibilmente utile. L'uso del comando \verb|STRLEN| conferma questo
+dato.
 
-\medskip
+Tramite il comando \verb|GETRANGE|, si richiede di estrarre una porzione della stringa memorizzata
+in \verb|foo| \lnnum{3}, in particolare i caratteri i cui indici sono compresi nell'intervallo
+chiuso $\interval{2}{3}$; il comando infatti restituisce la stringa \verb|cd|.
+
+\subsection{Stringhe usate come interi}
+
+Le stringhe sono in realtà l'unico tipo di dato non aggregato supportato da Redis, ma vengono spesso
+usate come tipo \emph{debole}, cioè è possibile manipolarle come se fossero oggetti di altri tipi,
+per esempio interi.
+
+I seguenti comandi consentono infatti la manipolazioni di stringhe rappresentanti numeri in base
+10:
+
+\begin{description}[style=nextline,font={\bfseries\ttfamily}]
+	\item[INCR <key>] Incrementa il numero rappresentato nella stringa di una unità.
+	\item[DECR <key>] Decrementa il numero rappresentato nella stringa di una unità.
+	\item[INCRBY <key> <val>] Somma al numero rappresentato nella stringa un valore
+	spe\-ci\-fi\-ca\-to.
+	\item[DECRBY <key> <val>] Sottrae al numero rappresentato nella stringa un valore
+	spe\-ci\-fi\-ca\-to.
+\end{description}
+
+Vediamo un esempio pratico di uso di questi comandi:
+
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> SET foo 123
+|\lnote|127.0.0.1:6379> SET foo 123
 OK
 127.0.0.1:6379> STRLEN foo
 (integer) 3
-127.0.0.1:6379> INCR foo
+|\lnote|127.0.0.1:6379> INCR foo
 (integer) 124
 127.0.0.1:6379> STRLEN foo
 (integer) 3
-127.0.0.1:6379> DECRBY foo 24
+|\lnote|127.0.0.1:6379> DECRBY foo 24
 (integer) 100
 127.0.0.1:6379> GET foo
 "100"
 \end{commentedsource}
 
-In questo esempio, alla chiave \verb|foo| è stato associato una stringa che contiene
-la rappresentazione di un numero in base 10; il comando \verb|STRLEN| ci rassicura
-che si tratta di una stringa di lunghezza 3. Nonostante questo, i comandi \verb|INCR|
-e \verb|DECRBY| sono in grado di manipolare la stringa come se fosse un intero (e il
-loro valore di ritorno infatti è di tipo intero). Al termine di queste operazioni
-matematiche, il comando \verb|GET| conferma che si tratta sempre di una stringa.
+Alla chiave \verb|foo| è stato associato una stringa che contiene la rappresentazione di $123$
+in base 10 \lnnum{1}; il comando \verb|STRLEN| ci rassicura che si tratta di una stringa di
+lunghezza $3$ e non di un numero.
 
-Allo stesso modo, viene fornito un supporto molto blando per i numeri in virgola
-mobile tramite il comando \verb|INCRBYFLOAT|.
+Nonostante questo, il comando \verb|INCR| \lnnum{2} è in grado di manipolare la stringa come
+se fosse un intero, modificandola nella rappresentazione in base 10 di $124$. Si noti che il
+valore restituito, invece, è di tipo intero. Il comando \verb|STRLEN| subito successivo conferma
+che stiamo sempre manipolando una stringa.
 
-Una possibilità più avanzata è quella di considerare la stringa come un array di bit
-utilizzando i comandi \verb|BITCOUNT|, \verb|SETBIT| e \verb|GETBIT| per lavorare
-su ciascun bit.
+Allo stesso modo, il comando \verb|DECRBY| \lnnum{3} sottrae il valore $24$ all'attuale valore
+di \verb|foo|, ottenendo come risultato $100$, che viene restituito come intero. Il comando
+\verb|GET| finale mostra il contenuto di \verb|foo| questa volta come stringa.
+
+Oltre agli interi, viene fornito un supporto molto primitivo per i numeri in virgola
+mobile, tramite il solo comando \verb|INCRBYFLOAT|. 
+
+Una possibilità più avanzata è poi quella di considerare la stringa come un array di bit utilizzando
+i comandi \verb|BITCOUNT|, \verb|SETBIT| e \verb|GETBIT| per lavorare su ciascun bit.
 
 \subsection{Liste}
 
@@ -428,68 +455,134 @@ L'accesso al primo e all'ultimo elemento ha una complessità di $\mathcal{O}(1)$
 l'accesso all'elemento $N$ richiede $\mathcal{O}(N)$. I comandi principali per manipolare una
 lista sono i seguenti:
 
-\begin{itemize}
-	\medskip
-	\item \textbf{LPUSH}. Aggiunge un elemento in cima alla lista.
-	\item \textbf{RPUSH}. Aggiunge un elemento in fondo alla lista.
-	\item \textbf{LPOP}. Rimuove un elemento dalla cima della lista.
-	\item \textbf{RPOP}. Rimuove un elemento dal fondo della lista.
-	\item \textbf{LLEN}. Restituisce la lunghezza della lista.
-	\item \textbf{LINDEX}. Restituisce l'elemento K-esimo della lista.
-	\item \textbf{LRANGE}. Restituisce tutti gli elementi all'interno di un range di indici.
-	\item \textbf{LSET}. Modifica l'elemento K-esimo della lista.
-	\item \textbf{LINSERT}. Inserisce un elemento prima o dopo un elemento pivot.
-\end{itemize}
+\begin{description}[style=nextline,font={\bfseries\ttfamily}]
+	\item[{LPUSH key ele [ele\dots]}] Aggiunge un elemento in testa alla lista.
+	\item[{RPUSH key ele [ele\dots]}] Aggiunge un elemento in coda alla lista.
+	\item[LPOP key] Rimuove e restituisce un elemento dalla testa della lista. Restituisce errore
+		se la lista è vuota.
+	\item[RPOP key] Rimuove e restituisce un elemento dalla coda della lista. Restituisce errore
+		se la lista è vuota.
+	\item[{BLPOP key [key\dots] timeout / BRPOP key [key\dots] timeout}] Come i precedenti, ma se la
+		lista è vuota il client resta bloccato in attesa che venga aggiunto un elemento da un altro
+		client. Inoltre, è possibile specificare più di una lista su cui attendere elementi. Il
+		timeout deve essere specificato in secondi; se è $0$, le funzioni non bloccano mai
+		e si comportano come \verb|LPOP|/\verb|RPOP|.
+	\item[RPOP key] Rimuove un elemento dal fondo della lista.
+	\item[LLEN key] Restituisce la lunghezza della lista.
+	\item[LINDEX key idx] Restituisce l'elemento della lista all'indice specificato.
+	\item[LRANGE key first last] Restituisce tutti gli elementi all'interno
+		di un range di indici.
+	\item[LSET key idx ele] Sostituisce l'elemento della lista all'indice specificato con l'elemento
+		passato come argomento.
+	\item[LINSERT key AFTER/BEFORE pivot ele] Inserisce un elemento prima o
+		dopo l'elemento pivot specificato.
+\end{description}
+
+Oltre agli ovvi usi di memorizzazione di dati mantenendo un certo ordine di inserimento, le liste di
+Redis consentono anche di implementare un complesso meccanismo di \emph{task queue}, cioè code di
+attività da eseguire, tramite i comandi \verb|BLPOP| e \verb|BRPOP|. Per esempio, in un possibile
+scenario applicativo, un gruppo di client \emph{produttori} possono inserire attività da eseguire
+(magari codificate da un ID) in una coda di attività pendenti tramite \verb|RPUSH|; un secondo
+gruppo di client \emph{consumatori} possono invece restare in attesa di attività da eseguire
+tramite \verb|BLPOP|, ed eseguirli via via che vengono accodati. La possibilità di specificare più
+di una lista consente di dividere le attività per priorità o per tipologia, consentendo comunque
+flessibilità su quali attività eseguire da parte dei consumatori. A titolo di esempio di utilizzo di
+questa funzionalità, si veda il software
+\fnhref{http://celery.readthedocs.io/en/latest/}{Celery}, una coda di attività distribuita per
+programmi scritti in Python, che consente di utilizzare Redis come database.
 
 Qui si può vedere una sessione interattiva di esempio di uso di una lista:
 
-\medskip
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> RPUSH mylist mickey minnie goofy donald
+|\lnote|127.0.0.1:6379> RPUSH mylist mickey minnie goofy donald
 (integer) 4
 127.0.0.1:6379> LINDEX mylist 0
 "mickey"
 127.0.0.1:6379> LINDEX mylist 1
 "minnie"
-127.0.0.1:6379> LPOP mylist
+|\lnote|127.0.0.1:6379> LPOP mylist
 "mickey"
 127.0.0.1:6379> LLEN mylist
 (integer) 3
-127.0.0.1:6379> LINSERT mylist AFTER goofy walt
+|\lnote|127.0.0.1:6379> LINSERT mylist AFTER goofy walt
 (integer) 4
-127.0.0.1:6379> LRANGE mylist 0 5
-1) "minnie"
-2) "goofy"
-3) "walt"
-4) "donald"
+|\lnote|127.0.0.1:6379> LRANGE mylist 1 5
+1) "goofy"
+2) "walt"
+3) "donald"
 \end{commentedsource}
 
 Si noti che non è necessario inizializzare la lista in nessun modo: il primo riferimento alla chiave
-\verb|mylist| tramite un comando \verb|RPUSH| (che opera esclusivamente su liste) è sufficiente
-per creare dinamicamente l'oggetto di tipo giusto.
+\verb|mylist| tramite un comando \verb|RPUSH| \lnnum{1} è sufficiente per creare dinamicamente
+l'oggetto di tipo giusto. In questo esempio, la lista viene inizializzata con i $4$ elementi nello
+stesso ordine specificato poiché il comando \verb|RPUSH| effettua l'inserimento in coda:
 
-Oltre agli ovvi usi di memorizzazione di dati mantenendo un certo ordine di inserimento, le liste di
-Redis consentono anche di implementare un complesso meccanismo di \emph{task queue}, cioè code di
-attività da eseguire; infatti, i comandi \verb|LPOP| e \verb|RPOP| dispongono anche di una versione
-bloccante, chiamate rispettivamente \verb|BLPOP| e \verb|BRPOP|. Se eseguiti specificando una lista
-vuota, invece di tornare un errore, sospendono il client finché un elemento viene aggiunto alla
-lista da un altro client. In questo modo, un gruppo di client produttori possono inserire attività
-da eseguire (magari codificate da un ID) in una coda di attività pendenti, e un secondo gruppo di
-client consumatori possono restare in attesa di attività da eseguire, ed eseguirli via via che
-vengono accodati. Si noti che \verb|BLPOP| e \verb|BRPOP| consentono anche di specificare più di una
-lista da controllare, restando in attesa finché non viene inserito un elemento in una qualunque
-delle liste specificate; così facendo è possibile quindi suddividere meglio le attività per priorità
-o per tipologia, consentendo comunque flessibilità su quali attività eseguire da parte dei
-consumatori. A titolo di esempio di utilizzo di questa funzionalità, si veda il software
-\fnhref{http://celery.readthedocs.io/en/latest/}{Celery}, una coda di attività distribuita per
-programmi scritti in Python, che consente di utilizzare Redis come database.
+\begin{center}
+	\begin{tabular}{c|*{4}{c|}}
+	  \hhline{~-}
+	  \scriptsize Inizio & \cellcolor{blue!25}mickey \\ 
+	  \hhline{~--}
+	  \vdots             & mickey & \cellcolor{blue!25}minnie \\ 
+	  \hhline{~---}
+	  \vdots             & mickey & minnie & \cellcolor{blue!25}goofy \\ 
+	  \hhline{~----}
+	  \vdots             & mickey & minnie & goofy & \cellcolor{blue!25}donald \\ 
+	  \hhline{~----}
+	  \scriptsize Fine   & mickey & minnie & goofy & donald \\ 
+	  \hhline{~----}
+	\end{tabular}
+\end{center}
 
+Se si fosse usato \verb|LPUSH|, l'inserimento in testa avrebbe creato una lista in ordine inverso
+rispetto a quello degli argomenti. Le chiamate al comando \verb|LINDEX| nell'esempio confermano
+questa struttura.
+
+Il comando \verb|LPOP| \lnnum{2} rimuove il primo elemento dalla testa della lista, restituendolo,
+e lasciando la lista con 3 elementi come confermato dal successivo comando \verb|LLEN|:
+
+\begin{center}
+	\begin{tabular}{c|*{4}{c|}}
+	  \hhline{~----}
+	  \scriptsize Inizio & mickey & minnie & goofy & donald \\ 
+	  \hhline{~----}
+	  \vdots             & \cellcolor{red!35}mickey & minnie & goofy & donald \\ 
+	  \hhline{~----}
+	  \scriptsize Fine   & minnie & goofy & donald \\ 
+	  \hhline{~---}
+	\end{tabular}
+\end{center}
+
+Il comando \verb|LINSERT| \lnnum{3} inserisce un nuovo elemento \verb|walt| immediatamente
+successivo all'emento \verb|goofy|:
+
+\begin{center}
+	\begin{tabular}{c|*{4}{c|}}
+	  \hhline{~---}
+	  \scriptsize Inizio & minnie & goofy & donald \\ 
+	  \hhline{~----}
+	  \vdots             & minnie & goofy & \cellcolor{blue!25}walt & donald \\ 
+	  \hhline{~----}
+	  \scriptsize Fine   & minnie & goofy & walt & donald \\ 
+	  \hhline{~----}
+	\end{tabular}
+\end{center}
+
+Infine, il comando \verb|LRANGE| \lnnum{4} restituisce una porzione di elementi della lista, cioè
+quelli compresi nell'intervallo $\interval{1}{5}$. Nonostante l'estremo superiore dell'intervallo
+sia più grando della dimensione della lista, il comando non generare nessun errore, e semplicemente
+restituisce gli elementi esistenti. Il client potrà dedurre che la lista era più breve dal fatto
+che gli elementi restituiti sono in numero inferiore a quanti erano stati richiesti.
 
 \subsection{Tabelle hash}
 
 Una tabella hash consente di memorizzare una serie di coppie di stringhe (denominate ``campo'' e
 ``valore''), associandole ad una chiave del database; questo consente quindi di serializzare dei
 semplici oggetti, sebbene non sia possibile avere tipologie più complesse di dati.
+
+La funzione di hash utilizzata dalla tabella è la medesima utilizzata per memorizzare le chiavi
+dentro il database: MurMurHash2, descritta nella \autoref{sec:redis:murmur}. D'altra parte, l'intero
+database Redis è esso stesso una tabella hash che associa le chiavi agli oggetti contenuti, ed è
+quindi logico che venga riutilizzata la medesima implementazione.
 
 Un esempio di uso di tabella hash è la memorizzazione delle informazioni sugli utenti di un
 applicativo; è possibile infatti utilizzare come chiave una stringa composta da un prefisso (per
@@ -506,31 +599,34 @@ necessaria uniformità, l'onere è lasciato al client.
 
 I comandi principali sono i seguenti, caratterizzati dal prefisso \verb|H|:
 
-\begin{itemize}
-	\medskip
-	\item \textbf{HSET}. Aggiunge un campo alla tabella.
-	\item \textbf{HGET}. Legge il valore di un campo della tabella.
-	\item \textbf{HDEL}. Cancella un campo dalla tabella.
-	\item \textbf{HEXISTS}. Verifica se un campo è presente nella tabella.
-	\item \textbf{HLEN}. Restituisce il numero di campi presenti nella tabella.
-	\item \textbf{HGETALL}. Restituisce tutti i campi e tutti i valori nella tabella.
-	\item \textbf{HMGET} e \textbf{HMSET}. Rispettivamente come \verb|HGET| e \verb|HSET| ma operano
-	su campi multipli.
-	\item \textbf{HKEYS} e \textbf{HVALS}. Restituiscono rispettivamente tutti i campi e tutti i
-	valori nella tabella.
-\end{itemize}
+\begin{description}[style=nextline,font={\bfseries\ttfamily}]
+	\item[HSET key field value] Aggiunge un campo alla tabella, associandolo ad un valore.
+	\item[{HMSET key field value [field value\dots]}] Aggiunge uno o più campi alla tabella,
+		associandoli ai rispettivi valori.
+	\item[HGET key field] Legge il valore associato ad un singolo campo della tabella.
+	\item[{HMGET key field [field\dots]}] Legge uno o più valori associati a uno o più campi della
+		tabella.
+	\item[{HDEL key field [field\dots]}] Cancella uno o più campi dalla tabella. Si noti che
+		non esiste in questo caso \verb|HMDEL| perché questo comando ha già effetto multiplo. I
+		comandi \verb|HSET| e \verb|HGET| sono il lascito di un vecchio approccio al design dei
+		comandi e sono di fatto deprecati.
+	\item[HEXISTS key field] Verifica se un campo è presente nella tabella.
+	\item[HLEN key] Restituisce il numero di campi presenti nella tabella.
+	\item[HGETALL key] Restituisce tutti i campi e tutti i valori nella tabella.
+	\item[HKEYS key / HVALS key] Restituiscono rispettivamente tutti i campi e tutti i valori
+		nella tabella.
+\end{description}
 
 Qui si può vedere una sessione interattiva di esempio di uso di una tabella hash:
 
-\medskip
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> HSET user:88 name giovanni
+|\lnote|127.0.0.1:6379> HSET user:88 name giovanni
 (integer) 1
-127.0.0.1:6379> HMSET user:88 surname bajo age 38
+|\lnote|127.0.0.1:6379> HMSET user:88 surname bajo age 38
 OK
 127.0.0.1:6379> HLEN user:88
 (integer) 3
-127.0.0.1:6379> HGET user:88 surname
+|\lnote|127.0.0.1:6379> HGET user:88 surname
 "bajo"
 127.0.0.1:6379> HGETALL user:88
 1) "name"
@@ -547,21 +643,56 @@ OK
 1) "giovanni"
 2) "bajo"
 3) "38"
-127.0.0.1:6379> HEXISTS user:88 name
+|\lnote|127.0.0.1:6379> HEXISTS user:88 name
 (integer) 1
 127.0.0.1:6379> HEXISTS user:88 giovanni
 (integer) 0
 \end{commentedsource}
+
+Nell'esempio, il comando \verb|HSET| inizializza una tabella hash con chiave \verb|user:88|
+\lnnum{1}, creando subito un campo \verb|name| con valore \verb|giovanni|. 
+
+\begin{center}
+	\begin{tabular}{r|l}
+		\hline
+		\rowcolor{blue!20} \multicolumn{2}{c}{Tabella user:88} \\
+		\hline
+		name & giovanni \\
+		\hline
+	\end{tabular}
+\end{center}
 
 Come si può vedere, la tabella hash è creata dinamicamente al primo uso, e non è necessario
 dimensionarla in alcun modo; Redis implementa in modo efficiente le tabelle hash e le ridimensiona
 automaticamente al crescere degli elementi contenuti, mantenendo un fattore massimo di riempimento
 che garantisce una buona velocità di accesso.
 
-La funzione di hash utilizzata dalla tabella è la medesima utilizzata per memorizzare le chiavi
-dentro il database (MurMurHash2). D'altra parte, l'intero database Redis è esso stesso una tabella
-hash che associa le chiavi agli oggetti contenuti, ed è quindi logico che venga riutilizzata la
-medesima implementazione.
+Successivamente, tramite \verb|HMSET| \lnnum{2}, vengono aggiunti altri due campi alla tabella:
+\verb|surname| con valore \verb|bajo| e \verb|age| con valore \verb|38|. La successiva 
+chiamata a \verb|HLEN| conferma che la tabella contiene ora 3 valori, e cioè:
+
+\begin{center}
+	\begin{tabular}{r|l}
+		\hline
+		\rowcolor{blue!20} \multicolumn{2}{c}{Tabella user:88} \\
+		\hline
+		name & giovanni \\
+		surname & bajo \\
+		age & 38 \\
+		\hline
+	\end{tabular}
+\end{center}
+
+La chiamata a \verb|HMGET| \lnnum{3} restituisce il valore associato al campo \verb|surname|, cioè 
+\verb|bajo|. Per quanto riguarda invece le estrazioni multiple di campi e valori, l'esempio
+mostra che \verb|HGETALL| restituisce l'intera tabella \lnnum{4}, alternando campi e valori
+nell'array che viene restituito; invece \verb|HKEYS| e \verb|HVALS| restituiscono rispettivamente
+solo le chiavi o solo i valori (cioè il contenuto delle due colonne rappresentate qui sopra).
+
+Infinie, \verb|HEXISTS| verifica se il campo \verb|name| è stato definito \lnnum{4}, restituendo $1$
+per indicare successo. Richiamando invece \verb|HEXISTS| erroneamente con una stringa che 
+corrisponde ad un valore invece che ad un campo (\verb|giovanni| nell'esempio), il valore
+restituito $0$ indica il fallimento del test.
 
 \subsection{Insiemi}
 \label{sec:redis:sets}
@@ -589,26 +720,26 @@ un insieme come indice esterno di una tabella, dovendolo però aggiornare manual
 Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizzati dal prefisso
 \verb|S|:
 
-\begin{itemize}
-	\medskip
-	\item \textbf{SADD}. Aggiunge una stringa ad un insieme.
-	\item \textbf{SREM}. Rimuove una stringa da un insieme.
-	\item \textbf{SISMEMBER}. Controlla se una stringa è presente in un in\-sie\-me.
-	\item \textbf{SMEMBERS}. Elenca tutte le stringhe contenute nell'insieme.
-	\item \textbf{SRANDMEMBER}. Restituisce una o più stringhe scelte ca\-sual\-men\-te tra quelle
-	presenti.
-	\item \textbf{SPOP}. Come ``SRANDMEMBER'', ma rimuove le stringhe scelte dall'insieme.
-	\item \textbf{SUNION}. Restituisce l'unione tra due o più insiemi.
-	\item \textbf{SINTER}. Restituisce l'intersezione tra due o più insiemi.
-	\item \textbf{SDIFF}. Restituisce la differenza tra un insieme e uno o più altri insiemi.
-	\item \textbf{SUNIONSTORE}, \textbf{SINTERSTORE}, \textbf{SDIFFSTORE}: Come i comandi
-	precedenti, ma il risultato dell'operazione viene memorizzato in Redis in una nuova chiave
-	specificata, e viene restituita solo la cardinalità del risultato.
-\end{itemize}
+\begin{description}[style=nextline,font={\bfseries\ttfamily}]
+	\item[{SADD key ele [ele\dots]}] Aggiunge una o più stringhe ad un insieme.
+	\item[{SREM key ele [ele\dots]}] Rimuove una o più stringhe da un insieme.
+	\item[SISMEMBER key ele] Controlla se una stringa è presente in un insieme.
+	\item[SMEMBERS key] Elenca tutte le stringhe contenute nell'insieme.
+	\item[{SRANDMEMBER key [count]}] Restituisce una o più stringhe scelte casualmente tra
+		quelle presenti (se \verb|count| non viene specificato, il default è $1$).
+	\item[{SPOP key [count]}] Restituisce e rimuove una o più stringhe scelte casualmente tra
+		quelle presenti (se \verb|count| non viene specificato, il default è $1$).
+	\item[{SUNION key [key\dots]}] Restituisce l'unione tra due o più insiemi.
+	\item[{SINTER key [key\dots]}] Restituisce l'intersezione tra due o più insiemi.
+	\item[{SDIFF key [key\dots]}] Restituisce la differenza tra un insieme e uno o più altri
+		insiemi.
+	\item[{SUNIONSTORE key [key\dots] / SINTERSTORE key [key\dots] / SDIFFSTORE key [key\dots]}] 
+		Come i comandi precedenti, ma il risultato dell'operazione viene memorizzato in Redis in una
+		nuova chiave specificata, e viene restituita solo la cardinalità del risultato.
+\end{description}
 
 Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> SADD paying_users 88 37 4 66
 (integer) 4
@@ -664,58 +795,52 @@ di comandi dedicati a questa modalità sottolinea proprio la flessibilità di qu
 
 Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
 
-\begin{itemize}
-	\medskip
-	\item \textbf{ZADD}: aggiunge una o più stringhe all'insieme ordinato, associandole ad un
-	punteggio. Se le stringhe esistono già, il punteggio viene aggiornato al valore specificato. Il
-	comando prevede anche una serie di opzioni avanzate per cambiare il comportamento di default in
-	caso di stringa già esistente.
-	\item \textbf{ZINCRBY}: si comporta come \verb|ZADD|, ma in caso di stringa esistente il
-	punteggio viene modificato in modo relativo, sommando cioè il valore specificato invece che
-	sostituirlo.
-	\item \textbf{ZREM}: rimuove una o più stringhe dall'insieme.
-	\item \textbf{ZSCORE}: restituisce il punteggio associato ad una stringa, e può essere usato
-	anche come test di appartenenza.
-	\item \textbf{ZCARD}: restituisce la cardinalità dell'insieme, cioè il numero di stringhe
-	contenute.
-	\item \textbf{ZINTERSTORE}, \textbf{ZUNIONSTORE}: come le controparti per gli insiemi,
-	effettuano le operazioni (rispettivamente) di unione e intersezione, memorizzando il risultato
-	in un nuovo insieme ordinato. Il punteggio ottenuto è la somma dei punteggi specificati negli
-	insiemi di origine, ma è possibile specificare una funzione di aggregazione diversa (media,
-	minimo o massimo), oltre che applicare dei pesi (fattori moltiplicativi) ai punteggi.
-	\item \textbf{ZRANGE}: restituisce gli elementi all'interno dell'intervallo specificato come
-	indice di sequenza. Per esempio, specificando come intervallo inclusivo \verb|0 4|, si
-	ottengono i primi 5 elementi, cioè i 5 elementi con minor punteggio attualmente presenti
-	nell'insieme. È possibile usare gli indici negativi per fare riferimento alla fine della
-	sequenza (per esempio, ``\verb|-1|'' indica l'elemento con punteggio più alto).
-	\item \textbf{ZRANGEBYSCORE}: restituisce gli elementi all'interno dell'intervallo specificato
-	come punteggi. Per esempio, specificando come intervallo ``\verb|100.2 100.8|'', si ottengono tutti
-	gli elementi i cui punteggi sono $\in \interval{100.2}{100.8}$. Gli estremi dell'intervallo
-	possono essere specificati come aperti o chiusi. È possibile inoltre specificare un numero
-	massimo di elementi restituiti per evitare trasferimenti troppo pesanti (consentendo quindi la
-	paginazione).
-	\item \textbf{ZRANGEBYLEX}: restituisce gli elementi all'interno dell'intervallo specificato
-	come prefissi lessicografici. Per esempio, specificando come intervallo ``\verb|AZ C|'', si
-	ottengono tutti gli elementi che seguono lessicograficamente la stringa ``AZ'' e precedono la
-	stringa ``C''. Come per il comando precedente, è possibile specificare se gli estremi
-	dell'intervallo sono aperti o chiusi, e indicare un limite massimo agli elementi restituiti.
-	Come già descritto, questo comando funziona correttamente solo con insiemi ordinati in cui
-	tutti gli elementi hanno lo stesso punteggio.
-	\item \textbf{ZREVRANGE}, \textbf{ZREV\-RANGE\-BY\-SCORE}, \textbf{ZREV\-RANGE\-BY\-LEX}: simili ai
-	precedenti comandi, ma considerano l'insieme ordinato al contrario, cioè in ordine decrescente
-	di punteggio.
-	\item \textbf{ZREMRANGEBYRANK}, \textbf{ZREM\-RANGE\-BY\-SCORE}, \textbf{ZREM\-RANGE\-BY\-LEX}: simili ai
-	precedenti comandi, ma rimuovono gli elementi all'interno degli intervalli specificati invece
-	che restituirli.
-\end{itemize}
+\begin{description}[style=nextline,font={\bfseries\ttfamily}]
+	\item[ZADD] Aggiunge una o più stringhe all'insieme ordinato, associandole ad un punteggio. Se
+		le stringhe esistono già, il punteggio viene aggiornato al valore specificato. Il comando
+		prevede anche una serie di opzioni avanzate per cambiare il comportamento di default in caso
+		di stringa già esistente.
+	\item[ZINCRBY] Si comporta come \verb|ZADD|, ma in caso di stringa esistente il punteggio viene
+		modificato in modo relativo, sommando cioè il valore specificato invece che sostituirlo.
+	\item[ZREM] Rimuove una o più stringhe dall'insieme.
+	\item[ZSCORE] Restituisce il punteggio associato ad una stringa, e può essere
+		usato anche come test di appartenenza.
+	\item[ZCARD] Restituisce la cardinalità dell'insieme, cioè il numero di
+		stringhe contenute.
+	\item[ZINTERSTORE / ZUNIONSTORE] Come le controparti per gli insiemi, effettuano le operazioni
+		(rispettivamente) di unione e intersezione, memorizzando il risultato in un nuovo insieme
+		ordinato. Il punteggio ottenuto è la somma dei punteggi specificati negli insiemi di
+		origine, ma è possibile specificare una funzione di aggregazione diversa (media, minimo o
+		massimo), oltre che applicare dei pesi (fattori moltiplicativi) ai punteggi.
+	\item[ZRANGE] Restituisce gli elementi all'interno dell'intervallo specificato come indice di
+		sequenza. Per esempio, specificando come intervallo inclusivo \verb|0 4|, si ottengono i
+		primi 5 elementi, cioè i 5 elementi con minor punteggio attualmente presenti nell'insieme. È
+		possibile usare gli indici negativi per fare riferimento alla fine della sequenza (per
+		esempio, ``\verb|-1|'' indica l'elemento con punteggio più alto).
+	\item[ZRANGEBYSCORE] Restituisce gli elementi all'interno dell'intervallo specificato come
+		punteggi. Per esempio, specificando come intervallo ``\verb|100.2 100.8|'', si ottengono
+		tutti gli elementi i cui punteggi sono $\in \interval{100.2}{100.8}$. Gli estremi
+		dell'intervallo possono essere specificati come aperti o chiusi. È possibile inoltre
+		specificare un numero massimo di elementi restituiti per evitare trasferimenti troppo
+		pesanti (consentendo quindi la paginazione).
+	\item[ZRANGEBYLEX] Restituisce gli elementi all'interno dell'intervallo specificato come
+		prefissi lessicografici. Per esempio, specificando come intervallo ``\verb|AZ C|'', si
+		ottengono tutti gli elementi che seguono lessicograficamente la stringa ``AZ'' e precedono
+		la stringa ``C''. Come per il comando precedente, è possibile specificare se gli estremi
+		dell'intervallo sono aperti o chiusi, e indicare un limite massimo agli elementi restituiti.
+		Come già descritto, questo comando funziona correttamente solo con insiemi ordinati in cui
+		tutti gli elementi hanno lo stesso punteggio.
+	\item[ZREVRANGE / ZREVRANGEBYSCORE / ZREVRANGEBYLEX] Simili ai precedenti comandi, ma
+		considerano l'insieme ordinato al contrario, cioè in ordine decrescente di punteggio.
+	\item[ZREMRANGEBYRANK / ZREMRANGEBYSCORE / ZREMRANGEBYLEX] Simili ai precedenti comandi, ma
+		rimuovono gli elementi all'interno degli intervalli specificati invece che restituirli.
+\end{description}
 
 Anche gli insiemi ordinati, come gli insiemi, si prestano molto bene a creare indici manuali,
 sempre ordinati, su cui effettuare poi operazioni di estrazione e ricerca. Vista la flessibilità
 della struttura dati, indichiamo alcuni possibili scenari applicativi.
 
 \begin{itemize}
-	\medskip
-
 	\item Un esempio di struttura dati facilmente rappresentabile tramite insieme ordinato è una
 	coda con priorità. Supponiamo per esempio di dover memorizzare un elenco di azioni da eseguire
 	nel futuro, assieme con l'istante temporale al quale l'azione deve essere eseguita. Al momento
@@ -733,17 +858,16 @@ della struttura dati, indichiamo alcuni possibili scenari applicativi.
 	inserirlo nell'insieme ordinato l'ID dell'utente aggiungendo l'importo del carrello
 	(\verb|ZINCR|); non è necessario gestire in modo diverso il primo acquisto, perché \verb|ZINCR|
 	funziona anche se l'elemento non è ancora presente. Se vogliamo contattare tutti gli utenti che
-	hanno speso più di €1000 sul nostro e-commerce, possiamo utilizzare \verb|ZRANGEBYSCORE|
-	specificando l'intervallo $\interval{1000.00}{\infty}$ (tramite la stringa 
-	``\verb|1000.00 +inf|'') per estrarre gli ID. In alternativa, supponendo di voler premiare i 100 utenti che
-	hanno speso di più, possiamo estrarre i loro ID con \verb|ZREVRANGE| usando l'intervallo
-	``\verb|0 99|'' (essendo l'insieme in ordine crescente, dobbiamo usare \verb|ZREVRANGE| per
-	estrarre facilmente gli elementi con punteggio più grosso).
+	hanno speso più di \SI{1000}{\EUR} sul nostro e-commerce, possiamo utilizzare
+	\verb|ZRANGEBYSCORE| specificando l'intervallo $\interval{1000.00}{\infty}$ (tramite la stringa
+	``\verb|1000.00 +inf|'') per estrarre gli ID. In alternativa, supponendo di voler premiare i
+	$100$ utenti che hanno speso di più, possiamo estrarre i loro ID con \verb|ZREVRANGE| usando
+	l'intervallo ``\verb|0 99|'' (essendo l'insieme in ordine crescente, dobbiamo usare
+	\verb|ZREVRANGE| per estrarre facilmente gli elementi con punteggio più grosso).
 \end{itemize}
 
 Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordinati:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> ZADD test 10 a 20 b 30 c
 (integer) 0
@@ -808,15 +932,14 @@ riportato.
 
 Questi sono i comandi esistenti, identificati dal prefisso \verb|PF|:
 
-\begin{itemize}
-	\medskip
-	\item \textbf{PFADD}: aggiunge una o più stringhe all'HyperLogLog spe\-ci\-fi\-ca\-to, creandone uno
-	se non esiste già.
-	\item \textbf{PFCOUNT}: restituisce l'attuale stima di cardinalità dell'HyperLogLog
+\begin{description}[style=nextline,font={\bfseries\ttfamily}]
+	\item[PFADD] Aggiunge una o più stringhe all'HyperLogLog spe\-ci\-fi\-ca\-to,
+	creandone uno se non esiste già.
+	\item[PFCOUNT] Restituisce l'attuale stima di cardinalità dell'HyperLogLog
 	specificato.
-	\item \textbf{PFMERGE}: fonde due o più HyperLogLog, creando un nuovo HyperLogLog che stima la
-	cardinalità dell'unione degli insiemi specificati.
-\end{itemize}
+	\item[PFMERGE] Fonde due o più HyperLogLog, creando un nuovo HyperLogLog che
+	stima la cardinalità dell'unione degli insiemi specificati.
+\end{description}
 
 Un tipico caso d'uso è quello di conteggiare i cosiddetti \emph{DAU}, ``daily active users'', cioè
 il numero di utenti attivi in un'applicazione all'interno di ciascuna giornata solare.
@@ -834,7 +957,6 @@ Giugno 2017 è stato più di 2 miliardi \cite{fb-mau}.
 
 Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> PFADD dau 50
 (integer) 1
@@ -894,7 +1016,6 @@ agli utenti (tramite \verb|HMSET|) e un insieme ordinato che rappresenta un indi
 transazione per evitare che altri client possano accedere ad uno stato inconsistente nel quale
 l'utente è presente come record ma non nell'indice (o viceversa):
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> HMSET user:123 name Giovanni surname Bajo
 OK
@@ -922,19 +1043,21 @@ dal comando \verb|EXEC|.
 Relativamente alle proprietà ACID sopra descritte, è possibile osservare che:
 
 \begin{itemize}
-	\medskip
 	\item \textbf{Atomicità}: la proprietà non viene rispettata, poiché se un comando all'interno
 	delle transazione fallisce, la transazione viene bloccata a metà della propria esecuzione,
 	ma senza effettuare un ripristino del database allo stato iniziale. Si noti inoltre che i
 	comandi di Redis tipicamente non restituiscono errori su chiavi non trovate o non esistenti, 
 	preferendo restituire valori speciali come numeri negativi; in questi casi, la transazione
 	continua. 
+
 	\item \textbf{Coerenza}: questa proprietà non si applica a Redis perché non è possibile definire 
 	veri vincoli d'integrità nella base di dati.
+
 	\item \textbf{Isolamento}: la proprietà viene rispettata perché l'esecuzione dei comandi
 	della transazione è perfettamente isolata da altri client, che rimangono in attesa. Questo
 	comportamento è ottenuto semplicemente tramite l'approccio a singolo thread di esecuzione (si
 	veda la \autoref{sec:concurrency} per maggiori informazioni).
+
 	\item \textbf{Durabilità}: questa possibilità può essere rispettata se Redis viene configurato
 	per effettuare una piena persistenza dei dati dopo ciascun comando. Questa possibilità
 	verrà dettagliata nella	\autoref{sec:durability:aof}.
@@ -957,7 +1080,6 @@ e non quindi su campi di una tabella hash, sarà necessario utilizzare il comand
 per estrarre il valore corrente, e poi \verb|HSET| per inserire il nuovo valore incrementato,
 in questo modo:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> HGET post:589 vote
 "56"
@@ -970,7 +1092,6 @@ modificare lo stesso campo. Non sembra inoltre possibile utilizzare una transazi
 basata su \verb|MULTI| e \verb|EXEC| perché il comando \verb|HSET| può essere inviato dal client
 solo dopo che ha ricevuto la risposta al comando \verb|HGET|:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> MULTI
 OK
@@ -989,7 +1110,6 @@ eseguire la transazione, nella speranza di riuscire a vincere la corsa.
 
 Questo è l'uso corretto di \verb|WATCH| nell'esempio che stiamo a\-na\-liz\-zan\-do:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> WATCH post:589
 OK
@@ -1006,7 +1126,6 @@ QUEUED
 Vediamo cosa succede invece simulando l'intervento di un client esterno che modifica il valore
 del post in modo concorrente:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> WATCH post:589
 OK
@@ -1027,7 +1146,7 @@ che la transazione non venisse eseguita; il client può rilevare questa condizio
 restituito da \verb|EXEC| (che è \verb|nil|, invece che un array contenente i valori restituiti
 dai comandi della transazione), e riprovare nuovamente la sequenza.
 
-\section{Velocit\`a}
+\section{Velocità}
 
 (benchmark)
 (segnalare problema del rountrip di rete)
@@ -1165,7 +1284,6 @@ sono invece utilizzate.
 Per provare ad eseguire lo script durante la fase di sviluppo, è consigliabile l'utilizzo
 dell'opzione \verb|--eval| del comando \verb|redis-cli|:
 
-\medskip
 \begin{commentedsource}[style=redis]
 $ redis-cli
 127.0.0.1:6379> ZADD paying_users 1000 a 2000 b 3000 c 3000 d 250 e
@@ -1187,7 +1305,6 @@ i parametri, con il comando \verb|EVALSHA|.
 
 In questo caso, la sequenza è la seguente:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> SCRIPT LOAD "-- zsetaverage.lua: calcola la media di spesa degli utenti paganti sopra\n-- una certa soglia.\n--\n-- Argomenti:\n--     ARGV[1] - chiave dell'insieme ordinato\n--     ARGV[2] - soglia di spesa\n\n-- Estrae tutti gli utenti con un punteggio maggiore a quello specificato.\n-- L'opzione WITHSCORES dice a redis di tornare non solo le stringhe\n-- dell'insieme ordinato (quindi gli ID degli utenti) ma anche i \n-- punteggi associati.\n-- matches sara' quindi un array contenente in sequenza ID1, SCORE1, ID2, SCORE2, ecc.\nlocal matches = redis.call('ZRANGEBYSCORE', ARGV[1], ARGV[2], '+inf', 'WITHSCORES')\n\nlocal total = 0\n\n-- Attraversa l'array a partire dal secondo elemento, fino alla sua lunghezza,\n-- con passo 2. In questo modo ad ogni passo indirizziamo direttamente i punteggi\n-- saltando gli ID\n-- Si noti che in LUA il primo elemento di un array ha indice 1\nfor idx=2, #matches, 2 do\n    total = total + tonumber(matches[idx])\nend\n\n-- Calcola la media\nreturn total / (#matches / 2)\n"
 "c8fe4ea641681f744e517b52002266ca7b4e4cdf"
@@ -1225,25 +1342,22 @@ rimossa.
 
 I comandi che manipolano la scadenza delle chiavi sono i seguenti:
 
-\begin{itemize}
-	\medskip
-	\item \textbf{EXPIRE} e \textbf{PEXPIRE}: modificano la data di scadenza di una chiave in
-	modo relativo, specificandola rispettivamente in secondi o millisecondi dal momento in cui 
-	il comando viene eseguito.
-	\item \textbf{EXPIREAT} e \textbf{PEXPIREAT}: modificano la data di scadenza di una chiave
-	in modo assoluto, specificandola cioè come data, calcolata rispettivamente in secondi o 
-	millisecondi dalla cosiddetta \emph{UNIX epoch}, cioè il 1° Gennaio 1970.
-	\item \textbf{TTL} e \textbf{PTTL}: restituiscono il tempo di vita rimasto di una chiave,
-	rispettivamente in secondi o millisecondi. Se la chiave non esiste viene restituito il
-	valore speciale $-2$, mentre se la chiave esiste ma non ha una data di scadenza viene
-	restituito il valore $-1$.
-	\item \textbf{PERSIST}: elimina la data di scadenza dalla chiave specificata, trasformandola
-	così in una chiave persistente.
-\end{itemize}
+\begin{description}[style=nextline,font={\bfseries\ttfamily}]
+	\item[EXPIRE / PEXPIRE] Modificano la data di scadenza di una chiave in modo relativo,
+		specificandola rispettivamente in secondi o millisecondi dal momento in cui il comando viene
+		eseguito.
+	\item[EXPIREAT / PEXPIREAT] Modificano la data di scadenza di una chiave in modo assoluto,
+		specificandola cioè come data, calcolata rispettivamente in secondi o millisecondi dalla
+		cosiddetta \emph{UNIX epoch}, cioè il 1° Gennaio 1970.
+	\item[TTL / PTTL] Restituiscono il tempo di vita rimasto di una chiave, rispettivamente in
+		secondi o millisecondi. Se la chiave non esiste viene restituito il valore speciale $-2$,
+		mentre se la chiave esiste ma non ha una data di scadenza viene restituito il valore $-1$.
+	\item[PERSIST] Elimina la data di scadenza dalla chiave specificata, trasformandola così in una
+		chiave persistente.
+\end{description}
 
 Questo è un esempio di uso dei comandi di scadenza:
 
-\medskip
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> SET data 123
 OK
