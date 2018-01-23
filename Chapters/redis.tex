@@ -458,10 +458,10 @@ lista sono i seguenti:
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
 	\item[{LPUSH key ele [ele\dots]}] Aggiunge un elemento in testa alla lista.
 	\item[{RPUSH key ele [ele\dots]}] Aggiunge un elemento in coda alla lista.
-	\item[LPOP key] Rimuove e restituisce un elemento dalla testa della lista. Restituisce errore
-		se la lista è vuota.
-	\item[RPOP key] Rimuove e restituisce un elemento dalla coda della lista. Restituisce errore
-		se la lista è vuota.
+	\item[LPOP key] Rimuove e restituisce un elemento dalla testa della lista. Re\-sti\-tui\-sce
+		errore se la lista è vuota.
+	\item[RPOP key] Rimuove e restituisce un elemento dalla coda della lista. Re\-sti\-tui\-sce
+		errore se la lista è vuota.
 	\item[{BLPOP key [key\dots] timeout / BRPOP key [key\dots] timeout}] Come i precedenti, ma se la
 		lista è vuota il client resta bloccato in attesa che venga aggiunto un elemento da un altro
 		client. Inoltre, è possibile specificare più di una lista su cui attendere elementi. Il
@@ -472,10 +472,10 @@ lista sono i seguenti:
 	\item[LINDEX key idx] Restituisce l'elemento della lista all'indice specificato.
 	\item[LRANGE key first last] Restituisce tutti gli elementi all'interno
 		di un range di indici.
-	\item[LSET key idx ele] Sostituisce l'elemento della lista all'indice specificato con l'elemento
-		passato come argomento.
+	\item[LSET key idx ele] Sostituisce l'elemento della lista all'indice specificato con
+		l'e\-le\-men\-to passato come argomento.
 	\item[LINSERT key AFTER/BEFORE pivot ele] Inserisce un elemento prima o
-		dopo l'elemento pivot specificato.
+		dopo l'elemento pivot spe\-ci\-fi\-ca\-to.
 \end{description}
 
 Oltre agli ovvi usi di memorizzazione di dati mantenendo un certo ordine di inserimento, le liste di
@@ -713,16 +713,20 @@ controllo di appartenenza, oppure di differenza (ottenendo quindi l'elenco degli
 non hanno aggiornato all'ultima versione, in modo da poter per esempio inviare loro una email di
 sollecito).
 
-Nei database relazionali, queste operazioni sono tipicamente possibili tramite delle query SQL, che
-il database rende efficienti tramite indici. Allo stesso modo, in questo esempio abbiamo utilizzato
-un insieme come indice esterno di una tabella, dovendolo però aggiornare manualmente.
+Nei database relazionali, le operazioni appena descritte sono tipicamente possibili tramite delle
+query SQL, che il database rende efficienti tramite indici. Allo stesso modo, in questo esempio
+abbiamo utilizzato un insieme come indice esterno di una tabella, dovendolo però aggiornare
+manualmente.
 
 Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizzati dal prefisso
 \verb|S|:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
-	\item[{SADD key ele [ele\dots]}] Aggiunge una o più stringhe ad un insieme.
-	\item[{SREM key ele [ele\dots]}] Rimuove una o più stringhe da un insieme.
+	\item[{SADD key ele [ele\dots]}] Aggiunge una o più stringhe ad un insieme, e restituisce
+		il numero di stringhe univoche aggiunte (cioè l'incremento di cardinalità dell'insieme).
+	\item[{SREM key ele [ele\dots]}] Rimuove una o più stringhe da un insieme, e restituisce
+		il numero di stringhe univoche rimosse dall'insieme (ignorando quindi quelle eventualmente
+		non presenti delle quali si è chiesta la rimozione).
 	\item[SISMEMBER key ele] Controlla se una stringa è presente in un insieme.
 	\item[SMEMBERS key] Elenca tutte le stringhe contenute nell'insieme.
 	\item[{SRANDMEMBER key [count]}] Restituisce una o più stringhe scelte casualmente tra
@@ -741,30 +745,140 @@ Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizza
 Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
 
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> SADD paying_users 88 37 4 66
+|\lnote|127.0.0.1:6379> SADD paying_users 88 37 4 66
 (integer) 4
 127.0.0.1:6379> SADD paying_users 37 111
 (integer) 1
-127.0.0.1:6379> SISMEMBER paying_users 111
+|\lnote|127.0.0.1:6379> SISMEMBER paying_users 111
 (integer) 1
-127.0.0.1:6379> SREM paying_users 37
+|\lnote|127.0.0.1:6379> SREM paying_users 37
 (integer) 1
 127.0.0.1:6379> SCARD paying_users
 (integer) 4
 127.0.0.1:6379> SISMEMBER paying_users 37
 (integer) 0
-127.0.0.1:6379> SADD updated_users 12 4 66
+|\lnote|127.0.0.1:6379> SADD updated_users 12 4 66
 (integer) 3
-127.0.0.1:6379> SDIFF paying_users updated_users
-1) "88"
-2) "111"
-127.0.0.1:6379> SINTER paying_users updated_users
+|\lnote|127.0.0.1:6379> SINTER paying_users updated_users
 1) "4"
 2) "66"
+|\lnote|127.0.0.1:6379> SDIFF paying_users updated_users
+1) "88"
+2) "111"
 \end{commentedsource}
 
-Anche in questo caso, non è stato necessario allocare o dimensionare le strutture dati: al primo
-accesso, esse vengono create automaticamente, e si dimensionano in modo dinamico durante l'uso.
+Inizialmente, viene creato un insieme tramite \verb|SADD| \lnnum{1}, inserendo $4$ elementi
+distinti. Il valore di ritorno indica correttamente che sono state aggiunte $4$ stringhe univoche, e
+come sempre l'insieme è stato creato automaticamente al primo uso, senza necessità di allocazione
+preventiva.
+
+\begin{center}
+\begin{tikzpicture}[thick]
+	\draw[fill={blue!35},fill opacity=0.4,text opacity=1] (0,0) circle (2)
+		node[font=\ttfamily,above,shift={(0,2)}] { paying\_users };
+	\node at (-0.9,-0.9) {$88$};
+	\node at (1.4,-0.7) {$66$};
+	\node at (0.8,0.8) {$4$};
+	\node at (-0.7,0.5) {$37$};
+\end{tikzpicture}
+\end{center}
+
+Successivamente, vengono aggiunti $2$ elementi all'insieme. Uno però, il $37$, è già presente,
+quindi il numero di sringhe univoche aggiunte è solo $1$, come restituito dal comando.
+
+\begin{center}
+\begin{tikzpicture}[thick]
+	\draw[fill={blue!35},fill opacity=0.4,text opacity=1] (0,0) circle (2)
+		node[font=\ttfamily,above,shift={(0,2)}] { paying\_users };
+	\node at (-0.9,-0.9) {$88$};
+	\node at (1.4,-0.7) {$66$};
+	\node at (0.8,0.8) {$4$};
+	\node at (-0.7,0.5) {$37$};
+	\node at (0.1,-0.1) {$111$};
+\end{tikzpicture}
+\end{center}
+
+Il test di appartenenza dell'elemento $111$ tramite \verb|SISMEMBER| \lnnum{2} restituisce $1$ per 
+indicare che l'elemento è presente. Dopodiché, l'elemento $37$ viene rimosso dall'insieme tramite
+\verb|SREM| \lnnum{3}, e i successivi comandi \verb|SCARD| e \verb|ISMEMBER| confermano 
+rispettivamente la nuova cardinalità dell'insieme ($4$) e l'assenza dell'elemento appena rimosso.
+
+\begin{center}
+\begin{tikzpicture}[thick]
+	\draw[fill={blue!35},fill opacity=0.4,text opacity=1] (0,0) circle (2)
+		node[font=\ttfamily,above,shift={(0,2)}] { paying\_users };
+	\node at (-0.9,-0.9) {$88$};
+	\node at (0.8,0.8) {$4$};
+	\node at (1.4,-0.7) {$66$};
+	\node at (0.1,-0.1) {$111$};
+\end{tikzpicture}
+\end{center}
+
+A questo punto, l'esempio crea un nuovo insieme \lnnum{4}: 
+
+\medskip
+\begin{center}
+\begin{tikzpicture}[thick]
+	\draw[fill={blue!35},fill opacity=0.4,text opacity=1] (-2.5,0) circle (2)
+		node[font=\ttfamily,above,shift={(0,2)}] { paying\_users };
+	\node at (-3.4,-0.9) {$88$};
+	\node at (-1.7,0.8) {$4$};
+	\node at (-1.1,-0.7) {$66$};
+	\node at (-2.4,-0.1) {$111$};
+
+	\draw[fill={red!25},fill opacity=0.4,text opacity=1] (2.5,0) circle (2)
+		node[font=\ttfamily,above,shift={(0,2)}] { updated\_users };
+	\node at (2.7,0.1) {$66$};
+	\node at (3.4,-1.1) {$12$};
+	\node at (1.3,0.7) {$4$};
+\end{tikzpicture}
+\end{center}
+
+e ne calcola rispettivamente l'intersezione tramite \verb|SINTER| \lnnum{5} e la differenza
+tramite \verb|SDIFF| \lnnum{6}:
+
+\medskip
+\begin{center}
+\begin{tikzpicture}[thick]
+	\begin{scope}
+		\clip {(1.4,0) circle (2)};
+		\draw[fill={blue!35},fill opacity=0.4,text opacity=1] (-1.4,0) circle (2);
+	\end{scope}
+	\begin{scope}
+		\clip {(-1.4,0) circle (2)};
+		\draw[fill={red!25},fill opacity=0.4,text opacity=1] (1.4,0) circle (2);
+	\end{scope}
+
+	\draw(-1.4,0) circle (2) node[font=\ttfamily,above,shift={(0,2)}] { paying\_users };
+	\node[text opacity=0.4] at (-1.9,-0.9) {$88$};
+	\node[text opacity=0.4] at (-1.8,0.8) {$111$};
+
+	\draw(1.4,0) circle (2) node[font=\ttfamily,above,shift={(0,2)}] { updated\_users };
+	\node[text opacity=0.4] at (2.4,-0.9) {$12$};
+	\node at (-0.1,-0.3) {$66$};
+	\node at (0.1,0.4) {$4$};
+\end{tikzpicture}
+\end{center}
+\medskip
+\begin{center}
+\begin{tikzpicture}[thick]
+	\draw[fill={blue!35},fill opacity=0.4,text opacity=1] (-1.4,0) circle (2)
+		node[font=\ttfamily,above,shift={(0,2)}] { paying\_users };
+	\node at (-1.9,-0.9) {$88$};
+	\node at (-1.8,0.8) {$111$};
+
+	\draw[fill=white] (1.4,0) circle (2)
+		node[font=\ttfamily,above,shift={(0,2)}] { updated\_users };
+	\draw(-1.4,0) circle (2);
+	\node[text opacity=0.4] at (2.4,-0.9) {$12$};
+	\node[text opacity=0.4] at (-0.1,-0.3) {$66$};
+	\node[text opacity=0.4] at (0.1,0.4) {$4$};
+\end{tikzpicture}
+\end{center}
+
+
+
+
 
 \subsection{Insiemi ordinati}
 
