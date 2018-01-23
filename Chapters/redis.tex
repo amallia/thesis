@@ -1231,7 +1231,7 @@ eseguire la transazione, nella speranza di riuscire a vincere la corsa.
 Questo è l'uso corretto di \verb|WATCH| nell'esempio che stiamo a\-na\-liz\-zan\-do:
 
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> WATCH post:589
+|\lnote|127.0.0.1:6379> WATCH post:589
 OK
 127.0.0.1:6379> HGET post:589 vote
 |\lnote|"56"
