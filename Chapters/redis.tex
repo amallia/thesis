@@ -718,8 +718,8 @@ query SQL, che il database rende efficienti tramite indici. Allo stesso modo, in
 abbiamo utilizzato un insieme come indice esterno di una tabella, dovendolo però aggiornare
 manualmente.
 
-Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizzati dal prefisso
-\verb|S|:
+Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizzati dal
+prefisso~\verb|S|:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
 	\item[{SADD key ele [ele\dots]}] Aggiunge una o più stringhe ad un insieme, e restituisce
@@ -876,10 +876,6 @@ tramite \verb|SDIFF| \lnnum{6}:
 \end{tikzpicture}
 \end{center}
 
-
-
-
-
 \subsection{Insiemi ordinati}
 
 Un insieme ordinato è una sequenza di stringhe univoche, ordinate secondo un valore associato
@@ -907,7 +903,7 @@ intervallo è in realtà correttamente definito solo quando il punteggio di tutt
 stesso, e cioè quando la struttura dati sta di fatto già ordinando alfabeticamente, ma l'esistenza
 di comandi dedicati a questa modalità sottolinea proprio la flessibilità di questa struttura dati.
 
-Questi sono i principali comandi esistenti, identificati dal prefisso \verb|Z|:
+Questi sono i principali comandi esistenti, identificati dal prefisso~\verb|Z|:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
 	\item[ZADD] Aggiunge una o più stringhe all'insieme ordinato, associandole ad un punteggio. Se
@@ -1072,30 +1068,33 @@ Giugno 2017 è stato più di 2 miliardi \cite{fb-mau}.
 Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> PFADD dau 50
+|\lnote|127.0.0.1:6379> PFADD dau 50
 (integer) 1
 127.0.0.1:6379> PFCOUNT dau
 (integer) 1
-127.0.0.1:6379> PFADD dau 51 52 50 53 54 50 55 56 50 57 58 59 50
+|\lnote|127.0.0.1:6379> PFADD dau 51 52 50 53 54 50 55 56 50 57 58 59 50
 (integer) 1
 127.0.0.1:6379> PFCOUNT dau
 (integer) 10
-127.0.0.1:6379> PFADD dau 51 52 53 54 55 56 57 58 59 61
+|\lnote|127.0.0.1:6379> PFADD dau 51 52 53 54 55 56 57 58 59 61
 (integer) 1
 127.0.0.1:6379> PFCOUNT dau
 (integer) 11
 \end{commentedsource}
 
-Inizialmente, viene aggiunto il valore $50$ all'HyperLogLog denominato \verb|dau| (che viene quindi
-creato con questo primo comando), e successivamente si può verificare che la cardinalità
-dell'insieme è al momento quella attesa, cioè $1$. Successivamente, vengono aggiunti un gruppo di
-valori di cui alcuni non già presenti (i numeri dal $51$ al $59$) ma altri invece già presenti (il
-numero $50$, che viene aggiunto per 3 volte nella sequenza, pur essendo già presente). La cardinalità
-però risulta comunque corretta: infatti \verb|PFCOUNT| restituisce il valore atteso $10$, visto che in
-questo momento nella struttura sono stati inseriti tutti i valori tra il $50$ e il $59$. Infine,
-proviamo nuovamente ad inserire un set comprendente tutti valori già visti tranne l'ultimo ($61$). La
-cardinalità ancora una volta è corretta, poiché misura $11$, avendo scartato correttamente i valori
-già visti e aggiunto solo l'elemento $61$.
+Inizialmente, viene aggiunto il valore $50$ all'HyperLogLog denominato \verb|dau| \lnnum{1} (che
+viene quindi creato con questo primo comando), e successivamente si può verificare che la
+cardinalità dell'insieme è al momento quella attesa, cioè $1$.
+
+Vengono poi aggiunti un gruppo di valori \lnnum{2} di cui alcuni non già presenti (i numeri dal $51$
+al $59$) ma altri invece già presenti (il numero $50$, che viene aggiunto per 3 volte nella
+sequenza, pur essendo già presente). La cardinalità però risulta comunque corretta: infatti
+\verb|PFCOUNT| restituisce il valore atteso $10$, visto che in questo momento nella struttura sono
+stati inseriti tutti i valori tra il $50$ e il $59$. 
+
+Infine, si prova nuovamente ad inserire un insieme di valori \lnnum{3} tutti già visti tranne
+l'ultimo ($61$). La cardinalità ancora una volta è corretta, poiché misura $11$, avendo scartato
+correttamente i valori già visti e aggiunto solo l'elemento $61$.
 
 \section{Transazioni}
 
@@ -1122,37 +1121,40 @@ Per utilizzare una transazione, è sufficiente inviare il comando \verb|MULTI|, 
 sequenza di comandi che si vuole eseguire atomicamente, seguiti dal comando \verb|EXEC|, che dà
 il via all'esecuzione. I valori di ritorno di tutti i comandi vengono concatenati e restituiti come
 valore di ritorno del comando \verb|EXEC|. È possibile anche annullare una transazione prima di
-eseguirla, inviando il comando \verb|DISCARD|.
-
-Questo è un esempio d'uso, nel quale creiamo una tabella hash per memorizzare i record relativi
-agli utenti (tramite \verb|HMSET|) e un insieme ordinato che rappresenta un indice della tabella
-(\verb|paying-users|, tramite \verb|ZADD|); per rimuovere l'utente dal database, utilizziamo una
-transazione per evitare che altri client possano accedere ad uno stato inconsistente nel quale
-l'utente è presente come record ma non nell'indice (o viceversa):
+eseguirla, inviando il comando \verb|DISCARD|. Vediamo un esempio:
 
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> HMSET user:123 name Giovanni surname Bajo
 OK
-127.0.0.1:6379> ZADD paying-users 1500 123
+|\lnote|127.0.0.1:6379> ZADD paying-users 1500 123
 (integer) 1
 127.0.0.1:6379> HMSET user:124 name Mickey surname Mouse
 OK
-127.0.0.1:6379> ZADD paying-users 1200 124
+|\lnote|127.0.0.1:6379> ZADD paying-users 1200 124
 (integer) 1
 127.0.0.1:6379> MULTI
 OK
 127.0.0.1:6379> DEL user:123
-QUEUED
+|\lnote|QUEUED
 127.0.0.1:6379> ZREM paying-users 123
-QUEUED
-127.0.0.1:6379> EXEC
+|\lnote|QUEUED
+|\lnote|127.0.0.1:6379> EXEC
 1) (integer) 1
 2) (integer) 1
 \end{commentedsource}
 
-Come si vede, i comandi inviati al server dopo il comando \verb|MULTI| non sono stati eseguiti
-immediatamente, ma accodati in attesa della fine della definizione della transazione, delimitata
-dal comando \verb|EXEC|.
+All'inizio, viene create una tabella hash per memorizzare i record relativi agli utenti (tramite
+\verb|HMSET|) e un insieme ordinato che rappresenta un indice della tabella (\verb|paying-users|,
+tramite \verb|ZADD|). Il primo utente ha ID $123$, e ha speso un totale di \SI{1500}{\EUR}
+\lnnum{1}, mentre il secondo utente con ID $124$ ha speso \SI{1200}{\EUR} \lnnum{2}.
+
+L'esempio mostra quindi come rimuovere atomicamente l'utente con ID $123$: viene utilizzata una
+transazione per evitare che altri client possano accedere ad uno stato inconsistente nel quale
+l'utente è presente come record ma non nell'indice (o viceversa). Durante la transazione,
+vengono eseguiti i comandi \verb|DEL| e \verb|ZREM| per rimuovere l'utente sia dalla tabella
+hash sia dall'indice, e il valore di ritorno \verb|QUEUED| \lnnum{3} \lnnum{4} mostra come
+i comandi non sono stati eseguiti immediatamente, ma accodati in attesa della fine della 
+definizione della transazione, delimitata dal comando \verb|EXEC| \lnnum{5}.
 
 Relativamente alle proprietà ACID sopra descritte, è possibile osservare che:
 
@@ -1187,32 +1189,36 @@ client non avrà accesso al valore di ritorno di un comando fino a che l'intera 
 stata eseguita, né è disponibile una sintassi speciali per referenziare il valore restituito da un
 comando precedente.
 
-Supponiamo di implementare un social network e di voler incrementare in modo atomico 
-un campo memorizzato all'interno di una tabella hash, per esempio il numero di commenti che un
-determinato post ha ricevuto; poiché il comando \verb|INCR| agisce solo su chiavi di tipo stringa,
-e non quindi su campi di una tabella hash, sarà necessario utilizzare il comando \verb|HGET|
-per estrarre il valore corrente, e poi \verb|HSET| per inserire il nuovo valore incrementato,
-in questo modo:
+Supponiamo di implementare un social network e di voler incrementare in modo atomico un campo
+memorizzato all'interno di una tabella hash, per esempio il numero di commenti che un determinato
+post ha ricevuto; poiché il comando \verb|INCR| agisce solo su chiavi di tipo stringa, e non quindi
+su campi di una tabella hash, sarà necessario utilizzare il comando \verb|HGET| per estrarre il
+valore corrente \lnnum{1}, e poi \verb|HSET| per inserire il nuovo valore incrementato \lnnum{2}, in
+questo modo:
 
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> HGET post:589 vote
+|\lnote|127.0.0.1:6379> HGET post:589 vote
 "56"
-127.0.0.1:6379> HSET post:589 vote 57
+|\lnote|127.0.0.1:6379> HSET post:589 vote 57
 (integer) 0
 \end{commentedsource}
 
-Purtroppo questa sequenza è soggetta ad una race condition da parte di un altro client che volesse
-modificare lo stesso campo. Non sembra inoltre possibile utilizzare una transazione
-basata su \verb|MULTI| e \verb|EXEC| perché il comando \verb|HSET| può essere inviato dal client
-solo dopo che ha ricevuto la risposta al comando \verb|HGET|:
+Purtroppo questa sequenza è soggetta ad una \emph{race condition} da parte di un altro client che
+volesse modificare lo stesso campo. Non sembra inoltre possibile utilizzare una transazione basata
+su \verb|MULTI| e \verb|EXEC| perché il comando \verb|HSET| può essere inviato dal client solo dopo
+che ha ricevuto la risposta al comando \verb|HGET|:
 
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> MULTI
 OK
 127.0.0.1:6379> HGET post:589 vote
-QUEUED
-127.0.0.1:6379> HSET post:589 ???
+|\lnote|QUEUED
+|\lnote|127.0.0.1:6379> HSET post:589 ???
 \end{commentedsource}
+
+Poiché il comando \verb|HGET| è stato accodato in attesa del termine della transazione, il client
+non ha ricevuto il valore del campo richiesto \lnnum{1}, e non è quindi in grado di sapere quale
+nuovo valore inserire \lnnum{2}.
 
 Per risolvere queste situazioni, Redis utilizza un comune pattern di transazione atomica chiamato
 ``check and set'', che consente di condizionare l'esecuzione di una transazione alla verifica che un
@@ -1228,14 +1234,19 @@ Questo è l'uso corretto di \verb|WATCH| nell'esempio che stiamo a\-na\-liz\-zan
 127.0.0.1:6379> WATCH post:589
 OK
 127.0.0.1:6379> HGET post:589 vote
-"56"
+|\lnote|"56"
 127.0.0.1:6379> MULTI
 OK
-127.0.0.1:6379> HSET post:589 vote 57
+|\lnote|127.0.0.1:6379> HSET post:589 vote 57
 QUEUED
 127.0.0.1:6379> EXEC
 1) (integer) 0
 \end{commentedsource}
+
+In questo caso, dopo aver attivata l'osservazione della chiave con \verb|WATCH| \lnnum{1}, il
+comando di lettura viene eseguito prima della transazione, ricevendo quindi il valore
+attuale del campo richiesto \lnnum{2}, che può essere incrementato e modificato durante la transazione
+\lnnum{3}.
 
 Vediamo cosa succede invece simulando l'intervento di un client esterno che modifica il valore
 del post in modo concorrente:
@@ -1243,22 +1254,23 @@ del post in modo concorrente:
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> WATCH post:589
 OK
-127.0.0.1:6379> HGET post:589 vote
+|\lnote|127.0.0.1:6379> HGET post:589 vote
 "56"
-127.0.0.1:6379> HSET post:589 vote 57
+|\lnote|127.0.0.1:6379> HSET post:589 vote 57
 (integer) 0
 127.0.0.1:6379> MULTI
 OK
 127.0.0.1:6379> HSET post:589 vote 57
 QUEUED
 127.0.0.1:6379> EXEC
-(nil)
+|\lnote|(nil)
 \end{commentedsource}
 
-In questo caso, la modifica sopraggiunta alla chiave tra \verb|WATCH| e \verb|EXEC| ha fatto sì
-che la transazione non venisse eseguita; il client può rilevare questa condizione dal valore 
-restituito da \verb|EXEC| (che è \verb|nil|, invece che un array contenente i valori restituiti
-dai comandi della transazione), e riprovare nuovamente la sequenza.
+In questo caso, l'esempio simula una modifica \lnnum{2} effettuata dopo la lettura della chiave
+\lnnum{1}, come se fosse stata fatta da un altro client in modo concorrente; questa modifica fa sì
+che la transazione non venisse eseguita e fosse annullata: il client può rilevare questa condizione
+dal valore restituito da \verb|EXEC| (che è \verb|nil| \lnnum{3}, invece che un array contenente i
+valori restituiti dai comandi della transazione), e riprovare nuovamente la sequenza.
 
 \section{Velocità}
 
