@@ -188,8 +188,8 @@ La compilazione da codice sorgente è molto semplice: Redis è scritto nel lingu
 pochissime dipendenze a livello di librerie sono distribuite con il codice sorgente stesso, quindi è
 sufficiente disporre sul sistema del compilatore GCC. Una volta scaricato l'archivio di codice
 sorgente dalla \fnhref{https://redis.io/download}{pagina di scaricamento ufficiale} o tramite
-\verb|git| dal \fnhref{https://github.com/antirez/redis}{repositorio ufficiale su GitHub}, è
-sufficiente lanciare il comando \verb|make|. Questa l'intera sequenza:
+\cverb|git| dal \fnhref{https://github.com/antirez/redis}{repositorio ufficiale su GitHub}, è
+sufficiente lanciare il comando \cverb|make|. Questa l'intera sequenza:
 
 \medskip
 \begin{lstlisting}
@@ -200,9 +200,9 @@ $ make
 
 In alternativa, è possibile installare Redis da un pacchetto di distribuzione binario
 presente nella maggior parte dei sistemi operativi. Per esempio, in un sistema Debian
-o Ubuntu, è possibile eseguire il comando \verb|apt-get install redis-server|, mentre
+o Ubuntu, è possibile eseguire il comando \cverb|apt-get install redis-server|, mentre
 su un sistema macOS si può utilizzare il gestore di pacchetti ``Homebrew'' tramite il
-comando \verb|brew install redis|.
+comando \cverb|brew install redis|.
 
 \section{Architettura}
 \label{sec:redis:arch}
@@ -215,8 +215,8 @@ veda \autoref{sec:persistence}).
 
 Per comunicare con Redis, un client si deve connettere via TCP (la porta di default è la 6379) e
 comunicare tramite un protocollo testuale di tipo master/slave. È possibile utilizzare
-anche semplicemente \verb|telnet| per sperimentare, sebbene sia più comodo utilizzare il
-client dedicato \verb|redis-cli| che offre il completamento intelligente dei comandi, la
+anche semplicemente \cverb|telnet| per sperimentare, sebbene sia più comodo utilizzare il
+client dedicato \cverb|redis-cli| che offre il completamento intelligente dei comandi, la
 storia dei comandi inseriti, e la formattazione leggibile dei risultati.
 
 Come esempio, la seguente sessione mostra come scrivere e leggere un valore di tipo
@@ -234,10 +234,10 @@ OK
 Il valore di ritorno visualizzato dalla console è fortemente tipizzato nel protocollo;
 nel precedente esempio, il valore di ritorno è sempre una stringa. Quando viene
 richiesto il valore di una stringa che non esiste \lnnum{1}, il valore restituito
-è una stringa vuota, che viene visualizzata da \verb|redis-cli| come \verb|<nil>|,
-invece di \verb|""|.
+è una stringa vuota, che viene visualizzata da \cverb|redis-cli| come \cverb|<nil>|,
+invece di \cverb|""|.
 
-Il comando \verb|DEL| può essere utilizzato per cancellare un oggetto di tipo
+Il comando \cverb|DEL| può essere utilizzato per cancellare un oggetto di tipo
 arbitrario:
 
 \begin{commentedsource}[style=redis]
@@ -323,11 +323,11 @@ valore finale.
 
 MurMurHash2 è considerata oggi obsoleta e sorpassata da MurMurHash3, poiché è stata individuata una
 falla in caso di blocchi di dati identici consecutivi \cite{murmur2flaw}. Infatti, se la chiave
-contiene due blocchi da \SI{32}{\bit} (es: \verb|abcdabcd|), ciascun blocco viene modificato nello
-stesso modo tramite le costanti, e poi mixato al valore di hash tramite un semplice \verb|XOR|, che
+contiene due blocchi da \SI{32}{\bit} (es: \cverb|abcdabcd|), ciascun blocco viene modificato nello
+stesso modo tramite le costanti, e poi mixato al valore di hash tramite un semplice \cverb|XOR|, che
 applicato due volte in sequenza provoca una possibile cancellazione di informazione (si ricordi che
-$A \oplus B \oplus B = A$). La moltiplicazione del valore di hash per la costante \verb|m| attutisce
-un po' l'effetto ma non del tutto: per esempio, per la costante \verb|0x5bd1e995| utilizzata come
+$A \oplus B \oplus B = A$). La moltiplicazione del valore di hash per la costante \cverb|m| attutisce
+un po' l'effetto ma non del tutto: per esempio, per la costante \cverb|0x5bd1e995| utilizzata come
 default, si può misurare sperimentalmente una cancellazione di circa \SI{4.6}{\bit} su \num{32}, che
 corrisponde quindi a collisioni con una probabilità di \num{1} su $2 ^ {27.4}$ invece che l'ottimale
 \num{1} su $2 ^ {32}$.
@@ -336,8 +336,8 @@ corrisponde quindi a collisioni con una probabilità di \num{1} su $2 ^ {27.4}$ 
 
 Ogni oggetto memorizzato in Redis deve avere un tipo specifico, che viene serializzato
 nella tabella e controllato ad ogni accesso. A livello di protocollo di comunicazione,
-ogni comando opera su oggetti di uno specifico tipo; per esempio, i comandi \verb|SET|
-e \verb|GET| visti nell'esempio precedente operano solamente su stringhe.
+ogni comando opera su oggetti di uno specifico tipo; per esempio, i comandi \cverb|SET|
+e \cverb|GET| visti nell'esempio precedente operano solamente su stringhe.
 
 Oltre ai tipi base (stringhe, interi, numeri in virgola mobile), gli oggetti memorizzati
 possono essere delle vere e proprio strutture dati quali liste, tabelle hash, insiemi
@@ -348,22 +348,22 @@ Redis non prevede comandi espliciti di creazione di oggetti; è normalmente suff
 eseguire un comando di modifica di un oggetto (come per esempio il comando per aggiungere
 un elemento ad un insieme) su una chiave non utilizzata per creare automaticamente una
 struttura dati del tipo specificato, associandola alla chiave. Per esempio, il comando
-\verb|SADD| viene utilizzato per aggiungere uno o più elementi ad un insieme; di
-conseguenza, il comando \verb|SADD test1 elem1 elem2| creerà automaticamente un insieme 
-associato alla chiave \verb|test1|, contenente i due elementi \verb|elem1| e \verb|elem2|.
-Se \verb|test1| esistesse già nella base di dati ma fosse di tipo diverso (per esempio,
-una lista), il comando \verb|SADD| ritornerebbe un errore (\verb|WRONGTYPE|).
+\cverb|SADD| viene utilizzato per aggiungere uno o più elementi ad un insieme; di
+conseguenza, il comando \cverb|SADD test1 elem1 elem2| creerà automaticamente un insieme 
+associato alla chiave \cverb|test1|, contenente i due elementi \cverb|elem1| e \cverb|elem2|.
+Se \cverb|test1| esistesse già nella base di dati ma fosse di tipo diverso (per esempio,
+una lista), il comando \cverb|SADD| ritornerebbe un errore (\cverb|WRONGTYPE|).
 
 Viceversa, come già visto nella \autoref{sec:redis:arch}, è previsto un comando di cancellazione
-generale (\verb|DEL|) che rimuove la chiave e l'oggetto ad essa associato dal database,
+generale (\cverb|DEL|) che rimuove la chiave e l'oggetto ad essa associato dal database,
 qualunque sia il tipo dell'oggetto stesso.
 
 
 \subsection{Stringhe}
 
 Si tratta di sequenze di byte di lunghezza arbitraria. I comandi
-più comuni per manipolarle sono, come visto, \verb|SET| e \verb|GET|, ma anche \verb|APPEND|
-per concatenare, \verb|STRLEN| per leggere la lunghezza, o \verb|GETRANGE| per estrarre una
+più comuni per manipolarle sono, come visto, \cverb|SET| e \cverb|GET|, ma anche \cverb|APPEND|
+per concatenare, \cverb|STRLEN| per leggere la lunghezza, o \cverb|GETRANGE| per estrarre una
 sottostringa.
 
 \begin{commentedsource}[style=redis]
@@ -379,19 +379,19 @@ OK
 "cd"
 \end{commentedsource}
 
-In questo esempio, la chiave \verb|foo| viene associata ad una stringa con valore \verb|abcd|
-\lnnum{1}, come verificato subito dopo con il comando \verb|GET|. 
+In questo esempio, la chiave \cverb|foo| viene associata ad una stringa con valore \cverb|abcd|
+\lnnum{1}, come verificato subito dopo con il comando \cverb|GET|. 
 
-Il comando \verb|APPEND| \lnnum{2} concatena la stringa \verb|ef| al valore attuale \verb|foo|,
-ottenendo quindi una nuova stringa \verb|abcdef| che viene associata sempre alla chiave \verb|foo|.
-Si noti come \verb|APPEND| ha restituito la nuova lunghezza della stringa (\verb|abcdef| è composta
+Il comando \cverb|APPEND| \lnnum{2} concatena la stringa \cverb|ef| al valore attuale \cverb|foo|,
+ottenendo quindi una nuova stringa \cverb|abcdef| che viene associata sempre alla chiave \cverb|foo|.
+Si noti come \cverb|APPEND| ha restituito la nuova lunghezza della stringa (\cverb|abcdef| è composta
 da $6$ caratteri), sfruttando la disponibilità nel protocollo del valore di ritorno come modo per
-veicolare una informazione possibilmente utile. L'uso del comando \verb|STRLEN| conferma questo
+veicolare una informazione possibilmente utile. L'uso del comando \cverb|STRLEN| conferma questo
 dato.
 
-Tramite il comando \verb|GETRANGE|, si richiede di estrarre una porzione della stringa memorizzata
-in \verb|foo| \lnnum{3}, in particolare i caratteri i cui indici sono compresi nell'intervallo
-chiuso $\interval{2}{3}$; il comando infatti restituisce la stringa \verb|cd|.
+Tramite il comando \cverb|GETRANGE|, si richiede di estrarre una porzione della stringa memorizzata
+in \cverb|foo| \lnnum{3}, in particolare i caratteri i cui indici sono compresi nell'intervallo
+chiuso $\interval{2}{3}$; il comando infatti restituisce la stringa \cverb|cd|.
 
 \subsection{Stringhe usate come interi}
 
@@ -399,8 +399,7 @@ Le stringhe sono in realtà l'unico tipo di dato non aggregato supportato da Red
 usate come tipo \emph{debole}, cioè è possibile manipolarle come se fossero oggetti di altri tipi,
 per esempio interi.
 
-I seguenti comandi consentono infatti la manipolazioni di stringhe rappresentanti numeri in base
-10:
+I seguenti comandi consentono infatti la manipolazioni di stringhe rappresentanti numeri in base~$10$:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
 	\item[INCR <key>] Incrementa il numero rappresentato nella stringa di una unità.
@@ -428,24 +427,24 @@ OK
 "100"
 \end{commentedsource}
 
-Alla chiave \verb|foo| è stato associato una stringa che contiene la rappresentazione di $123$
-in base 10 \lnnum{1}; il comando \verb|STRLEN| ci rassicura che si tratta di una stringa di
+Alla chiave \cverb|foo| è stato associato una stringa che contiene la rappresentazione di $123$
+in base~$10$ \lnnum{1}; il comando \cverb|STRLEN| ci rassicura che si tratta di una stringa di
 lunghezza $3$ e non di un numero.
 
-Nonostante questo, il comando \verb|INCR| \lnnum{2} è in grado di manipolare la stringa come
+Nonostante questo, il comando \cverb|INCR| \lnnum{2} è in grado di manipolare la stringa come
 se fosse un intero, modificandola nella rappresentazione in base 10 di $124$. Si noti che il
-valore restituito, invece, è di tipo intero. Il comando \verb|STRLEN| subito successivo conferma
+valore restituito, invece, è di tipo intero. Il comando \cverb|STRLEN| subito successivo conferma
 che stiamo sempre manipolando una stringa.
 
-Allo stesso modo, il comando \verb|DECRBY| \lnnum{3} sottrae il valore $24$ all'attuale valore
-di \verb|foo|, ottenendo come risultato $100$, che viene restituito come intero. Il comando
-\verb|GET| finale mostra il contenuto di \verb|foo| questa volta come stringa.
+Allo stesso modo, il comando \cverb|DECRBY| \lnnum{3} sottrae il valore $24$ all'attuale valore
+di \cverb|foo|, ottenendo come risultato $100$, che viene restituito come intero. Il comando
+\cverb|GET| finale mostra il contenuto di \cverb|foo| questa volta come stringa.
 
 Oltre agli interi, viene fornito un supporto molto primitivo per i numeri in virgola
-mobile, tramite il solo comando \verb|INCRBYFLOAT|. 
+mobile, tramite il solo comando \cverb|INCRBYFLOAT|. 
 
 Una possibilità più avanzata è poi quella di considerare la stringa come un array di bit utilizzando
-i comandi \verb|BITCOUNT|, \verb|SETBIT| e \verb|GETBIT| per lavorare su ciascun bit.
+i comandi \cverb|BITCOUNT|, \cverb|SETBIT| e \cverb|GETBIT| per lavorare su ciascun bit.
 
 \subsection{Liste}
 
@@ -466,7 +465,7 @@ lista sono i seguenti:
 		lista è vuota il client resta bloccato in attesa che venga aggiunto un elemento da un altro
 		client. Inoltre, è possibile specificare più di una lista su cui attendere elementi. Il
 		timeout deve essere specificato in secondi; se è $0$, le funzioni non bloccano mai
-		e si comportano come \verb|LPOP|/\verb|RPOP|.
+		e si comportano come \cverb|LPOP|/\cverb|RPOP|.
 	\item[RPOP key] Rimuove un elemento dal fondo della lista.
 	\item[LLEN key] Restituisce la lunghezza della lista.
 	\item[LINDEX key idx] Restituisce l'elemento della lista all'indice specificato.
@@ -480,11 +479,11 @@ lista sono i seguenti:
 
 Oltre agli ovvi usi di memorizzazione di dati mantenendo un certo ordine di inserimento, le liste di
 Redis consentono anche di implementare un complesso meccanismo di \emph{task queue}, cioè code di
-attività da eseguire, tramite i comandi \verb|BLPOP| e \verb|BRPOP|. Per esempio, in un possibile
+attività da eseguire, tramite i comandi \cverb|BLPOP| e \cverb|BRPOP|. Per esempio, in un possibile
 scenario applicativo, un gruppo di client \emph{produttori} possono inserire attività da eseguire
-(magari codificate da un ID) in una coda di attività pendenti tramite \verb|RPUSH|; un secondo
+(magari codificate da un ID) in una coda di attività pendenti tramite \cverb|RPUSH|; un secondo
 gruppo di client \emph{consumatori} possono invece restare in attesa di attività da eseguire
-tramite \verb|BLPOP|, ed eseguirli via via che vengono accodati. La possibilità di specificare più
+tramite \cverb|BLPOP|, ed eseguirli via via che vengono accodati. La possibilità di specificare più
 di una lista consente di dividere le attività per priorità o per tipologia, consentendo comunque
 flessibilità su quali attività eseguire da parte dei consumatori. A titolo di esempio di utilizzo di
 questa funzionalità, si veda il software
@@ -513,9 +512,9 @@ Qui si può vedere una sessione interattiva di esempio di uso di una lista:
 \end{commentedsource}
 
 Si noti che non è necessario inizializzare la lista in nessun modo: il primo riferimento alla chiave
-\verb|mylist| tramite un comando \verb|RPUSH| \lnnum{1} è sufficiente per creare dinamicamente
+\cverb|mylist| tramite un comando \cverb|RPUSH| \lnnum{1} è sufficiente per creare dinamicamente
 l'oggetto di tipo giusto. In questo esempio, la lista viene inizializzata con i $4$ elementi nello
-stesso ordine specificato poiché il comando \verb|RPUSH| effettua l'inserimento in coda:
+stesso ordine specificato poiché il comando \cverb|RPUSH| effettua l'inserimento in coda:
 
 \begin{center}
 	\begin{tabular}{c|*{4}{c|}}
@@ -533,12 +532,12 @@ stesso ordine specificato poiché il comando \verb|RPUSH| effettua l'inserimento
 	\end{tabular}
 \end{center}
 
-Se si fosse usato \verb|LPUSH|, l'inserimento in testa avrebbe creato una lista in ordine inverso
-rispetto a quello degli argomenti. Le chiamate al comando \verb|LINDEX| nell'esempio confermano
+Se si fosse usato \cverb|LPUSH|, l'inserimento in testa avrebbe creato una lista in ordine inverso
+rispetto a quello degli argomenti. Le chiamate al comando \cverb|LINDEX| nell'esempio confermano
 questa struttura.
 
-Il comando \verb|LPOP| \lnnum{2} rimuove il primo elemento dalla testa della lista, restituendolo,
-e lasciando la lista con 3 elementi come confermato dal successivo comando \verb|LLEN|:
+Il comando \cverb|LPOP| \lnnum{2} rimuove il primo elemento dalla testa della lista, restituendolo,
+e lasciando la lista con 3 elementi come confermato dal successivo comando \cverb|LLEN|:
 
 \begin{center}
 	\begin{tabular}{c|*{4}{c|}}
@@ -552,8 +551,8 @@ e lasciando la lista con 3 elementi come confermato dal successivo comando \verb
 	\end{tabular}
 \end{center}
 
-Il comando \verb|LINSERT| \lnnum{3} inserisce un nuovo elemento \verb|walt| immediatamente
-successivo all'emento \verb|goofy|:
+Il comando \cverb|LINSERT| \lnnum{3} inserisce un nuovo elemento \cverb|walt| immediatamente
+successivo all'emento \cverb|goofy|:
 
 \begin{center}
 	\begin{tabular}{c|*{4}{c|}}
@@ -567,7 +566,7 @@ successivo all'emento \verb|goofy|:
 	\end{tabular}
 \end{center}
 
-Infine, il comando \verb|LRANGE| \lnnum{4} restituisce una porzione di elementi della lista, cioè
+Infine, il comando \cverb|LRANGE| \lnnum{4} restituisce una porzione di elementi della lista, cioè
 quelli compresi nell'intervallo $\interval{1}{5}$. Nonostante l'estremo superiore dell'intervallo
 sia più grando della dimensione della lista, il comando non generare nessun errore, e semplicemente
 restituisce gli elementi esistenti. Il client potrà dedurre che la lista era più breve dal fatto
@@ -586,18 +585,18 @@ quindi logico che venga riutilizzata la medesima implementazione.
 
 Un esempio di uso di tabella hash è la memorizzazione delle informazioni sugli utenti di un
 applicativo; è possibile infatti utilizzare come chiave una stringa composta da un prefisso (per
-esempio \verb|user|), seguito dall'ID univoco (chiave primaria) dell'utente, per esempio un intero
-progressivo, opzionalmente divisi da un separatore per leggibilità (\verb|user:88|). All'interno
-della tabella, i campi sono i nomi degli attributi che si vuole memorizzare (\verb|nome|,
-\verb|cognome|, ecc.), associati ai relativi valori.
+esempio \cverb|user|), seguito dall'ID univoco (chiave primaria) dell'utente, per esempio un intero
+progressivo, opzionalmente divisi da un separatore per leggibilità (\cverb|user:88|). All'interno
+della tabella, i campi sono i nomi degli attributi che si vuole memorizzare (\cverb|nome|,
+\cverb|cognome|, ecc.), associati ai relativi valori.
 
 Si noti che non esiste nessun controllo d'integrità che ci assicuri che le tabelle associate a tutti
-gli utenti (tutte le chiavi con prefisso \verb|user|, nel nostro esempio) siano consistenti tra loro
+gli utenti (tutte le chiavi con prefisso \cverb|user|, nel nostro esempio) siano consistenti tra loro
 e dunque popolate dai medesimi campi; così come non è possibile verificare la tipizzazione dei
 campi, poiché i valori sono esclusivamente di tipo stringa e dunque senza tipo. Se dunque è
 necessaria uniformità, l'onere è lasciato al client.
 
-I comandi principali sono i seguenti, caratterizzati dal prefisso \verb|H|:
+I comandi principali sono i seguenti, caratterizzati dal prefisso \cverb|H|:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
 	\item[HSET key field value] Aggiunge un campo alla tabella, associandolo ad un valore.
@@ -607,8 +606,8 @@ I comandi principali sono i seguenti, caratterizzati dal prefisso \verb|H|:
 	\item[{HMGET key field [field\dots]}] Legge uno o più valori associati a uno o più campi della
 		tabella.
 	\item[{HDEL key field [field\dots]}] Cancella uno o più campi dalla tabella. Si noti che
-		non esiste in questo caso \verb|HMDEL| perché questo comando ha già effetto multiplo. I
-		comandi \verb|HSET| e \verb|HGET| sono il lascito di un vecchio approccio al design dei
+		non esiste in questo caso \cverb|HMDEL| perché questo comando ha già effetto multiplo. I
+		comandi \cverb|HSET| e \cverb|HGET| sono il lascito di un vecchio approccio al design dei
 		comandi e sono di fatto deprecati.
 	\item[HEXISTS key field] Verifica se un campo è presente nella tabella.
 	\item[HLEN key] Restituisce il numero di campi presenti nella tabella.
@@ -649,8 +648,8 @@ OK
 (integer) 0
 \end{commentedsource}
 
-Nell'esempio, il comando \verb|HSET| inizializza una tabella hash con chiave \verb|user:88|
-\lnnum{1}, creando subito un campo \verb|name| con valore \verb|giovanni|. 
+Nell'esempio, il comando \cverb|HSET| inizializza una tabella hash con chiave \cverb|user:88|
+\lnnum{1}, creando subito un campo \cverb|name| con valore \cverb|giovanni|. 
 
 \begin{center}
 	\begin{tabular}{r|l}
@@ -667,9 +666,9 @@ dimensionarla in alcun modo; Redis implementa in modo efficiente le tabelle hash
 automaticamente al crescere degli elementi contenuti, mantenendo un fattore massimo di riempimento
 che garantisce una buona velocità di accesso.
 
-Successivamente, tramite \verb|HMSET| \lnnum{2}, vengono aggiunti altri due campi alla tabella:
-\verb|surname| con valore \verb|bajo| e \verb|age| con valore \verb|38|. La successiva 
-chiamata a \verb|HLEN| conferma che la tabella contiene ora 3 valori, e cioè:
+Successivamente, tramite \cverb|HMSET| \lnnum{2}, vengono aggiunti altri due campi alla tabella:
+\cverb|surname| con valore \cverb|bajo| e \cverb|age| con valore \cverb|38|. La successiva 
+chiamata a \cverb|HLEN| conferma che la tabella contiene ora 3 valori, e cioè:
 
 \begin{center}
 	\begin{tabular}{r|l}
@@ -683,15 +682,15 @@ chiamata a \verb|HLEN| conferma che la tabella contiene ora 3 valori, e cioè:
 	\end{tabular}
 \end{center}
 
-La chiamata a \verb|HMGET| \lnnum{3} restituisce il valore associato al campo \verb|surname|, cioè 
-\verb|bajo|. Per quanto riguarda invece le estrazioni multiple di campi e valori, l'esempio
-mostra che \verb|HGETALL| restituisce l'intera tabella \lnnum{4}, alternando campi e valori
-nell'array che viene restituito; invece \verb|HKEYS| e \verb|HVALS| restituiscono rispettivamente
+La chiamata a \cverb|HMGET| \lnnum{3} restituisce il valore associato al campo \cverb|surname|, cioè 
+\cverb|bajo|. Per quanto riguarda invece le estrazioni multiple di campi e valori, l'esempio
+mostra che \cverb|HGETALL| restituisce l'intera tabella \lnnum{4}, alternando campi e valori
+nell'array che viene restituito; invece \cverb|HKEYS| e \cverb|HVALS| restituiscono rispettivamente
 solo le chiavi o solo i valori (cioè il contenuto delle due colonne rappresentate qui sopra).
 
-Infinie, \verb|HEXISTS| verifica se il campo \verb|name| è stato definito \lnnum{4}, restituendo $1$
-per indicare successo. Richiamando invece \verb|HEXISTS| erroneamente con una stringa che 
-corrisponde ad un valore invece che ad un campo (\verb|giovanni| nell'esempio), il valore
+Infinie, \cverb|HEXISTS| verifica se il campo \cverb|name| è stato definito \lnnum{4}, restituendo $1$
+per indicare successo. Richiamando invece \cverb|HEXISTS| erroneamente con una stringa che 
+corrisponde ad un valore invece che ad un campo (\cverb|giovanni| nell'esempio), il valore
 restituito $0$ indica il fallimento del test.
 
 \subsection{Insiemi}
@@ -707,8 +706,8 @@ Riprendendo il precedente esempio di tabella hash contenente gli utenti, un appl
 voler memorizzare all'interno di un insieme l'elenco degli utenti che soddisfano una determinata
 proprietà, per esempio tutti coloro che hanno effettuato almeno un pagamento, o coloro che hanno
 aggiornato all'ultima versione dell'applicativo. In questo caso, si creerebbero due
-insiemi, associati alle chiavi \verb|paying_users| e \verb|updated_users|, e inserirvi gli ID degli
-utenti (\verb|88|, \verb|4|, \verb|37|, ecc.). Sarebbe poi possibile effettuare rapide operazioni di
+insiemi, associati alle chiavi \cverb|paying_users| e \cverb|updated_users|, e inserirvi gli ID degli
+utenti (\cverb|88|, \cverb|4|, \cverb|37|, ecc.). Sarebbe poi possibile effettuare rapide operazioni di
 controllo di appartenenza, oppure di differenza (ottenendo quindi l'elenco degli utenti paganti che
 non hanno aggiornato all'ultima versione, in modo da poter per esempio inviare loro una email di
 sollecito).
@@ -719,7 +718,7 @@ abbiamo utilizzato un insieme come indice esterno di una tabella, dovendolo per�
 manualmente.
 
 Questi sono i principali comandi che Redis prevede per gli insiemi, caratterizzati dal
-prefisso~\verb|S|:
+prefisso~\cverb|S|:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
 	\item[{SADD key ele [ele\dots]}] Aggiunge una o più stringhe ad un insieme, e restituisce
@@ -730,9 +729,9 @@ prefisso~\verb|S|:
 	\item[SISMEMBER key ele] Controlla se una stringa è presente in un insieme.
 	\item[SMEMBERS key] Elenca tutte le stringhe contenute nell'insieme.
 	\item[{SRANDMEMBER key [count]}] Restituisce una o più stringhe scelte casualmente tra
-		quelle presenti (se \verb|count| non viene specificato, il default è $1$).
+		quelle presenti (se \cverb|count| non viene specificato, il default è $1$).
 	\item[{SPOP key [count]}] Restituisce e rimuove una o più stringhe scelte casualmente tra
-		quelle presenti (se \verb|count| non viene specificato, il default è $1$).
+		quelle presenti (se \cverb|count| non viene specificato, il default è $1$).
 	\item[{SUNION key [key\dots]}] Restituisce l'unione tra due o più insiemi.
 	\item[{SINTER key [key\dots]}] Restituisce l'intersezione tra due o più insiemi.
 	\item[{SDIFF key [key\dots]}] Restituisce la differenza tra un insieme e uno o più altri
@@ -767,7 +766,7 @@ Qui si può vedere una sessione interattiva di esempio di uso degli insiemi:
 2) "111"
 \end{commentedsource}
 
-Inizialmente, viene creato un insieme tramite \verb|SADD| \lnnum{1}, inserendo $4$ elementi
+Inizialmente, viene creato un insieme tramite \cverb|SADD| \lnnum{1}, inserendo $4$ elementi
 distinti. Il valore di ritorno indica correttamente che sono state aggiunte $4$ stringhe univoche, e
 come sempre l'insieme è stato creato automaticamente al primo uso, senza necessità di allocazione
 preventiva.
@@ -798,9 +797,9 @@ quindi il numero di sringhe univoche aggiunte è solo $1$, come restituito dal c
 \end{tikzpicture}
 \end{center}
 
-Il test di appartenenza dell'elemento $111$ tramite \verb|SISMEMBER| \lnnum{2} restituisce $1$ per 
+Il test di appartenenza dell'elemento $111$ tramite \cverb|SISMEMBER| \lnnum{2} restituisce $1$ per 
 indicare che l'elemento è presente. Dopodiché, l'elemento $37$ viene rimosso dall'insieme tramite
-\verb|SREM| \lnnum{3}, e i successivi comandi \verb|SCARD| e \verb|ISMEMBER| confermano 
+\cverb|SREM| \lnnum{3}, e i successivi comandi \cverb|SCARD| e \cverb|ISMEMBER| confermano 
 rispettivamente la nuova cardinalità dell'insieme ($4$) e l'assenza dell'elemento appena rimosso.
 
 \begin{center}
@@ -834,8 +833,8 @@ A questo punto, l'esempio crea un nuovo insieme \lnnum{4}:
 \end{tikzpicture}
 \end{center}
 
-e ne calcola rispettivamente l'intersezione tramite \verb|SINTER| \lnnum{5} e la differenza
-tramite \verb|SDIFF| \lnnum{6}:
+e ne calcola rispettivamente l'intersezione tramite \cverb|SINTER| \lnnum{5} e la differenza
+tramite \cverb|SDIFF| \lnnum{6}:
 
 \medskip
 \begin{center}
@@ -903,43 +902,51 @@ intervallo è in realtà correttamente definito solo quando il punteggio di tutt
 stesso, e cioè quando la struttura dati sta di fatto già ordinando alfabeticamente, ma l'esistenza
 di comandi dedicati a questa modalità sottolinea proprio la flessibilità di questa struttura dati.
 
-Questi sono i principali comandi esistenti, identificati dal prefisso~\verb|Z|:
+Questi sono i principali comandi esistenti, identificati dal prefisso~\cverb|Z|:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
-	\item[ZADD] Aggiunge una o più stringhe all'insieme ordinato, associandole ad un punteggio. Se
-		le stringhe esistono già, il punteggio viene aggiornato al valore specificato. Il comando
-		prevede anche una serie di opzioni avanzate per cambiare il comportamento di default in caso
-		di stringa già esistente.
-	\item[ZINCRBY] Si comporta come \verb|ZADD|, ma in caso di stringa esistente il punteggio viene
-		modificato in modo relativo, sommando cioè il valore specificato invece che sostituirlo.
-	\item[ZREM] Rimuove una o più stringhe dall'insieme.
-	\item[ZSCORE] Restituisce il punteggio associato ad una stringa, e può essere
-		usato anche come test di appartenenza.
-	\item[ZCARD] Restituisce la cardinalità dell'insieme, cioè il numero di
+	\item[{ZADD key score ele [score ele\dots]}] Aggiunge una o più elementi (stringhe) all'insieme
+		ordinato, associandole ad uno o più punteggi. Se le stringhe esistono già, il punteggio
+		viene aggiornato al valore specificato. Il comando prevede anche una serie di opzioni
+		avanzate per cambiare il comportamento in caso di stringa già esistente.
+	\item[{ZINCRBY key incr ele}] Si comporta come \cverb|ZADD|, ma in caso di elemento esistente il
+		punteggio viene modificato in modo relativo, sommando cioè il valore specificato invece che
+		sostituirlo.
+	\item[{ZREM key ele [ele\dots]}] Rimuove una o più stringhe dall'insieme, e restituisce il
+		numero di elementi effettivamente rimossi.
+	\item[ZSCORE key ele] Restituisce il punteggio associato ad un elemento, oppure \cverb|<nil>|
+	    se l'elemento non esiste. Questo comando può quindi essere usato anche come test di
+	    appartenenza.
+	\item[ZCARD key] Restituisce la cardinalità dell'insieme, cioè il numero di
 		stringhe contenute.
-	\item[ZINTERSTORE / ZUNIONSTORE] Come le controparti per gli insiemi, effettuano le operazioni
+	\item[{ZINTERSTORE / ZUNIONSTORE dest numkeys key [key\dots] [WEIGHTS weight [weight\dots]]
+		[AGGREGATE SUM|MIN|MAX]}] Come le controparti per gli insiemi, effettuano le operazioni
 		(rispettivamente) di unione e intersezione, memorizzando il risultato in un nuovo insieme
 		ordinato. Il punteggio ottenuto è la somma dei punteggi specificati negli insiemi di
 		origine, ma è possibile specificare una funzione di aggregazione diversa (media, minimo o
-		massimo), oltre che applicare dei pesi (fattori moltiplicativi) ai punteggi.
-	\item[ZRANGE] Restituisce gli elementi all'interno dell'intervallo specificato come indice di
-		sequenza. Per esempio, specificando come intervallo inclusivo \verb|0 4|, si ottengono i
-		primi 5 elementi, cioè i 5 elementi con minor punteggio attualmente presenti nell'insieme. È
-		possibile usare gli indici negativi per fare riferimento alla fine della sequenza (per
-		esempio, ``\verb|-1|'' indica l'elemento con punteggio più alto).
-	\item[ZRANGEBYSCORE] Restituisce gli elementi all'interno dell'intervallo specificato come
-		punteggi. Per esempio, specificando come intervallo ``\verb|100.2 100.8|'', si ottengono
-		tutti gli elementi i cui punteggi sono $\in \interval{100.2}{100.8}$. Gli estremi
-		dell'intervallo possono essere specificati come aperti o chiusi. È possibile inoltre
-		specificare un numero massimo di elementi restituiti per evitare trasferimenti troppo
-		pesanti (consentendo quindi la paginazione).
-	\item[ZRANGEBYLEX] Restituisce gli elementi all'interno dell'intervallo specificato come
-		prefissi lessicografici. Per esempio, specificando come intervallo ``\verb|AZ C|'', si
-		ottengono tutti gli elementi che seguono lessicograficamente la stringa ``AZ'' e precedono
-		la stringa ``C''. Come per il comando precedente, è possibile specificare se gli estremi
-		dell'intervallo sono aperti o chiusi, e indicare un limite massimo agli elementi restituiti.
-		Come già descritto, questo comando funziona correttamente solo con insiemi ordinati in cui
-		tutti gli elementi hanno lo stesso punteggio.
+		massimo) tramite l'opzione \cverb|AGGREGATE|, ed applicare dei pesi (fattori moltiplicativi)
+		ai punteggi tramite l'opzione \cverb|WEIGHTS|.
+	\item[ZRANGE key start stop] Restituisce gli elementi all'interno dell'intervallo
+		specificato come indice di sequenza. Per esempio, specificando come intervallo inclusivo
+		\cverb|0 4|, si ottengono i primi 5 elementi, cioè i 5 elementi con minor punteggio
+		attualmente presenti nell'insieme. È possibile usare gli indici negativi per fare
+		riferimento alla fine della sequenza (per esempio, \cverb|-1| indica l'elemento con
+		punteggio più alto).
+	\item[{ZRANGEBYSCORE key min max [LIMIT offset count]}] Restituisce gli elementi all'interno
+		dell'intervallo specificato come punteggi. Per esempio, specificando come intervallo
+		\cverb|100.2 100.8|, si ottengono tutti gli elementi i cui punteggi sono $\in
+		\interval{100.2}{100.8}$. Gli estremi dell'intervallo si intendo chiusi, ma possono essere
+		specificati come aperti tramite il prefisso \cverb|(|: per esempio \cverb|5.4 (8|
+		indica l'intervallo $\interval[open right]{5.4}{8}$. È possibile inoltre specificare un
+		numero massimo di elementi restituiti tramite l'opzione \cverb|LIMIT|, per evitare
+		trasferimenti troppo pesanti, consentendo quindi la paginazione.
+	\item[{ZRANGEBYLEX key min max [LIMIT offset count]}] Restituisce gli elementi all'interno
+		dell'intervallo specificato come prefissi lessicografici. Per esempio, specificando come
+		intervallo \cverb|AZ C|, si ottengono tutti gli elementi che seguono lessicograficamente
+		la stringa ``AZ'' e precedono la stringa ``C''. Come per il comando precedente, è possibile
+		specificare se gli estremi dell'intervallo sono aperti o chiusi, e indicare un limite
+		massimo agli elementi restituiti. Come già descritto, questo comando funziona correttamente
+		solo con insiemi ordinati in cui tutti gli elementi hanno lo stesso punteggio.
 	\item[ZREVRANGE / ZREVRANGEBYSCORE / ZREVRANGEBYLEX] Simili ai precedenti comandi, ma
 		considerano l'insieme ordinato al contrario, cioè in ordine decrescente di punteggio.
 	\item[ZREMRANGEBYRANK / ZREMRANGEBYSCORE / ZREMRANGEBYLEX] Simili ai precedenti comandi, ma
@@ -954,53 +961,125 @@ della struttura dati, indichiamo alcuni possibili scenari applicativi.
 	\item Un esempio di struttura dati facilmente rappresentabile tramite insieme ordinato è una
 	coda con priorità. Supponiamo per esempio di dover memorizzare un elenco di azioni da eseguire
 	nel futuro, assieme con l'istante temporale al quale l'azione deve essere eseguita. Al momento
-	di inserire un'azione, si può creare un nuovo elemento in una tabella hash (\verb|HSET|)
-	utilizzando un ID progressivo conservato in una chiave (\verb|INCR|), memorizzando così tutto
+	di inserire un'azione, si può creare un nuovo elemento in una tabella hash (\cverb|HSET|)
+	utilizzando un ID progressivo conservato in una chiave (\cverb|INCR|), memorizzando così tutto
 	il dettaglio dell'azione da eseguire (tipologia, parametri, condizioni di errore). Dopodiché,
-	si inserisce l'ID dell'azione in un insieme ordinato (\verb|ZADD|), utilizzando come punteggio
+	si inserisce l'ID dell'azione in un insieme ordinato (\cverb|ZADD|), utilizzando come punteggio
 	il timestamp UNIX a cui si dovrà eseguire l'azione. Successivamente, in polling, è possibile
 	estrarre tutte le azioni scadute (cioè il cui timestamp è inferiore all'attimo corrente,
-	tramite \verb|ZRANGEBYSCORE|) e processarle; via via che ciascuna azione termina l'esecuzione,
-	può essere rimossa dall'insieme (\verb|ZREM|).
+	tramite \cverb|ZRANGEBYSCORE|) e processarle; via via che ciascuna azione termina l'esecuzione,
+	può essere rimossa dall'insieme (\cverb|ZREM|).
 
 	\item Supponiamo di voler creare un sistema di fidelizzazione per un e-commerce, basato sulla
 	spesa effettuata da ciascun utente. Ogni volta che un utente effettua un acquisto, possiamo
 	inserirlo nell'insieme ordinato l'ID dell'utente aggiungendo l'importo del carrello
-	(\verb|ZINCR|); non è necessario gestire in modo diverso il primo acquisto, perché \verb|ZINCR|
+	(\cverb|ZINCR|); non è necessario gestire in modo diverso il primo acquisto, perché \cverb|ZINCR|
 	funziona anche se l'elemento non è ancora presente. Se vogliamo contattare tutti gli utenti che
 	hanno speso più di \SI{1000}{\EUR} sul nostro e-commerce, possiamo utilizzare
-	\verb|ZRANGEBYSCORE| specificando l'intervallo $\interval{1000.00}{\infty}$ (tramite la stringa
-	``\verb|1000.00 +inf|'') per estrarre gli ID. In alternativa, supponendo di voler premiare i
-	$100$ utenti che hanno speso di più, possiamo estrarre i loro ID con \verb|ZREVRANGE| usando
-	l'intervallo ``\verb|0 99|'' (essendo l'insieme in ordine crescente, dobbiamo usare
-	\verb|ZREVRANGE| per estrarre facilmente gli elementi con punteggio più grosso).
+	\cverb|ZRANGEBYSCORE| specificando l'intervallo $\interval{1000.00}{\infty}$ (tramite la stringa
+	\cverb|1000.00 +inf|) per estrarre gli ID. In alternativa, supponendo di voler premiare i
+	$100$ utenti che hanno speso di più, possiamo estrarre i loro ID con \cverb|ZREVRANGE| usando
+	l'intervallo \cverb|0 99| (essendo l'insieme in ordine crescente, dobbiamo usare
+	\cverb|ZREVRANGE| per estrarre facilmente gli elementi con punteggio più grosso).
 \end{itemize}
 
-Qui si può vedere una sessione interattiva di esempio di uso degli insiemi ordinati:
+Qui si può vedere una semplice sessione interattiva di esempio di uso degli insiemi ordinati:
 
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> ZADD test 10 a 20 b 30 c
-(integer) 0
-127.0.0.1:6379> ZCARD test
+|\lnote|127.0.0.1:6379> ZADD paying_users 2500 tim 800 max 1000 sam 
 (integer) 3
-127.0.0.1:6379> ZSCORE test b
-"20"
-127.0.0.1:6379> ZRANGE test 0 0
-1) "a"
-127.0.0.1:6379> ZRANGE test 0 10
-1) "a"
-2) "b"
-3) "c"
-127.0.0.1:6379> ZREVRANGE test 0 0
-1) "c"
-127.0.0.1:6379> ZRANGEBYSCORE test 15 25
-1) "b"
-127.0.0.1:6379> ZINCRBY test 20 b
-"40"
-127.0.0.1:6379> ZRANGEBYSCORE test 15 25
+127.0.0.1:6379> ZADD paying_users 3000 tim 500 peg
+(integer) 1
+|\lnote|127.0.0.1:6379> ZCARD paying_users
+(integer) 4
+|\lnote|127.0.0.1:6379> ZINCRBY paying_users 1200 max
+"2000"
+127.0.0.1:6379> ZSCORE paying_users max
+"2000"
+|\lnote|127.0.0.1:6379> ZRANGE paying_users 0 1
+1) "peg"
+2) "sam"
+127.0.0.1:6379> ZREVRANGE paying_users 0 1 WITHSCORES
+1) "tim"
+2) "3000"
+3) "max"
+4) "2000"
+|\lnote|127.0.0.1:6379> ZRANGEBYSCORE paying_users 1500 2500
+1) "max"
+127.0.0.1:6379> ZINCRBY paying_users 2000 max
+"4000"
+127.0.0.1:6379> ZRANGEBYSCORE paying_users 1500 2500
 (empty list or set)
+|\lnote|127.0.0.1:6379> ZRANGEBYSCORE paying_users 3000 (4000
+1) "tim"
 \end{commentedsource}
 
+Inizialmente, viene creato un insieme ordinato \cverb|paying_users| contenente 3 elementi \lnnum{1};
+poiché l'insieme è ordinato, rappresentiamo i dati rispettando subito il punteggio associato a
+ciascun elemento:
+
+\begin{center}
+	\begin{tabular}{|*{3}{c|}}
+	  \hline
+	  \cellcolor{blue!25}{\num{800}} & \cellcolor{blue!25}{\num{1000}} & \cellcolor{blue!25}{\num{2500}} \\ 
+	  \cellcolor{blue!25}{max} & \cellcolor{blue!25}{sam} & \cellcolor{blue!25}{tim} \\ 
+	  \hline
+	\end{tabular}
+\end{center}
+
+Il successivo comando \cverb|ZADD| aggiunge due elementi: l'elemento \cverb|tim| però era già
+presente nell'insieme, e quindi il suo punteggio viene aggiornato:
+
+\begin{center}
+	\begin{tabular}{|*{4}{c|}}
+	  \hline
+	  \cellcolor{blue!25}{\num{500}} & \num{800} & \num{1000} & \cellcolor{blue!25}{\num{3000}} \\ 
+	  \cellcolor{blue!25}{peg} & max & sam & \cellcolor{blue!25}{tim} \\ 
+	  \hline
+	\end{tabular}
+\end{center}
+
+Infatti, si può verificare che la nuova cardinalità è $4$ \lnnum{2}.
+
+Il comando \cverb|ZINCRBY| \lnnum{3} modifica il punteggio dell'elemento \cverb|max|,
+incrementandolo di $800$, e restituisce il nuovo punteggio $2000$. Il punteggio può anche
+essere estratto tramite \cverb|ZSCORE|, per verificarne il valore corrente.
+
+\begin{center}
+	\begin{tabular}{|*{4}{c|}}
+	  \hline
+	  \num{500} & \num{1000} & \cellcolor{blue!25}{\num{2000}} & \num{3000} \\ 
+	  peg & sam & \cellcolor{blue!25}{max} & tim \\ 
+	  \hline
+	\end{tabular}
+\end{center}
+
+Per estrarre porzioni di contenuto dell'insieme, viene utilizzato \cverb|ZRANGE| con un intervallo
+che indica l'elemento di inizio e quello di fine dell'estrazione da effettuare, in ordine di
+punteggio; per esempio \cverb|0 1| indica i 2 elementi con valore più basso \lnnum{4}. Il comando
+\cverb|ZREVRANGE| si comporta nello stesso modo, ma estrae elementi partendo dal fondo dell'insieme,
+cioè in ordine inverso di punteggio. L'opzione \cverb|WITHSCORES| specifica di estrarre anche
+i punteggi oltre agli elementi.
+
+Il comando \cverb|ZRANGEBYSCORE| effettua un'estrazione utilizzando non più indici, ma un range di
+punteggi. Specificando \cverb|1500 2500| \lnnum{5}, l'unico elemento compreso in questo intervallo è
+\verb|max|, che viene restituito. Se si aumenta il punteggio di \cverb|max| portandolo a $4000$,
+una seconda invocazione di \cverb|ZRANGEBYSCORE| sul medesimo intervallo non restituisce più
+alcun elemento.
+
+\begin{center}
+	\begin{tabular}{|*{4}{c|}}
+	  \hline
+	  \num{500} & \num{1000} & \num{3000} & \cellcolor{blue!25}{\num{4000}} \\ 
+	  peg & sam & tim & \cellcolor{blue!25}{max} \\ 
+	  \hline
+	\end{tabular}
+\end{center}
+
+Come ultimo caso, si noti l'uso dell'identificatore speciale \cverb|(| per indicare un intervallo
+aperto: specificando l'intervallo \cverb|3000 (4000|, corrispondente a 
+$\interval[open right]{3000}{4000}$, il solo elemento \cverb|tim| viene restituito, poiché \cverb|max|
+è escluso dall'intervallo.
 
 \subsection{HyperLogLog}
 
@@ -1021,9 +1100,10 @@ come spiegato in \cite{hyperloglog-explain}, è che, osservando nella loro rappr
 un multi-insieme di numeri equamente distribuiti, se troviamo uno specifico prefisso di $N$ bit
 predeterminato, è possibile ipotizzare che la cardinalità dell'insieme sia almeno $2^N$; per
 esempio, in un insieme di numeri casuali, circa il \SI{12.5}{\percent} di essi ha un prefisso
-binario pari \verb|001|, per cui se troviamo questo prefisso, possiamo ipotizzare che i numeri siano
-almeno \num{8}. Effettuando questo test con prefissi sempre più lunghi (cercando cioè, il più lungo
-prefisso di zeri iniziali nel multi-insieme), è possibile ottenere una stima della cardinalità.
+binario pari a \cverb|001|, per cui se troviamo questo prefisso, possiamo ipotizzare che i numeri
+siano almeno \num{8}. Effettuando questo test con prefissi sempre più lunghi (cercando cioè, il più
+lungo prefisso di zeri iniziali nel multi-insieme), è possibile ottenere una stima della
+cardinalità.
 
 Questa osservazione però commette un errore con varianza molto elevata, per cui HyperLogLog divide i
 numeri in ingresso in più sottoinsiemi, effettua per ciascuno una stima della cardinalità e poi
@@ -1040,7 +1120,7 @@ registri, ottenendo quindi un errore pari a $1.04 / \sqrt{2^{14}} = \SI{0.8}{\pe
 utilizzando un totale di $2^{14} * 6 / 8 = \num{12228}$ byte di memoria necessaria, come già
 riportato.
 
-Questi sono i comandi esistenti, identificati dal prefisso \verb|PF|:
+Questi sono i comandi esistenti, identificati dal prefisso~\cverb|PF|:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
 	\item[PFADD] Aggiunge una o più stringhe all'HyperLogLog spe\-ci\-fi\-ca\-to,
@@ -1054,12 +1134,12 @@ Questi sono i comandi esistenti, identificati dal prefisso \verb|PF|:
 Un tipico caso d'uso è quello di conteggiare i cosiddetti \emph{DAU}, ``daily active users'', cioè
 il numero di utenti attivi in un'applicazione all'interno di ciascuna giornata solare.
 L'applicazione, alla mezzanotte, può creare un nuovo HyperLogLog utilizzando una chiave derivata dal
-giorno in corso (per esempio, \verb|DAU-2017-09-02|), aggiungendo via via l'ID di ciascun utente
-(tramite \verb|PFADD|) ogni volta che ne viene rilevata una qualunque attività, senza doversi
+giorno in corso (per esempio, \cverb|DAU-2017-09-02|), aggiungendo via via l'ID di ciascun utente
+(tramite \cverb|PFADD|) ogni volta che ne viene rilevata una qualunque attività, senza doversi
 preoccupare di tenere conto se l'utente era già stato conteggiato come attivo o meno. Al termine
-della giornata, è possibile stimare i \emph{DAU} tramite il comando \verb|PFCOUNT|. Lo storico può
+della giornata, è possibile stimare i \emph{DAU} tramite il comando \cverb|PFCOUNT|. Lo storico può
 essere conservato per ragioni di analisi a posteriori, e può essere aggregato tramite
-\verb|PFMERGE| per ottenere stime di attività su finestre temporali diverse, per esempio su base
+\cverb|PFMERGE| per ottenere stime di attività su finestre temporali diverse, per esempio su base
 settimanale o mensile (cosiddetti rispettivamente \emph{WAU} o \emph{MAU}). Grazie all'HyperLogLog,
 l'utilizzo di memoria è costante indipendentemente dal numero di utenti attivi, anche se questi
 dovessero raggiungere importanti volumi; a titolo di esempio, il numero di \emph{MAU} su Facebook in
@@ -1082,14 +1162,14 @@ Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
 (integer) 11
 \end{commentedsource}
 
-Inizialmente, viene aggiunto il valore $50$ all'HyperLogLog denominato \verb|dau| \lnnum{1} (che
+Inizialmente, viene aggiunto il valore $50$ all'HyperLogLog denominato \cverb|dau| \lnnum{1} (che
 viene quindi creato con questo primo comando), e successivamente si può verificare che la
 cardinalità dell'insieme è al momento quella attesa, cioè $1$.
 
 Vengono poi aggiunti un gruppo di valori \lnnum{2} di cui alcuni non già presenti (i numeri dal $51$
 al $59$) ma altri invece già presenti (il numero $50$, che viene aggiunto per 3 volte nella
 sequenza, pur essendo già presente). La cardinalità però risulta comunque corretta: infatti
-\verb|PFCOUNT| restituisce il valore atteso $10$, visto che in questo momento nella struttura sono
+\cverb|PFCOUNT| restituisce il valore atteso $10$, visto che in questo momento nella struttura sono
 stati inseriti tutti i valori tra il $50$ e il $59$. 
 
 Infine, si prova nuovamente ad inserire un insieme di valori \lnnum{3} tutti già visti tranne
@@ -1117,11 +1197,11 @@ meccanismo di ripristino in caso uno dei comandi inviati fallisca: la transazion
 semplicemente restituendo il codice di errore del comando, ma senza annullare le modifiche
 eventualmente operate dai comandi precedenti.
 
-Per utilizzare una transazione, è sufficiente inviare il comando \verb|MULTI|, seguito dalla 
-sequenza di comandi che si vuole eseguire atomicamente, seguiti dal comando \verb|EXEC|, che dà
+Per utilizzare una transazione, è sufficiente inviare il comando \cverb|MULTI|, seguito dalla 
+sequenza di comandi che si vuole eseguire atomicamente, seguiti dal comando \cverb|EXEC|, che dà
 il via all'esecuzione. I valori di ritorno di tutti i comandi vengono concatenati e restituiti come
-valore di ritorno del comando \verb|EXEC|. È possibile anche annullare una transazione prima di
-eseguirla, inviando il comando \verb|DISCARD|. Vediamo un esempio:
+valore di ritorno del comando \cverb|EXEC|. È possibile anche annullare una transazione prima di
+eseguirla, inviando il comando \cverb|DISCARD|. Vediamo un esempio:
 
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> HMSET user:123 name Giovanni surname Bajo
@@ -1144,17 +1224,17 @@ OK
 \end{commentedsource}
 
 All'inizio, viene create una tabella hash per memorizzare i record relativi agli utenti (tramite
-\verb|HMSET|) e un insieme ordinato che rappresenta un indice della tabella (\verb|paying-users|,
-tramite \verb|ZADD|). Il primo utente ha ID $123$, e ha speso un totale di \SI{1500}{\EUR}
+\cverb|HMSET|) e un insieme ordinato che rappresenta un indice della tabella (\cverb|paying-users|,
+tramite \cverb|ZADD|). Il primo utente ha ID $123$, e ha speso un totale di \SI{1500}{\EUR}
 \lnnum{1}, mentre il secondo utente con ID $124$ ha speso \SI{1200}{\EUR} \lnnum{2}.
 
 L'esempio mostra quindi come rimuovere atomicamente l'utente con ID $123$: viene utilizzata una
 transazione per evitare che altri client possano accedere ad uno stato inconsistente nel quale
 l'utente è presente come record ma non nell'indice (o viceversa). Durante la transazione,
-vengono eseguiti i comandi \verb|DEL| e \verb|ZREM| per rimuovere l'utente sia dalla tabella
-hash sia dall'indice, e il valore di ritorno \verb|QUEUED| \lnnum{3} \lnnum{4} mostra come
+vengono eseguiti i comandi \cverb|DEL| e \cverb|ZREM| per rimuovere l'utente sia dalla tabella
+hash sia dall'indice, e il valore di ritorno \cverb|QUEUED| \lnnum{3} \lnnum{4} mostra come
 i comandi non sono stati eseguiti immediatamente, ma accodati in attesa della fine della 
-definizione della transazione, delimitata dal comando \verb|EXEC| \lnnum{5}.
+definizione della transazione, delimitata dal comando \cverb|EXEC| \lnnum{5}.
 
 Relativamente alle proprietà ACID sopra descritte, è possibile osservare che:
 
@@ -1191,9 +1271,9 @@ comando precedente.
 
 Supponiamo di implementare un social network e di voler incrementare in modo atomico un campo
 memorizzato all'interno di una tabella hash, per esempio il numero di commenti che un determinato
-post ha ricevuto; poiché il comando \verb|INCR| agisce solo su chiavi di tipo stringa, e non quindi
-su campi di una tabella hash, sarà necessario utilizzare il comando \verb|HGET| per estrarre il
-valore corrente \lnnum{1}, e poi \verb|HSET| per inserire il nuovo valore incrementato \lnnum{2}, in
+post ha ricevuto; poiché il comando \cverb|INCR| agisce solo su chiavi di tipo stringa, e non quindi
+su campi di una tabella hash, sarà necessario utilizzare il comando \cverb|HGET| per estrarre il
+valore corrente \lnnum{1}, e poi \cverb|HSET| per inserire il nuovo valore incrementato \lnnum{2}, in
 questo modo:
 
 \begin{commentedsource}[style=redis]
@@ -1205,8 +1285,8 @@ questo modo:
 
 Purtroppo questa sequenza è soggetta ad una \emph{race condition} da parte di un altro client che
 volesse modificare lo stesso campo. Non sembra inoltre possibile utilizzare una transazione basata
-su \verb|MULTI| e \verb|EXEC| perché il comando \verb|HSET| può essere inviato dal client solo dopo
-che ha ricevuto la risposta al comando \verb|HGET|:
+su \cverb|MULTI| e \cverb|EXEC| perché il comando \cverb|HSET| può essere inviato dal client solo dopo
+che ha ricevuto la risposta al comando \cverb|HGET|:
 
 \begin{commentedsource}[style=redis]
 127.0.0.1:6379> MULTI
@@ -1216,19 +1296,19 @@ OK
 |\lnote|127.0.0.1:6379> HSET post:589 ???
 \end{commentedsource}
 
-Poiché il comando \verb|HGET| è stato accodato in attesa del termine della transazione, il client
+Poiché il comando \cverb|HGET| è stato accodato in attesa del termine della transazione, il client
 non ha ricevuto il valore del campo richiesto \lnnum{1}, e non è quindi in grado di sapere quale
 nuovo valore inserire \lnnum{2}.
 
 Per risolvere queste situazioni, Redis utilizza un comune pattern di transazione atomica chiamato
 ``check and set'', che consente di condizionare l'esecuzione di una transazione alla verifica che un
-valore non sia mutato rispetto a quanto atteso. Il comando \verb|WATCH| infatti consente di
+valore non sia mutato rispetto a quanto atteso. Il comando \cverb|WATCH| infatti consente di
 annullare automaticamente una transazione se il valore di una chiave cambia tra il momento in cui
 viene eseguito e il momento in cui la transazione viene eseguita, cioè se si è effettivamente
 verificata una race condition. In questo caso, il client vorrà probabilmente provare nuovamente ad
 eseguire la transazione, nella speranza di riuscire a vincere la corsa.
 
-Questo è l'uso corretto di \verb|WATCH| nell'esempio che stiamo a\-na\-liz\-zan\-do:
+Questo è l'uso corretto di \cverb|WATCH| nell'esempio che stiamo a\-na\-liz\-zan\-do:
 
 \begin{commentedsource}[style=redis]
 |\lnote|127.0.0.1:6379> WATCH post:589
@@ -1243,7 +1323,7 @@ QUEUED
 1) (integer) 0
 \end{commentedsource}
 
-In questo caso, dopo aver attivata l'osservazione della chiave con \verb|WATCH| \lnnum{1}, il
+In questo caso, dopo aver attivata l'osservazione della chiave con \cverb|WATCH| \lnnum{1}, il
 comando di lettura viene eseguito prima della transazione, ricevendo quindi il valore
 attuale del campo richiesto \lnnum{2}, che può essere incrementato e modificato durante la transazione
 \lnnum{3}.
@@ -1269,7 +1349,7 @@ QUEUED
 In questo caso, l'esempio simula una modifica \lnnum{2} effettuata dopo la lettura della chiave
 \lnnum{1}, come se fosse stata fatta da un altro client in modo concorrente; questa modifica fa sì
 che la transazione non venisse eseguita e fosse annullata: il client può rilevare questa condizione
-dal valore restituito da \verb|EXEC| (che è \verb|nil| \lnnum{3}, invece che un array contenente i
+dal valore restituito da \cverb|EXEC| (che è \cverb|nil| \lnnum{3}, invece che un array contenente i
 valori restituiti dai comandi della transazione), e riprovare nuovamente la sequenza.
 
 \section{Velocità}
@@ -1290,7 +1370,7 @@ misure al 99-esimo percentile, sebbene con valori mediani stabilmente sotto il m
 
 L'utilizzo di transazioni, sebbene utile per introdurre il concetto di atomicità di esecuzione,
 non migliora la latenza poiché ogni comando viene inviato separatamente e necessita quindi di un 
-roundtrip (ai quali si sommano addirittura i due roundtrip richiesti da \verb|MULTI| e \verb|EXEC|).
+roundtrip (ai quali si sommano addirittura i due roundtrip richiesti da \cverb|MULTI| e \cverb|EXEC|).
 
 Per arginare questo problema, Redis consente il \emph{pipelining}, una tecnica molto comune, 
 utilizzata anche da altri protocolli di tipo master-slave come HTTP, IMAP e POP3. Dopo l'invio 
@@ -1299,7 +1379,7 @@ la risposta del primo dalla rete; il server infatti è in grado di mantenere mem
 dei comandi (memoria permettendo) indefinitamente, in attesa che il client le richieda. Dovendo
 quindi eseguire una sequenza predeterminata di comandi, come nel caso di una transazione, il
 pipelining risulta particolarmente comodo perché l'intera transazione (comprensiva dei delimitatori
-\verb|MULTI| e \verb|EXEC|) può essere inviata consecutivamente, praticamente senza attese.
+\cverb|MULTI| e \cverb|EXEC|) può essere inviata consecutivamente, praticamente senza attese.
 
 \begin{figure}
 	\centering
@@ -1352,7 +1432,7 @@ disattivare il controllo della congestione del TCP, descritto in
 \cite{rfc896} (detto anche \emph{algoritmo di Nagle} dal nome
 dell'autore), che rallenta l'invio di pacchetti piccoli di dati aggregandoli in ``segmenti'',
 diminuendo il traffico sulla rete ma aumentando la latenza fino anche a \SI{500}{\milli\second}), ed
-utilizzare le opzioni \verb|TCP_NODELAY| e \verb|TCP_CORK| per gestire manualmente il buffering
+utilizzare le opzioni \cverb|TCP_NODELAY| e \cverb|TCP_CORK| per gestire manualmente il buffering
 \cite{tcp-cork}. Molte librerie client Redis per i principali linguaggi di programmazione si
 occupano di questi dettagli automaticamente; si veda a titolo di esempio i 
 \fnhref{https://github.com/andymccurdy/redis-py/blob/8a186eb/redis/connection.py\#L517}{sorgenti della libreria \texttt{redis-py}}.
@@ -1389,11 +1469,11 @@ stato utilizzato all'interno di successi quali Angry Birds \cite{lua-angry} o Wo
 \cite{lua-wow}.
 
 Supponiamo di voler scrivere una stored procedure che calcoli un dato statistico aggregato; per
-esempio, dato un insieme ordinato \verb|paying-users| in cui le stringhe sono gli ID degli utenti di
+esempio, dato un insieme ordinato \cverb|paying-users| in cui le stringhe sono gli ID degli utenti di
 un sistema, e il punteggio associato è il totale speso dall'utente nell'applicazione, vogliamo
 calcolare qual è la media di spesa degli utenti ``premium'', cioè che hanno speso più di
 \SI{1000}{\EUR}. Per fare questo, è necessario estrarre prima la lista degli utenti ``premium''
-tramite il comando \verb|ZRANGEBYSCORE|, e poi iterare in questa lista calcolando il valore medio.
+tramite il comando \cverb|ZRANGEBYSCORE|, e poi iterare in questa lista calcolando il valore medio.
 L'utilizzo di una stored precedure ci consente di fare questo senza trasferire sulla rete le
 informazioni relative a tutti gli utenti ``premium'', che potrebbero essere migliaia o anche più. Il
 sorgente LUA che implementa questo semplice algoritmo è mostrato nel seguente listato:
@@ -1404,11 +1484,11 @@ sorgente LUA che implementa questo semplice algoritmo è mostrato nel seguente l
 Come si nota, il sorgente può essere parametrizzato tramite dei parametri di tipo chiave/valore
 che verranno passati al momento dell'utilizzo; in questo caso, si è scelto di passare come parametro 
 la chiave dell'insieme ordinato da utilizzare, e la soglia minima di spesa, rendendo così lo script 
-più generico e flessibile. Le chiavi dei parametri (accessibili tramite l'array \verb|KEYS|) non
+più generico e flessibile. Le chiavi dei parametri (accessibili tramite l'array \cverb|KEYS|) non
 sono invece utilizzate.
 
 Per provare ad eseguire lo script durante la fase di sviluppo, è consigliabile l'utilizzo
-dell'opzione \verb|--eval| del comando \verb|redis-cli|:
+dell'opzione \cverb|--eval| del comando \cverb|redis-cli|:
 
 \begin{commentedsource}[style=redis]
 $ redis-cli
@@ -1420,14 +1500,14 @@ $ redis-cli --eval zsetaverage.lua k t , paying_users 2000
 (integer) 2666
 \end{commentedsource}
 
-Si noti che abbiamo passato 2 parametri: il primo con chiave \verb|k| e valore \verb|paying_users|;
-il secondo con chiave \verb|t| e valore \verb|1000| (o \verb|2000|). L'identificatore ``\verb|,|''
+Si noti che abbiamo passato 2 parametri: il primo con chiave \cverb|k| e valore \cverb|paying_users|;
+il secondo con chiave \cverb|t| e valore \cverb|1000| (o \cverb|2000|). L'identificatore \cverbfull|,|
 separa l'elenco delle chiavi (che non sono utilizzate dal nostro script) dall'elenco dei valori.
 
 L'uso in produzione invece richiede due fasi: prima, lo script viene caricato nel database
-come stored procedure tramite il comando \verb|SCRIPT LOAD|, che restituisce un ID univoco. 
+come stored procedure tramite il comando \cverb|SCRIPT LOAD|, che restituisce un ID univoco. 
 Successivamente, lo script può essere eseguito richiamandolo tramite il suo ID, e specificando 
-i parametri, con il comando \verb|EVALSHA|.
+i parametri, con il comando \cverb|EVALSHA|.
 
 In questo caso, la sequenza è la seguente:
 
@@ -1440,7 +1520,7 @@ In questo caso, la sequenza è la seguente:
 (integer) 2666
 \end{commentedsource}
 
-Il comando \verb|EVALSHA| riceve come argomento l'ID dello script, il numero di parametri, e poi
+Il comando \cverb|EVALSHA| riceve come argomento l'ID dello script, il numero di parametri, e poi
 in sequenza tutte le chiavi (non utilizzate nel nostro esempio) e tutti i valori. 
 
 Si noti che l'ID dello script è in realtà il suo hash crittografico ottenuto tramite l'algoritmo
@@ -1528,7 +1608,7 @@ programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive 
 Questa architettura rende il codice di Redis più semplice e veloce, perché non è necessario
 acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale per
 serializzare gli accessi tra diversi thread in carico di gestire ciascuna connessione. L'uso di lock
-quale per esempio un ``mutex'' implementato dalla libreria \verb|pthread| avrebbe un impatto non
+quale per esempio un ``mutex'' implementato dalla libreria \cverb|pthread| avrebbe un impatto non
 solo a livello di semplicità di codice sorgente, ma anche di performance, poiché acquisire un lock
 impiega un tempo non trascurabile rispetto alla reale esecuzione delle operazioni richieste, anche
 nel caso in cui non è conteso.
@@ -1573,10 +1653,10 @@ Ad ogni nuovo avvio, Redis carica il contenuto del file RDB in RAM, deserializza
 prima di iniziare a ricevere comandi dai client.
 
 In aggiunta alla frequenza configurata, i client possono forzare un'operazione di salvataggio 
-tramite il comando \verb|BGSAVE|, tramite il quale si avvia un ``fork'' che effettuerà la
-serializzazione, ed eventualmente verificare il suo completamento tramite \verb|LASTSAVE|, che
+tramite il comando \cverb|BGSAVE|, tramite il quale si avvia un ``fork'' che effettuerà la
+serializzazione, ed eventualmente verificare il suo completamento tramite \cverb|LASTSAVE|, che
 restituisce il timestamp dell'ultimo salvataggio effettuato. Può essere usato anche il comando
-\verb|SAVE| che effettua un salvataggio attendendone la fine, ma è consigliabile solo su dataset
+\cverb|SAVE| che effettua un salvataggio attendendone la fine, ma è consigliabile solo su dataset
 molto piccoli perché il tempo d'esecuzione può essere anche di diversi minuti, e tutti i client
 saranno bloccati nel frattempo.
 

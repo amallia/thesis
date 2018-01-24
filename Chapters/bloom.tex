@@ -74,11 +74,11 @@ Al contrario di un array associativo, un insieme non ha dati associati all'eleme
 nonostante questo è spesso possibile riutilizzare la stessa implementazione di tabella hash,
 associando un dato nullo (non significativo) all'elemento. Questo accade comunemente nei linguaggi e
 nelle librerie che mettono a disposizione una struttura dati di tipo array associativo (poiché più
-completa); per esempio, il linguaggio Python fin dalla versione 1.0 prevedeva \verb|dict| come
-struttura dati (un array associativo implementato con tabella hash), mentre \verb|set|, per la
+completa); per esempio, il linguaggio Python fin dalla versione 1.0 prevedeva \cverb|dict| come
+struttura dati (un array associativo implementato con tabella hash), mentre \cverb|set|, per la
 gestione degli insiemi di dati, è stato aggiunto nella versione 2.3; prima di allora, era comune
 implementare l'insieme con un dizionario i cui valori erano semplicemente valori booleani (di solito
-\verb|True|).
+\cverb|True|).
 
 \section{Proprietà dei filtri di Bloom}
 
@@ -220,10 +220,11 @@ con parametri di creazione adeguati, era possibile fare in modo che questa chiam
 pochissime volte nel corso di una navigazione normale, impattando così il meno possibile i tempi
 di apertura dei siti.
 
-Con il passare del tempo, la lista è cresciuta troppo, e di conseguenza il filtro ha iniziato
-ad avere dimensioni importanti; di conseguenza, è stato scelto di usare un'altra struttura dati
-probabilistica (gli insiemi di Golomb-Rice \cite{golomb,rice,golomb-rice}), che ha una rappresentazione in memoria
-compressa, dunque più compatta, sebbene più lenta da utilizzare \cite{golomb-safebrowsing}. 
+Con il passare del tempo, la lista è cresciuta troppo, e di conseguenza il filtro ha iniziato ad
+avere dimensioni importanti; di conseguenza, è stato scelto di usare un'altra struttura dati
+probabilistica (gli insiemi di Golomb-Rice \cite{golomb,rice,golomb-rice}), che ha una
+rappresentazione in memoria compressa, dunque più compatta, sebbene più lenta da utilizzare
+\cite{golomb-safebrowsing}.
 
 \subsection{Riconciliazione di una rete di distribuzione con\-te\-nu\-ti}
 \label{sec:bloomcdn}
@@ -277,10 +278,10 @@ dei filtri).
 
 \section{Funzionamento dei filtri}
 
-Un filtro di Bloom è un array di bit, utilizzato come tabella hash, di dimensione arbitraria
-\verb|M| fissata al momento della creazione in base ai parametri (vedi la \autoref{sec:bloomparms}).
-Quando il filtro è vuoto, tutti i bit sono impostati a 0. La seguente tabella mostra un filtro
-vuoto composto di 11 bit:
+Un filtro di Bloom è un array di bit, utilizzato come tabella hash, di dimensione arbitraria $M$
+fissata al momento della creazione in base ai parametri (vedi la \autoref{sec:bloomparms}). Quando
+il filtro è vuoto, tutti i bit sono impostati a 0. La seguente tabella mostra un filtro vuoto
+composto di 11 bit:
 
 \begin{center}
   \begin{tabular}{*{11}{|c}|}
@@ -566,7 +567,7 @@ $$ h_i(x) = h_a(x) + ih_b(x) + \frac{i^3-i}{6} \pmod M $$.
 \subsection{Stima della cardinalità}
 \label{sec:bloomcard}
 
-È possibile effettuare una stima della cardinalità \verb|N| di un filtro di Bloom, derivandola
+È possibile effettuare una stima della cardinalità $N$ di un filtro di Bloom, derivandola
 dalla densità, come descritto in \cite{bloom-scalable}.
 
 Si noti che un filtro di dimensione $M$ con $K$ funzioni di hash può essere implementato, senza
@@ -632,7 +633,7 @@ vedere, l'errore effettuato dalla stima non diverge anche per valori di densità
 
 Dati due filtri creati con gli stessi parametri ed utilizzanti le stesse funzioni di hash, è
 possibile calcolare l'unione come mostrato nell'\autoref{alg:bloomunion}, semplicemente applicando
-l'operazione di \verb|OR| bit a bit agli array. Questa operazione non causa alcuna perdita di
+l'operazione di \cverb|OR| bit a bit agli array. Questa operazione non causa alcuna perdita di
 informazione né peggioramento della probabilità di falsi positivi, poiché l'array risultante è il
 medesimo che si sarebbe ottenuto aggiungendo in un solo filtro tutti gli elementi presenti nel primo
 e nel secondo filtro in input.
@@ -653,7 +654,7 @@ e nel secondo filtro in input.
 
 
 È possibile in modo simile calcolare l'intersezione tra due filtri applicando l'operazione di
-\verb|AND| bit a bit agli array, come descritto nell'\autoref{alg:bloomintersection}. In questo caso
+\cverb|AND| bit a bit agli array, come descritto nell'\autoref{alg:bloomintersection}. In questo caso
 però il risultato non è ottimale: l'array risultante potrebbe contenere alcuni bit impostati a 1 che
 non risulterebbero tali se si fosse creato direttamente un filtro aggiungendo solo gli elementi
 facenti parte dell'intersezione, e di conseguenza la probabilità di falsi positivi risultante dal
@@ -716,7 +717,7 @@ dove ogni cella impostata a 1 viene identificata con una lettera che si riferisc
 l'ha impostata durante l'inserimento. 
 
 L'insieme unione è $\{ A, B \} \cup \{ A , C \} = \{ A, B, C \}$, e il filtro risultante
-dall'operazione di \verb|OR| bit a bit, come si può vedere, è ottimale poiché è lo stesso che
+dall'operazione di \cverb|OR| bit a bit, come si può vedere, è ottimale poiché è lo stesso che
 avremmo ottenuto per inserimento diretto:
 
 \begin{center}
@@ -732,7 +733,7 @@ avremmo ottenuto per inserimento diretto:
 \end{center}
 
 L'insieme intersezione è $\{ A, B \} \cap \{ A , C \} = \{ A \}$, ma il filtro risultante
-dall'operazione di \verb|AND| bit a bit è il seguente:
+dall'operazione di \cverb|AND| bit a bit è il seguente:
 
 \begin{center}
   \begin{tabular}{*{11}{|c}|}

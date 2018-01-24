@@ -54,14 +54,13 @@ l'utilizzo della struttura dati, anche in fase di sviluppo.
 Nel progettare i nuovi comandi, abbiamo cercato di adeguarci il più possibile allo stile dei
 comandi esistenti, cercando di mantenere le proprietà evinte durante la fase di analisi.
 
-Abbiamo scelto il prefisso \verb|BF| per la famiglia di comandi, indicando chiaramente la
+Abbiamo scelto il prefisso~\cverb|BF| per la famiglia di comandi, indicando chiaramente la
 struttura dati che viene manipolata.
 
 Questi sono i comandi implementati:
 
-\begin{itemize}
-	\medskip
-	\item \textbf{BFADD <key> [ERROR p] ELEMENTS <ele1> <ele2> \dots}: aggiunge uno o più elementi al
+\begin{description}[style=nextline,font={\bfseries\ttfamily}]
+	\item[{BFADD key [ERROR p] ELEMENTS ele [ele2\dots]}] Aggiunge uno o più elementi al
 	filtro di Bloom specificato, creandolo se non già esistente. Restituisce il numero degli
 	elementi che risultavano non presenti al momento dell'inserimento (dato soggetto quindi ad
 	errore).
@@ -71,34 +70,35 @@ Questi sono i comandi implementati:
 	da quello con cui il filtro è stato creato, il comando restituisce un errore senza effettuare
 	alcun inserimento.
 
-	\item \textbf{BFEXIST <key> <ele>}: verifica la presenza di un elemento nel filtro specificato
+	\item[BFEXIST key ele] Verifica la presenza di un elemento nel filtro specificato
 	(test di appartenenza). Se il filtro non esiste, il comando restituisce falso.
 
-	\item \textbf{BFCOUNT <key>}: restituisce una stima del numero di elementi inseriti nel filtro.
+	\item[BFCOUNT key] Restituisce una stima del numero di elementi inseriti nel filtro.
 	Se il filtro non esiste, il comando restituisce $0$.
 
-	\item \textbf{BFDEBUG}: restituisce informazioni utili al debugging dell'implementazione del
+	\item[BFDEBUG] Restituisce informazioni utili al debugging dell'implementazione del
 	filtro. Questo comando accetta come primo parametro un sotto-comando; al momento, ne sono stati
 	implementati due:
 
-		\begin{itemize}
-		\item \textbf{BFDEBUG STATUS <key>}: restituisce una stringa che contiene informazioni sullo
+		\begin{description}[style=nextline,font={\bfseries\ttfamily}]
+		\item[BFDEBUG STATUS key] Restituisce una stringa che contiene informazioni sullo
 		stato attuale del filtro, e in particolare il numero di filtri presenti nella catena, e
 		l'errore che è stato specificato.
 
-		\item \textbf{BFDEBUG FILTER <key> <idx>}: restituisce informazioni su uno specifico filtro
+		\item[BFDEBUG FILTER key idx] Restituisce informazioni su uno specifico filtro
 		della catena; il filtro che si vuole ispezionare deve essere specificato come indice 
-		nel parametro \verb|idx|. La stringa restituita mostra il numero di sezioni (o funzioni
+		nel parametro \cverb|idx|. La stringa restituita mostra il numero di sezioni (o funzioni
 		di hash), la dimensione in bit di una sezione, e il numero di bit impostati a 1.
-		\end{itemize}
+		\end{description}
 
-\end{itemize}
+\end{description}
 
 Si noti come, avendo esposto il solo parametro di probabilità, di fatto i comandi si applicano ad
 una qualunque struttura dati probabilistica che implementa un insieme, consentendo in futuro di
 cambiare implementazione se lo si ritenesse necessario, senza invalidare l'utilizzo da parte dei
-client. I comandi di Redis, infatti, mantengono una retrocompatibilità completa fin dalla prima
-versione, in modo che sia sempre possibile aggiornare il server senza causare problemi ai client.
+client. I comandi di Redis, infatti, mantengono una compatibilità completa rispetto alla prima
+versione in cui vengono implementati, in modo che sia sempre possibile aggiornare il server senza
+causare problemi ai client.
 
 \section{Esempio d'uso dei comandi}
 
@@ -124,25 +124,25 @@ Vediamo ora un esempio di sessione utilizzando i comandi appena descritti:
 "k:12 s:1811 b:84"
 \end{commentedsource}
 
-Per cominciare, viene creato un filtro chiamato \verb|prova| \lnnum{1} in cui vengono inseriti 5
+Per cominciare, viene creato un filtro chiamato \cverb|prova| \lnnum{1} in cui vengono inseriti 5
 elementi (ciascun elemento è una stringa di un solo carattere, corrispondenti alle prime cinque
 lettere dell'alfabeto). Il comando restituisce il valore $5$, corrispondente al numero di elementi
 inseriti. Viene poi effettuato un calcolo della cardinalità stimata \lnnum{2}, che
 restituisce il valore corretto $5$.
 
 Successivamente, viene fatto un secondo inserimento \lnnum{3}; questa volta, oltre a due
-elementi nuovi (stringhe \verb|f| e \verb|g|), viene inserito anche un elemento che era stato
-già precedentemente inserito: la lettera \verb|a|. Il comando restituisce $2$, riportando
+elementi nuovi (stringhe \cverb|f| e \cverb|g|), viene inserito anche un elemento che era stato
+già precedentemente inserito: la lettera \cverb|a|. Il comando restituisce $2$, riportando
 correttamente il numero di nuovi elementi inseriti, e anche il successivo calcolo della
 cardinalità è corretto, poiché restituisce $7$.
 
-Poi viene effettuato un primo test di appartenenza al filtro tramite il comando \verb|BFEXIST|
-\lnnum{4}, richiedendo se l'elemento corrispondente alla stringa \verb|b| è presente; l'elemento era
+Poi viene effettuato un primo test di appartenenza al filtro tramite il comando \cverb|BFEXIST|
+\lnnum{4}, richiedendo se l'elemento corrispondente alla stringa \cverb|b| è presente; l'elemento era
 stato inserito precedentemente \lnnum{1}, ed infatti il comando restituisce correttamente $1$ per
 indicare che l'elemento è presente. Successivamente, viene effettuato un secondo test con l'elemento
-\verb|z| che non era stato mai inserito, e il comando questa volta restituisce $0$.
+\cverb|z| che non era stato mai inserito, e il comando questa volta restituisce $0$.
 
-Il comando \verb|BFDEBUG STATUS| viene usato per ispezionare lo
+Il comando \cverb|BFDEBUG STATUS| viene usato per ispezionare lo
 stato del filtro \lnnum{5}. La stringa restituita è composta da due valori:
 
 \medskip
@@ -154,7 +154,7 @@ stato del filtro \lnnum{5}. La stringa restituita è composta da due valori:
 \end{tabular}
 \medskip
 
-Per finire, il comando \verb|BFDEBUG FILTER| serve a ispezionare lo stato del primo filtro della
+Per finire, il comando \cverb|BFDEBUG FILTER| serve a ispezionare lo stato del primo filtro della
 catena \lnnum{6}. La stringa restituita contiene tre valori:
 
 \medskip
@@ -183,7 +183,7 @@ durante il primo inserimento:
 \end{commentedsource}
 
 In questo caso il filtro viene creato con una probabilità di falso positivo del \SI{5}{\%},
-specificata tramite il parametro \verb|ERROR 0.05| \lnnum{1}. Vengono poi inseriti i medesimi
+specificata tramite il parametro \cverb|ERROR 0.05| \lnnum{1}. Vengono poi inseriti i medesimi
 elementi dell'esempio precedente, ed è possibile verificare che i parametri del primo filtro 
 della catena sono ora diversi \lnnum{2}: in particolare, sono sufficienti $8$ funzioni di hash
 contro le $12$ usate precedentemente; il numero di bit impostati è quindi anch'esso inferiore
@@ -195,12 +195,12 @@ aumentando l'errore consentito.
 
 Le modifiche effettuate a Redis sono disponibili su GitHub, all'interno del
 \fnhref{https://github.com/rasky/redis/tree/bloomfilter}{repositorio fork di Redis}, in un branch
-chiamato \verb|bloomfilter|, e la parte principale del codice è riportata anche
+chiamato \cverb|bloomfilter|, e la parte principale del codice è riportata anche
 nella \autoref{sec:modredis}.
 
 \subsection{Strutture dati}
 
-Nel file \verb|bloom.h| vengono definite le due strutture dati principali:
+Nel file \cverb|bloom.h| vengono definite le due strutture dati principali:
 
 \begin{commentedsource}[style=csource,caption=Strutture dati,label={lst:bloomStruct}]
 typedef struct filter {
@@ -219,63 +219,63 @@ typedef struct bloom {
 } bloom;
 \end{commentedsource}
 
-La struttura \verb|bloom| rappresenta l'intero filtro scalabile. I suoi campi sono
+La struttura \cverb|bloom| rappresenta l'intero filtro scalabile. I suoi campi sono
 così definiti:
 
 \medskip
 \begin{tabular}{ |l|l|p{200pt}| }
   \hline
-  \verb|e| & \verb|double| & La probabilità richiesta di un falso positivo. Questo è il valore richiesto
+  \cverb|e| & \cverb|double| & La probabilità richiesta di un falso positivo. Questo è il valore richiesto
   dall'utente, che il filtro cercherà di rispettare come margine superiore. \\
 
-  \verb|numfilters| & \verb|int| & Numero di filtri presenti nella catena. \\
+  \cverb|numfilters| & \cverb|int| & Numero di filtri presenti nella catena. \\
 
-  \verb|first| & \verb|filter*| & Puntatore alla testa della lista concatenata di filtri. \\
+  \cverb|first| & \cverb|filter*| & Puntatore alla testa della lista concatenata di filtri. \\
   \hline
 \end{tabular}
 \medskip
 
-Come si evince, i filtri sono conservati in una lista a catena singola, e il campo \verb|first|
+Come si evince, i filtri sono conservati in una lista a catena singola, e il campo \cverb|first|
 contiene il puntatore alla testa. La scelta di una lista per l'implementazione della catena di
 filtri semplifica l'implementazione ed è compatibile con gli algoritmi che la utilizzano poiché
 molto spesso è richiesto di attraversare l'intera catena, mentre per esempio l'accesso casuale non è
 mai richiesto.
 
-Ciascun filtro è rappresentato dalla struttura \verb|filter|, definita dai seguenti campi:
+Ciascun filtro è rappresentato dalla struttura \cverb|filter|, definita dai seguenti campi:
 
 \medskip
 \begin{tabular}{ |l|l|p{210pt}| }
   \hline
 
-  \verb|next| & \verb|filter*| & Puntatore al filtro successivo nella catena \\
+  \cverb|next| & \cverb|filter*| & Puntatore al filtro successivo nella catena \\
 
-  \verb|k| & \verb|uint32| & Numero di funzioni di hash (e dunque di partizioni) \\
+  \cverb|k| & \cverb|uint32| & Numero di funzioni di hash (e dunque di partizioni) \\
 
-  \verb|b| & \verb|uint64| & Numero di bit attualmente impostati a $1$, considerando tutte le partizioni \\
+  \cverb|b| & \cverb|uint64| & Numero di bit attualmente impostati a $1$, considerando tutte le partizioni \\
 
-  \verb|s| & \verb|uint64| & Dimensione di ciascuna partizione in bit. L'utilizzo di memoria
+  \cverb|s| & \cverb|uint64| & Dimensione di ciascuna partizione in bit. L'utilizzo di memoria
   effettivo è $\ceil{s/7}$ \\
 
-  \verb|bmax| & \verb|uint64| & Numero di bit che possono essere impostati al massimo a $1$ prima
+  \cverb|bmax| & \cverb|uint64| & Numero di bit che possono essere impostati al massimo a $1$ prima
   che venga raggiunta la densità scelta come obiettivo (tipicamente, \SI{50}{\percent}). \\
 
-  \verb|parts| & \verb|uint8*[]| & Array di puntatori alle partizioni. \\
+  \cverb|parts| & \cverb|uint8*[]| & Array di puntatori alle partizioni. \\
 
   \hline
 \end{tabular}
 \medskip
 
-Si noti che l'array \verb|parts| è definito a dimensione variabile (anche detto \emph{array
+Si noti che l'array \cverb|parts| è definito a dimensione variabile (anche detto \emph{array
 flessibile}), utilizzando la funzionalità introdotta nello standard C99 che consente all'ultimo
 membro di una struttura, se array, di avere una dimensione non dichiarata staticamente, ma gestita
 dinamicamente al momento di allocare la struttura stessa sullo heap. Poiché la dimensione dell'array
-è pari a \verb|k| e non cambia mai dopo l'inizializzazione della struttura, questa scelta consente
-di allocare la struttura \verb|filter| e l'array di puntatori dinamico con una sola allocazione.
+è pari a \cverb|k| e non cambia mai dopo l'inizializzazione della struttura, questa scelta consente
+di allocare la struttura \cverb|filter| e l'array di puntatori dinamico con una sola allocazione.
 
 \subsection{Parametri di configurazione statici}
 \label{sec:patch:staticparms}
 
-All'inizio del file \verb|bloom.c|, troviamo alcune costanti di configurazione per le quali si è
+All'inizio del file \cverb|bloom.c|, troviamo alcune costanti di configurazione per le quali si è
 preferito non esporre una configurazione a livello utente.
 
 \begin{commentedsource}[style=csource,caption=Parametri statici]
@@ -304,28 +304,28 @@ Questa la descrizione dettagliata di ciascun parametro:
 
 \medskip
 \begin{itemize}
-  \item \verb|CONFIG_BLOOM_BASESIZE| (\SI{2048}{\byte}). Dimensione iniziale in byte del primo
+  \item \cverb|CONFIG_BLOOM_BASESIZE| (\SI{2048}{\byte}). Dimensione iniziale in byte del primo
   filtro della catena. La dimensione è stata calcolata tenendo conto di un bilanciamento tra uso
   della memoria, crescita del numero di filtri nella catena, e velocità (vedi la
   \autoref{sec:patch:basesize}).
 
-  \item \verb|CONFIG_BLOOM_DEFAULTERROR| ($\SI{0.3}{\percent}$). Probabilità di default di falso
+  \item \cverb|CONFIG_BLOOM_DEFAULTERROR| ($\SI{0.3}{\percent}$). Probabilità di default di falso
   positivo a cui il filtro scalabile tende asintoticamente. La scelta del valore cerca di
   massimizzare i casi d'uso in cui il filtro può essere usato con successo (vedi la
   \autoref{sec:patch:defaulterror}).
 
-  \item \verb|CONFIG_BLOOM_DESIREDFILLRATIO| ($\SI{50}{\percent}$). Valore di densità massimo dei filtri
+  \item \cverb|CONFIG_BLOOM_DESIREDFILLRATIO| ($\SI{50}{\percent}$). Valore di densità massimo dei filtri
   nella catena; quando il filtro in fondo alla catena (l'unico su cui si inseriscono nuovi elementi)
   raggiunge questa densità, un nuovo filtro viene creato. Il valore ottimizza l'uso dei filtri di
   Bloom, come visto nella \autoref{sec:bloomparms}.
 
-  \item \verb|CONFIG_BLOOM_ITEMGROWTHRATIO| ($\num{2.0}$). Fattore di crescita dei filtri
+  \item \cverb|CONFIG_BLOOM_ITEMGROWTHRATIO| ($\num{2.0}$). Fattore di crescita dei filtri
   all'interno della catena. Come visto nella \autoref{sec:bloomscalable} dove è chiamato
   $s$, questo fattore delinea una progressione geometrica che consente di adattare la crescita del
   filtro all'aumentare del numero di elementi inseriti senza creare una catena troppo lunga
   né sprecando troppa memoria.
 
-  \item \verb|CONFIG_BLOOM_TIGHTENINGRATIO| ($\num{0.85}$). Fattore di intensificazione, applicato
+  \item \cverb|CONFIG_BLOOM_TIGHTENINGRATIO| ($\num{0.85}$). Fattore di intensificazione, applicato
   per creare una progressione geometrica tra le probabilità di falsi positivi dei filtri all'interno
   della catena, come descritto nella \autoref{sec:bloomscalable}. Il valore ottimale è indicato
   essere compreso in $\interval{0.8}{0.9}$ in \cite{bloom-scalable}.
@@ -357,18 +357,18 @@ void bloomRelease(bloom *bf) {
 }
 \end{commentedsource}
 
-La funzione \verb|bloomNew| alloca una struttura di tipo \verb|bloom| sullo heap \lnnum{1},
-utilizzando la funzione \verb|zmalloc|, una funzione interna di Redis che implementa un sottile
+La funzione \cverb|bloomNew| alloca una struttura di tipo \cverb|bloom| sullo heap \lnnum{1},
+utilizzando la funzione \cverb|zmalloc|, una funzione interna di Redis che implementa un sottile
 strato di codice sopra l'allocatore standard per tracciare l'occupazione totale di memoria e fornire
 informazioni utili a livello statistico e per debugging.
 
 Si noti che durante la creazione del filtro scalabile, la catena viene lasciata completamente vuota
 \lnnum{2}: ritardando la creazione del primo filtro della catena all'inserimento del primo elemento,
 è possibile infatti accorgersi velocemente se, in un dato momento, è stato mai inserito un elemento,
-caratteristica utile alla corretta implementazione del comando \verb|BFADD| che deve discriminare il
+caratteristica utile alla corretta implementazione del comando \cverb|BFADD| che deve discriminare il
 primo inserimento per permettere la configurazione del parametro di errore.
 
-La funzione \verb|bloomRelease| rilascia la memoria allocata dall'intero filtro scalabile,
+La funzione \cverb|bloomRelease| rilascia la memoria allocata dall'intero filtro scalabile,
 percorrendo la catena \lnnum{3} e chiamando la funzione di distruzione di ciascun filtro \lnnum{4},
 terminando poi rilasciando la memoria occupata dalla struttura del filtro stessa \lnnum{5}.
 
@@ -416,7 +416,7 @@ void bloomFilterRelease(filter *flt) {
 }
 \end{commentedsource}
 
-La funzione \verb|bloomFilterNew| riceve in input un filtro scalabile e ritorna un filtro appena
+La funzione \cverb|bloomFilterNew| riceve in input un filtro scalabile e ritorna un filtro appena
 creato con i parametri adatti ad essere l'ultimo filtro della catena.
 
 Il calcolo dei parametri del filtro ricalca quanto visto nella \autoref{sec:bloomparms} e nella
@@ -427,13 +427,13 @@ Si può notare come la memoria allocata tenga conto dell'array flessibile delle 
 spazio per il giusto numero di puntatori (uno per sezione) \lnnum{4}. Nel ciclo successivo
 \lnnum{5}, vengono allocate invece le singole sezioni ed inizializzate a $0$.
 
-La cancellazione di un filtro avviene tramite una chiamata alla funzione \verb|bloomFilterRelease|,
+La cancellazione di un filtro avviene tramite una chiamata alla funzione \cverb|bloomFilterRelease|,
 che semplicemente rilascia la memoria di tutte le sezioni \lnnum{6}, e infine la memoria del filtro
 stesso \lnnum{7}.
 
 \subsection{Aggiunta di un elemento al filtro}
 
-Vediamo ora come viene aggiunto un elemento ad un filtro. Una prima funzione \verb|bloomAdd| si
+Vediamo ora come viene aggiunto un elemento ad un filtro. Una prima funzione \cverb|bloomAdd| si
 occupa di individuare il filtro giusto all'interno della catena:
 
 \begin{commentedsource}[style=csource,caption=Aggiunta elemento ad un filtro scalabile]
@@ -461,12 +461,12 @@ int bloomAdd(bloom *bf, unsigned char *ele, size_t elesize) {
 
 L'obiettivo della funzione è identificare il filtro corrente nella catena, cioè l'unico dentro cui è
 possibile aggiungere elementi (poiché tutti gli altri avranno già raggiunto la densità massima), per
-poi aggiungervi l'elemento tramite la funzione \verb|bloomFilterAdd| \lnnum{4}.
+poi aggiungervi l'elemento tramite la funzione \cverb|bloomFilterAdd| \lnnum{4}.
 
 Se la catena è vuota, viene immediatamente creato il primo filtro \lnnum{1}, che diventa il
 corrente. Altrimenti, si percorre la catena fino ad arrivare all'ultimo filtro \lnnum{2}; se anche
 esso ha superato la densità massima configurata, viene aggiunto un nuovo filtro vuoto in fondo alla
-catena, usando \verb|bloomFilterNew| \lnnum{3}: questo è il momento in cui il filtro scalabile
+catena, usando \cverb|bloomFilterNew| \lnnum{3}: questo è il momento in cui il filtro scalabile
 cresce.
 
 Vediamo ora il dettaglio dell'aggiunta dell'elemento ad un singolo filtro.
@@ -509,21 +509,21 @@ int bloomFilterAdd(filter *flt, unsigned char *ele, size_t elesize) {
 }
 \end{commentedsource}
 
-La funzione \verb|bloomFilterAdd| effettua invece l'inserimento vero e proprio, secondo
+La funzione \cverb|bloomFilterAdd| effettua invece l'inserimento vero e proprio, secondo
 l'\autoref{alg:bloominsert} visto nella \autoref{sec:bloom:add}.
 
 Per le funzioni di hash, viene utilizzato l'\autoref{alg:ehndoublehash} di doppio hash
 avanzato, visto nella \autoref{sec:bloom:hash}. L'algoritmo richiede in partenza due funzioni di
 hash ($h_a$ e $h_b$): nell'implementazione viene utilizzata la funzione di hash
-\verb|MurmurHash64A| \lnnum{1}, una variante a \SI{64}{\bit} della funzione MurMurHash2
+\cverb|MurmurHash64A| \lnnum{1}, una variante a \SI{64}{\bit} della funzione MurMurHash2
 (\autoref{alg:murmurhash2}). Di questa funzione, è presente già un'implementazione dentro il
 codice sorgente di Redis, e poiché l'output è a \SI{64}{\bit}, consideriamo la suddivisione in due
 valori a \SI{32}{\bit} come l'output di due funzioni di hash separate, ottenendo così i due valori
-\verb|a| e \verb|b| \lnnum{2} utili come input per l'algoritmo di doppio hash avanzato. La funzione
-\verb|MurMurHash64A| richiede come abbiamo visto un seme; in questo caso è necessario poter 
+\cverb|a| e \cverb|b| \lnnum{2} utili come input per l'algoritmo di doppio hash avanzato. La funzione
+\cverb|MurMurHash64A| richiede come abbiamo visto un seme; in questo caso è necessario poter 
 ricostruire sempre lo stesso hash a partire dallo stesso elemento, quindi il seme deve essere
 fisso. È stato quindi calcolato in fase di sviluppo un valore casuale ed inserito nel
-codice (\verb|0xc5fb9af2|).
+codice (\cverb|0xc5fb9af2|).
 
 Il calcolo del doppio hash avviene in formato iterativo \lnnum{3}, secondo quanto visto
 nell'\autoref{alg:ehndoublehash}. Successivamente, viene effettuata una riduzione dell'output della
@@ -535,9 +535,9 @@ processori ha una latenza elevata (circa $26$ cicli, contro i $4$ di una moltipl
 \cite{lemire-reduction} per i dettagli relativi a questa formula di riduzione.
 
 A questo punto, subito prima di impostare il bit a $1$, si verifica lo stato del bit \lnnum{5}; se
-esso è impostato a zero, si incrementa un contatore chiamato \verb|nbits| che tiene conto di quanti
+esso è impostato a zero, si incrementa un contatore chiamato \cverb|nbits| che tiene conto di quanti
 bit hanno cambiato di stato (da zero ad uno) durante l'inserimento dell'elemento. Questo contatore,
-al termine del ciclo, viene sommato al campo \verb|b| del filtro \lnnum{7}, mantenendo così un conto
+al termine del ciclo, viene sommato al campo \cverb|b| del filtro \lnnum{7}, mantenendo così un conto
 di quanti bit sono impostati a $1$ nell'intero filtro, molto utile per il calcolo della cardinalità
 (vedi \autoref{sec:patch:card}).
 
@@ -547,7 +547,7 @@ principale dell'algoritmo di inserimento.
 \subsection{Test di appartenenza di un elemento al filtro}
 
 Come nel precedente caso, anche per il test di appartenenza vi sono due funzioni da analizzare.
-La prima, \verb|bloomExist|, esegue un controllo sull'intera catena di filtri:
+La prima, \cverb|bloomExist|, esegue un controllo sull'intera catena di filtri:
 
 \begin{commentedsource}[style=csource,caption=Test di appartenenza di un elemento,label={lst:bloomExist}]
 int bloomExist(bloom *bf, unsigned char *ele, size_t elesize) {
@@ -563,14 +563,14 @@ int bloomExist(bloom *bf, unsigned char *ele, size_t elesize) {
 }
 \end{commentedsource}
 
-Utilizzando la funzione \verb|bloomFilterHash| già vista in precedenza, viene calcolata la funzione
+Utilizzando la funzione \cverb|bloomFilterHash| già vista in precedenza, viene calcolata la funzione
 di hash sull'elemento del quale si vuole effettuare il test di appartenenza \lnnum{1}. Il successivo
-ciclo \lnnum{2} scorre tutti i filtri della catena e richiama la funzione \verb|bloomFilterExist|
+ciclo \lnnum{2} scorre tutti i filtri della catena e richiama la funzione \cverb|bloomFilterExist|
 su ciascun filtro, passando come argomento il valore di hash già calcolato. Non appena l'elemento
 viene trovato all'interno di un filtro, si esce immediatamente dal ciclo restituendo un valore di
 successo \lnnum{3}.
 
-La funzione \verb|bloomFilterExist| implementa invece il cuore del test, cioè 
+La funzione \cverb|bloomFilterExist| implementa invece il cuore del test, cioè 
 l'\autoref{alg:bloomtest}:
 
 \begin{commentedsource}[style=csource,caption=Test di appartenenza di un elemento ad un filtro]
@@ -592,7 +592,7 @@ int bloomFilterExist(filter *flt, uint64_t hash) {
 }
 \end{commentedsource}
 
-Il calcolo dell'indice segue quanto già visto in \verb|bloomFilterAdd|
+Il calcolo dell'indice segue quanto già visto in \cverb|bloomFilterAdd|
 (\autoref{lst:bloomFilterAdd}): il valore di hash a \SI{64}{\bit} viene utilizzato per estrarre due
 hash a \SI{32}{\bit} \lnnum{1}, che vengono successivamente usati per il calcolo del doppio hash
 secondo l'\autoref{alg:ehndoublehash} \lnnum{2}.
@@ -605,7 +605,7 @@ valore $1$ \lnnum{4} che indica che il successo del test.
 \subsection{Stima della cardinalità}
 \label{sec:patch:card}
 
-La stima della cardinalità viene implementata dalla funzione qui riportata, \verb|bloomCard|:
+La stima della cardinalità viene implementata dalla funzione qui riportata, \cverb|bloomCard|:
 
 \begin{commentedsource}[style=csource,caption=Stima della cardinalità]
 int bloomCard(bloom *bf) {
@@ -624,22 +624,22 @@ Poiché un filtro scalabile è composto da una catena di filtri riempiti in sequ
 della cardinalità è data dalla somma della cardinalità stimata in ciascun filtro, secondo 
 l'\autoref{eq:bloomcard}. Il ciclo \lnnum{1} scorre tutti i filtri della catena; per ciascun
 filtro, viene calcolata la densità $p$, evitando di dover contare i bit di tutti gli array: infatti
-nella funzione \verb|bloomFilterAdd| (\autoref{lst:bloomFilterAdd}), è stato mantenuto un contatore
-dei bit impostati a $1$ nel campo \verb|b| del filtro, ed è possibile quindi usarlo direttamente
-\lnnum{2}, rapportandolo al campo \verb|bmax| corrispondente al numero di bit necessari a
+nella funzione \cverb|bloomFilterAdd| (\autoref{lst:bloomFilterAdd}), è stato mantenuto un contatore
+dei bit impostati a $1$ nel campo \cverb|b| del filtro, ed è possibile quindi usarlo direttamente
+\lnnum{2}, rapportandolo al campo \cverb|bmax| corrispondente al numero di bit necessari a
 raggiungere la densità richiesta, impostato in fase di creazione del filtro nella funzione
-\verb|bloomFilterNew| (\autoref{lst:bloomFilterNew}). 
+\cverb|bloomFilterNew| (\autoref{lst:bloomFilterNew}). 
 
 Calcolato $p$, si può implementare direttamente l'\autoref{eq:bloomcard} \lnnum{3}, ricordando che
 $s = m/k$, approssimando all'intero più vicino e accumulando il numero di elementi stimati in
-\verb|nelem|.
+\cverb|nelem|.
 
 \subsection{Implementazione dei comandi Redis}
 
 Il codice visto nei precedenti listati implementa un filtro scalabile di Bloom ma è necessario
 implementare ancora i comandi proposti in \autoref{sec:patch:newcommands}. Il codice completo è
 disponibile in \autoref{sec:modredis} e in questa sezione verrà analizzato solo un comando a titolo
-di esempio, \verb|BFEXIST|, poiché una trattazione dettagliata richiederebbe di entrare nel merito
+di esempio, \cverb|BFEXIST|, poiché una trattazione dettagliata richiederebbe di entrare nel merito
 anche delle numerose librerie e API interne di Redis.
 
 \begin{commentedsource}[style=csource,caption=Implementazione comando BFEXIST,label={lst:bfexistCommand}]
@@ -656,36 +656,36 @@ void bfexistCommand(client *c) {
 }
 \end{commentedsource}
 
-La funzione \verb|bfexistCommand| viene richiamata da Redis quando il comando \verb|BFEXIST| viene
+La funzione \cverb|bfexistCommand| viene richiamata da Redis quando il comando \cverb|BFEXIST| viene
 inviato da un client (la registrazione di questa funzione nella tabella dei comandi è mostrata nel
-\autoref{lst:cmdtable}). L'oggetto \verb|c| è una struttura che rappresenta la connessione con il
+\autoref{lst:cmdtable}). L'oggetto \cverb|c| è una struttura che rappresenta la connessione con il
 client, e contiene anche informazioni sul comando in corso di esecuzione. Il motore di Redis si è
 già occupato di dividere la linea di comando in \emph{token}, che sono disponibili nell'array di
-stringhe \verb|c->argv[]|. Per il comando \verb|BFEXIST| ci aspettiamo solo due argomento: la chiave
-del filtro in \verb|c->argv[0]| e l'elemento da ricercare in \verb|c->argv[1]|.
+stringhe \cverb|c->argv[]|. Per il comando \cverb|BFEXIST| ci aspettiamo solo due argomento: la chiave
+del filtro in \cverb|c->argv[0]| e l'elemento da ricercare in \cverb|c->argv[1]|.
 
 Il primo passo è quello di ricercare nel database se esiste già un oggetto corrispondente alla
-chiave \lnnum{1}. Viene utilizzata la funzione \verb|lookupKeyReadOrReply|, la quale riceve
-tre argomenti: un riferimento al client \verb|c|, la chiave da ricercare \verb|c->argv[1]|, e 
+chiave \lnnum{1}. Viene utilizzata la funzione \cverb|lookupKeyReadOrReply|, la quale riceve
+tre argomenti: un riferimento al client \cverb|c|, la chiave da ricercare \cverb|c->argv[1]|, e 
 la risposta da inviare al client in caso la chiave non sia presente. Esiste anche in Redis una
-funzione più semplice \verb|lookupKeyRead| che effettua solo la ricerca, senza preoccuparsi
+funzione più semplice \cverb|lookupKeyRead| che effettua solo la ricerca, senza preoccuparsi
 di eventualmente inviare una risposta al client, ma in questo caso utilizziamo la funzione
 più completa per rendere il codice più compatto.
 
-Il valore da restituire al client è \verb|shared.czero|, corrispondente ad una risposta pre-allocata
+Il valore da restituire al client è \cverb|shared.czero|, corrispondente ad una risposta pre-allocata
 (secondo la comune tecnica denominata \emph{singleton}) con valore intero $0$. Trattandosi di un
 valore di risposta molto comune, Redis ne mette a disposizione una istanza già pronta diminuendo
 così le allocazione e deallocazioni di memoria necessarie.
 
-La funzione \verb|lookupKeyReadOrReply| effettua quindi una ricerca nella tabella hash
+La funzione \cverb|lookupKeyReadOrReply| effettua quindi una ricerca nella tabella hash
 rappresentante il database per la chiave specificata; in caso che la chiave non sia presente, invia
-al client il valore $0$ come risposta, e restituisce il valore \verb|NULL| al chiamante. In questo
+al client il valore $0$ come risposta, e restituisce il valore \cverb|NULL| al chiamante. In questo
 caso, non è necessario fare più nulla ed è possibile quindi uscire direttamente dalla funzione.
 
 Se invece viene trovato un elemento nel database, è necessario verificare se sia del tipo giusto.
 Per l'implementazione dei filtri di Bloom, è stato definito un nuovo tipo di dato chiamato 
-\verb|OBJ_BLOOM| (tutti i tipi di strutture dati hanno una macro con prefisso \verb|OBJ_| che
-si espande ad un progressivo, definite nel file \verb|server.h|). La funzione \verb|checkType| si
+\cverb|OBJ_BLOOM| (tutti i tipi di strutture dati hanno una macro con prefisso \cverb|OBJ_| che
+si espande ad un progressivo, definite nel file \cverb|server.h|). La funzione \cverb|checkType| si
 occupa di verificare se il tipo è giusto \lnnum{2}, e in caso negativo prepara già un messaggio di
 errore e lo restituisce al client. Anche questa funzione infatti è pensata per essere usata nel
 contesto dell'implementazione di un comando e si occupa quindi non solo del test in sé ma anche di
@@ -693,20 +693,20 @@ creare un messaggio di errore opportuno. Se la funzione restituisce falso, non c
 non uscire.
 
 Se il tipo è corretto, possiamo finalmente accedere al dato in memoria, che sarà un'istanza della
-struttura \verb|bloom| (\autoref{lst:bloomStruct}), e chiamare la funzione  \verb|bloomExist|
+struttura \cverb|bloom| (\autoref{lst:bloomStruct}), e chiamare la funzione  \cverb|bloomExist|
 (\autoref{lst:bloomExist}) per effettuare il test di appartenenza \lnnum{3}. L'elemento da ricercare
-è estratto da \verb|c->argv[2]|, di tipo stringa e utilizza libreria interna \verb|sdstring| di
-Redis per gestire stringhe dinamiche, per cui è necessario richiamare la funzione \verb|sdslen| per
+è estratto da \cverb|c->argv[2]|, di tipo stringa e utilizza libreria interna \cverb|sdstring| di
+Redis per gestire stringhe dinamiche, per cui è necessario richiamare la funzione \cverb|sdslen| per
 calcolarne la lunghezza.
 
 Il valore restituito deve essere a questo punto inviato al client come risposta, utilizzando
-la funzione \verb|addReply| \lnnum{4}, e restituendo quindi \verb|shared.czero| in caso il valore
-sia $0$, e l'equivalente \verb|shared.cone| nel caso il valore sia $1$.
+la funzione \cverb|addReply| \lnnum{4}, e restituendo quindi \cverb|shared.czero| in caso il valore
+sia $0$, e l'equivalente \cverb|shared.cone| nel caso il valore sia $1$.
 
 \subsection{Registrazione dei comandi}
 
-La registrazione di comandi in Redis avviene tramite una tabella chiamata \verb|redisCommandTable|.
-Questa è la sua definizione contenuta nel file \verb|server.c|, che mostra come i comandi vengono
+La registrazione di comandi in Redis avviene tramite una tabella chiamata \cverb|redisCommandTable|.
+Questa è la sua definizione contenuta nel file \cverb|server.c|, che mostra come i comandi vengono
 registrati:
 
 \begin{commentedsource}[style=csource,caption=Registrazione nuovi comandi nella tabella co\-man\-di,label={lst:cmdtable}]
@@ -735,7 +735,7 @@ struct redisCommand redisCommandTable[] = {
 L'array come definito contiene un elemento per ciascun comando conosciuto da Redis. Il listato è
 parziale per brevità, ma vengono mostrati i 4 comandi aggiunti per il supporto ai filtri di Bloom.
 
-Analizzando la registrazione di \verb|BFEXIST| \lnnum{2}, si può vedere che il primo campo è il nome
+Analizzando la registrazione di \cverb|BFEXIST| \lnnum{2}, si può vedere che il primo campo è il nome
 del comando (per convenzione qui in minuscolo) e il secondo è il puntatore alla funzione che lo
 implementa.
 
@@ -743,11 +743,11 @@ Il terzo campo è il numero di \emph{token} di cui è composto il comando quando
 appropriato, in questo caso $3$ (il nome del comando stesso, più i due argomenti: chiave ed
 elemento). Grazie a questo valore, Redis può automaticamente restituire un errore al client in fase
 di analisi sintattica del comando inviato, sollevando le implementazioni dei singoli comandi da tale
-onere. Infatti, l'implementazione di \verb|bfexistCommand| (vista nel \autoref{lst:bfexistCommand})
-non effettua nessun controllo prima di accedere ai due argomenti \verb|c->argv[1]| e
-\verb|c->argv[2]|, né su eventuali argomenti in eccesso.
+onere. Infatti, l'implementazione di \cverb|bfexistCommand| (vista nel \autoref{lst:bfexistCommand})
+non effettua nessun controllo prima di accedere ai due argomenti \cverb|c->argv[1]| e
+\cverb|c->argv[2]|, né su eventuali argomenti in eccesso.
 
-Quando il valore del terzo comando è negativo, come per \verb|BFADD| \lnnum{1}, l'analizzatore
+Quando il valore del terzo comando è negativo, come per \cverb|BFADD| \lnnum{1}, l'analizzatore
 sintattico verifica la presenza di un numero di argomenti minimo pari al valore assoluto del numero
 specificato, ma consente comunque l'esistenza di argomenti aggiuntivi. Spetterà all'implementazione
 del comando gestire questa flessibilità, restituendo errore in caso di violazione della sintassi
@@ -769,19 +769,19 @@ Le flag più comuni sono le seguenti:
 \end{tabular}
 \medskip
 
-Il quinto argomento e gli ultimi due (decimo ed undicesimo), impostati a \verb|0|, si riferiscono 
+Il quinto argomento e gli ultimi due (decimo ed undicesimo), impostati a \cverb|0|, si riferiscono 
 a campi che vengono usati dinamicamente e devono essere inizializzati sempre a $0$.
 
 Gli argomenti rimasti si occupano di specificare all'analizzatore sintattico quali argomenti del
 comando si riferiscono a chiavi del database. In particolare, il settimo, ottavo e nono argomento
-(impostati a \verb|1,1,1| in \lnnum{2}) indicano rispettivamente che il primo argomento che è
+(impostati a \cverb|1,1,1| in \lnnum{2}) indicano rispettivamente che il primo argomento che è
 una chiave ha indice $1$, l'ultimo argomento che è una chiave ha indice $1$, e l'incremento da
 utilizzare per trovare tutte le chiavi tra la prima e l'ultima è $1$. In altre parole, questa
 tripletta consente in modo semplice di indicare quali argomenti sono chiavi se esse hanno una
 posizione fissa e sono disposte all'interno dell'array degli argomenti a intervalli regolari. Per
 gestire comandi con struttura più complessa, è possibile implementare un algoritmo di estrazione
 degli indici delle chiavi su misura, passando il puntatore alla funzione nel sesto argomento
-(impostato a \verb|NULL| in \lnnum{2}).
+(impostato a \cverb|NULL| in \lnnum{2}).
 
 
 \section{Configurazione dei parametri di default}
@@ -789,7 +789,7 @@ degli indici delle chiavi su misura, passando il puntatore alla funzione nel ses
 \subsection{Scelta della dimensione del primo filtro}
 \label{sec:patch:basesize}
 
-La dimensione del primo filtro della catena, codificata nella costante \verb|CONFIG_BLOOM_BASESIZE|
+La dimensione del primo filtro della catena, codificata nella costante \cverb|CONFIG_BLOOM_BASESIZE|
 vista nella \autoref{sec:patch:staticparms}, deve essere regolata in base ai risultati di utilizzo
 della memoria e velocità che si vogliono ottenere. Infatti, configurando un valore inutilmente
 piccolo, cresce logaritmicamente il numero di filtri nella catena a parità di elementi, aumentando
@@ -818,7 +818,7 @@ solo a quel punto si trasformano in tabella hash.
 \label{sec:patch:defaulterror}
 
 La probabilità di falso positivo può essere configurata dall'utente durante la creazione del
-filtro, tramite il comando \verb|BFADD|, ma è consigliabile comunque scegliere un default per
+filtro, tramite il comando \cverb|BFADD|, ma è consigliabile comunque scegliere un default per
 semplificare l'uso della struttura dati sopratutto in fase di sviluppo e sperimentazione. Questo
 valore non è quindi tanto sensibile quanto un parametro statico perché la sua modifica è comunque
 possibile senza dover modificare il codice sorgente.
@@ -850,7 +850,7 @@ filtri nella catena per poter inserire il numero di elementi richiesto. In quell
 \begin{itemize}
   \item L'intero filtro scalabile occuperà $M = \SI{2448192}{\byte} \approx \SI{2.33}{\mebi\byte}$
   di memoria, di cui l'ultimo filtro, il decimo, sarà circa la metà. Questo è ragionevole se si
-  pensa che è stato scelto un fattore di crescita esponenziale (\verb|CONFIG_BLOOM_ITEMGROWTHRATIO|)
+  pensa che è stato scelto un fattore di crescita esponenziale (\cverb|CONFIG_BLOOM_ITEMGROWTHRATIO|)
   pari a $2.0$.
 
   \item Il decimo filtro avrà $K=14$, cioè $14$ sezioni, ovverosia $14$ funzioni di hash da
