@@ -1063,7 +1063,7 @@ i punteggi oltre agli elementi.
 
 Il comando \cverb|ZRANGEBYSCORE| effettua un'estrazione utilizzando non più indici, ma un range di
 punteggi. Specificando \cverb|1500 2500| \lnnum{5}, l'unico elemento compreso in questo intervallo è
-\verb|max|, che viene restituito. Se si aumenta il punteggio di \cverb|max| portandolo a $4000$,
+\cverb|max|, che viene restituito. Se si aumenta il punteggio di \cverb|max| portandolo a $4000$,
 una seconda invocazione di \cverb|ZRANGEBYSCORE| sul medesimo intervallo non restituisce più
 alcun elemento.
 
@@ -1481,11 +1481,13 @@ sorgente LUA che implementa questo semplice algoritmo è mostrato nel seguente l
 \medskip
 \sourcecode[language={[5.0]lua}]{code/zsetaverage.lua}
 
-Come si nota, il sorgente può essere parametrizzato tramite dei parametri di tipo chiave/valore
-che verranno passati al momento dell'utilizzo; in questo caso, si è scelto di passare come parametro 
-la chiave dell'insieme ordinato da utilizzare, e la soglia minima di spesa, rendendo così lo script 
-più generico e flessibile. Le chiavi dei parametri (accessibili tramite l'array \cverb|KEYS|) non
-sono invece utilizzate.
+Le stored procedure in Redis ricevono in ingresso due array di parametri che possono essere passati
+dal chiamante: uno chiamato \cverb|KEYS| che contiene chiavi di oggetti nel database, e uno chiamato
+\cverb|ARGV|, che contiene argomenti arbitrari di altro tipo. Nello script d'esempio, si è scelto di
+passare come parametri il nome dell'insieme ordinato in \cverb|KEYS[1]|, e la soglia minima di spesa
+in \cverb|ARGV[1]|, rendendo così lo script più generico e flessibile. Si noti che in Lua, gli array
+sono indicizzata a partire da $1$, per cui \cverb|KEYS[1]| si riferisce al primo elemento 
+dell'array.
 
 Per provare ad eseguire lo script durante la fase di sviluppo, è consigliabile l'utilizzo
 dell'opzione \cverb|--eval| del comando \cverb|redis-cli|:
@@ -1494,38 +1496,42 @@ dell'opzione \cverb|--eval| del comando \cverb|redis-cli|:
 $ redis-cli
 127.0.0.1:6379> ZADD paying_users 1000 a 2000 b 3000 c 3000 d 250 e
 (integer) 5
-$ redis-cli --eval zsetaverage.lua k t , paying_users 1000
+|\lnote|$ redis-cli --eval zsetaverage.lua paying_users , 1000
 (integer) 2250
-$ redis-cli --eval zsetaverage.lua k t , paying_users 2000
+$ redis-cli --eval zsetaverage.lua paying_users , 2000
 (integer) 2666
 \end{commentedsource}
 
-Si noti che abbiamo passato 2 parametri: il primo con chiave \cverb|k| e valore \cverb|paying_users|;
-il secondo con chiave \cverb|t| e valore \cverb|1000| (o \cverb|2000|). L'identificatore \cverbfull|,|
-separa l'elenco delle chiavi (che non sono utilizzate dal nostro script) dall'elenco dei valori.
+Si noti che, a linea di comando, è necessario separare esplicitamente gli argomenti che
+popolano \cverb|KEYS| da quelli che popolano \cverb|ARGV|, perché altrimenti non sarebbe chiaro
+per Redis dove finiscono gli uni e iniziano gli altri. Il separatore da usare è l'identificatore 
+\cverbfull|,|. Di conseguenza, usando la sequenza di argomento \cverb|paying_users , 1000|
+\lnnum{1}, si popola in modo corretto gli array: \cverb|KEYS[1]| varrà \cverb|paying_users|, e
+\cverb|ARGV[1]| varrà \cverb|1000|.
 
-L'uso in produzione invece richiede due fasi: prima, lo script viene caricato nel database
-come stored procedure tramite il comando \cverb|SCRIPT LOAD|, che restituisce un ID univoco. 
-Successivamente, lo script può essere eseguito richiamandolo tramite il suo ID, e specificando 
-i parametri, con il comando \cverb|EVALSHA|.
-
-In questo caso, la sequenza è la seguente:
+Vediamo un esempio di come usare invece una stored procedure in produzione:
 
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> SCRIPT LOAD "-- zsetaverage.lua: calcola la media di spesa degli utenti paganti sopra\n-- una certa soglia.\n--\n-- Argomenti:\n--     ARGV[1] - chiave dell'insieme ordinato\n--     ARGV[2] - soglia di spesa\n\n-- Estrae tutti gli utenti con un punteggio maggiore a quello specificato.\n-- L'opzione WITHSCORES dice a redis di tornare non solo le stringhe\n-- dell'insieme ordinato (quindi gli ID degli utenti) ma anche i \n-- punteggi associati.\n-- matches sara' quindi un array contenente in sequenza ID1, SCORE1, ID2, SCORE2, ecc.\nlocal matches = redis.call('ZRANGEBYSCORE', ARGV[1], ARGV[2], '+inf', 'WITHSCORES')\n\nlocal total = 0\n\n-- Attraversa l'array a partire dal secondo elemento, fino alla sua lunghezza,\n-- con passo 2. In questo modo ad ogni passo indirizziamo direttamente i punteggi\n-- saltando gli ID\n-- Si noti che in LUA il primo elemento di un array ha indice 1\nfor idx=2, #matches, 2 do\n    total = total + tonumber(matches[idx])\nend\n\n-- Calcola la media\nreturn total / (#matches / 2)\n"
-"c8fe4ea641681f744e517b52002266ca7b4e4cdf"
-127.0.0.1:6379> EVALSHA c8fe4ea641681f744e517b52002266ca7b4e4cdf 2 k t paying_users 1000
+|\lnote|127.0.0.1:6379> SCRIPT LOAD "-- zsetaverage.lua: calcola la media di spesa degli utenti paganti sopra\n-- una certa soglia.\n--\n-- Argomenti:\n--     KEYS[1] - chiave dell'insieme ordinato\n--     ARGV[1] - soglia di spesa\n\n-- Estrae tutti gli utenti con un punteggio maggiore a quello specificato.\n-- L'opzione WITHSCORES dice a Redis di tornare non solo le stringhe\n-- dell'insieme ordinato (quindi gli ID degli utenti) ma anche i \n-- punteggi associati.\n-- matches sara' quindi un array contenente in sequenza ID1, SCORE1, ID2, SCORE2, ecc.\nlocal matches = redis.call('ZRANGEBYSCORE', KEYS[1], ARGV[1], '+inf', 'WITHSCORES')\n\nlocal total = 0\n\n-- Attraversa l'array a partire dal secondo elemento, fino alla sua lunghezza,\n-- con passo 2. In questo modo ad ogni passo indirizziamo direttamente i punteggi\n-- saltando gli ID\n-- Si noti che in LUA il primo elemento di un array ha indice 1\nfor idx=2, #matches, 2 do\n    total = total + tonumber(matches[idx])\nend\n\n-- Calcola la media\nreturn total / (#matches / 2)\n"
+"52b441d3009877c4473f02e4c9c4535962cdf64f"
+|\lnote|127.0.0.1:6379> EVALSHA 52b441d3009877c4473f02e4c9c4535962cdf64f 1 paying_users 1000
 (integer) 2250
-127.0.0.1:6379> EVALSHA c8fe4ea641681f744e517b52002266ca7b4e4cdf 2 k t paying_users 2000
+127.0.0.1:6379> EVALSHA 52b441d3009877c4473f02e4c9c4535962cdf64f 1 paying_users 2000
 (integer) 2666
 \end{commentedsource}
 
-Il comando \cverb|EVALSHA| riceve come argomento l'ID dello script, il numero di parametri, e poi
-in sequenza tutte le chiavi (non utilizzate nel nostro esempio) e tutti i valori. 
+In primo luogo, lo script viene caricato nel database tramite il comando \cverb|SCRIPT LOAD|
+\lnnum{1}, che restituisce un ID univoco come stringa esadecimale. Successivamente, lo script può
+essere eseguito richiamandolo tramite il suo ID, e specificando i parametri, con il comando
+\cverb|EVALSHA| \lnnum{2}. In questo caso, invece della sintassi vista precedentemente,
+viene esplcitiato il numero di chiavi (\cverb|1| nell'esempio), in modo che l'analizzatore
+sintattico possa sapere in che punto della lista degli argomenti finisce l'array \cverb|KEYS| e
+inizia l'array \cverb|ARGV|.
 
 Si noti che l'ID dello script è in realtà il suo hash crittografico ottenuto tramite l'algoritmo
-SHA-1; questo vuol dire che caricando più volte lo stesso script si otterrà sempre lo stesso valore
-ed è inoltre possibile precalcolare l'ID che uno script avrà, per semplicità di implementazione.
+SHA-1, applicato al sorgente dello script stesso; questo vuol dire che caricando più volte lo stesso
+script si otterrà sempre lo stesso valore ed è inoltre possibile precalcolare l'ID che uno script
+avrà, per semplicità di implementazione.
 
 \section{Scadenza delle chiavi}
 
@@ -1549,17 +1555,17 @@ rimossa.
 I comandi che manipolano la scadenza delle chiavi sono i seguenti:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
-	\item[EXPIRE / PEXPIRE] Modificano la data di scadenza di una chiave in modo relativo,
-		specificandola rispettivamente in secondi o millisecondi dal momento in cui il comando viene
-		eseguito.
-	\item[EXPIREAT / PEXPIREAT] Modificano la data di scadenza di una chiave in modo assoluto,
-		specificandola cioè come data, calcolata rispettivamente in secondi o millisecondi dalla
-		cosiddetta \emph{UNIX epoch}, cioè il 1° Gennaio 1970.
-	\item[TTL / PTTL] Restituiscono il tempo di vita rimasto di una chiave, rispettivamente in
-		secondi o millisecondi. Se la chiave non esiste viene restituito il valore speciale $-2$,
+	\item[EXPIRE key sec / PEXPIRE key msec] Modificano la data di scadenza di una chiave in modo
+		relativo, specificandola rispettivamente in secondi o millisecondi dal momento in cui il
+		comando viene eseguito.
+	\item[EXPIREAT key timestamp / PEXPIREAT key mstimestamp] Modificano la data di scadenza di una
+		chiave in modo assoluto, specificandola cioè come data, calcolata rispettivamente in secondi
+		o millisecondi dalla cosiddetta \emph{UNIX epoch}, cioè il 1° Gennaio 1970.
+	\item[TTL key / PTTL key] Restituiscono il tempo di vita rimasto di una chiave, rispettivamente
+		in secondi o millisecondi. Se la chiave non esiste viene restituito il valore speciale $-2$,
 		mentre se la chiave esiste ma non ha una data di scadenza viene restituito il valore $-1$.
-	\item[PERSIST] Elimina la data di scadenza dalla chiave specificata, trasformandola così in una
-		chiave persistente.
+	\item[PERSIST key] Elimina la data di scadenza dalla chiave specificata, trasformandola così in
+		una chiave persistente.
 \end{description}
 
 Questo è un esempio di uso dei comandi di scadenza:
@@ -1569,19 +1575,35 @@ Questo è un esempio di uso dei comandi di scadenza:
 OK
 127.0.0.1:6379> GET data
 "123"
-127.0.0.1:6379> EXPIREAT data 1545662795
+127.0.0.1:6379> TTL data
+|\lnote|(integer) -1
+|\lnote|127.0.0.1:6379> EXPIREAT data 2545662795
 (integer) 1
 127.0.0.1:6379> TTL data
-(integer) 39999983
+(integer) 1028907159
 127.0.0.1:6379> PTTL data
-(integer) 39999980005
+(integer) 1028907152359
 127.0.0.1:6379> GET data
 "123"
-127.0.0.1:6379> PEXPIRE data 100
+|\lnote|127.0.0.1:6379> PEXPIRE data 100
 (integer) 1
 127.0.0.1:6379> GET data
-(nil)
+|\lnote|(nil)
 \end{commentedsource}
+
+Subito dopo aver creato una chiave \cverb|data|, il comando \cverb|TTL| ritorna il valore speciale
+\cverb|-1| \lnnum{1} per indicare che non c'è una data di scadenza configurata. 
+
+Tramite il comando \cverb|EXPIREAT| \lnnum{2} viene inserita una data di scadenza nel futuro:
+$\num{2545662795}$ secondi dal 1° Gennaio 1970, cioè più o meno il 9 Gennaio 2050. Successivamente,
+i comandi \cverb|TTL| e \cverb|PTTL| confermano che c'è un tempo di scadenza configurato, ritornando
+il numero di secondi mancanti dal momento dell'esecuzione (si noti come il valore tornato da
+\cverb|PTTL| è circa $1000$ volte maggiore in quanti in millisecondi).
+
+Successivamente, la data di scadenza viene cambiata tramite \cverb|PEXPIRE| \lnnum{3},
+configurandola a soli $\num{100}$ millisecondi dal momento di esecuzione del comando. Provando
+subito dopo a rileggere la chiave, essa risulta non più presente \lnnum{4}, in quanto è stata
+cancellata automaticamente per superamento della data di scadenza.
 
 \section{Concorrenza}
 \label{sec:concurrency}

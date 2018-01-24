@@ -2,15 +2,15 @@
 -- una certa soglia.
 --
 -- Argomenti:
---     ARGV[1] - chiave dell'insieme ordinato
---     ARGV[2] - soglia di spesa
+--     KEYS[1] - chiave dell'insieme ordinato
+--     ARGV[1] - soglia di spesa
 
 -- Estrae tutti gli utenti con un punteggio maggiore a quello specificato.
--- L'opzione WITHSCORES dice a redis di tornare non solo le stringhe
+-- L'opzione WITHSCORES dice a Redis di tornare non solo le stringhe
 -- dell'insieme ordinato (quindi gli ID degli utenti) ma anche i 
 -- punteggi associati.
 -- matches sara' quindi un array contenente in sequenza ID1, SCORE1, ID2, SCORE2, ecc.
-local matches = redis.call('ZRANGEBYSCORE', ARGV[1], ARGV[2], '+inf', 'WITHSCORES')
+local matches = redis.call('ZRANGEBYSCORE', KEYS[1], ARGV[1], '+inf', 'WITHSCORES')
 
 local total = 0
 
