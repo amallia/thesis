@@ -12,6 +12,7 @@
 \usepackage{pgf-umlsd} % UML sequence diagrams
 \usepackage{needspace} % Evita listati/tabelle orfani
 \usepackage{enumitem} % Più opzioni per le definition list
+\usepackage{fancyvrb,newverbs} % Per colorare il bkg dei verbatim
 
 % Definisci \EUR come unità di misura con il simbolo dell'euro
 \usepackage{eurosym}  
@@ -137,6 +138,19 @@
     \lstset{#1,numbers=none}
 }{}
 
+% Definisce comandi \cverb e \ctexttt per codice inline formattato con 
+% un leggero fondale grigio che lo evidenzia rispetto al testo normale.
+\definecolor{cverbbg}{gray}{0.95}
+%\colorlet{cverbbg}{LemonChiffon1}
+\newcommand{\ctexttt}[1]{\colorbox{cverbbg}{\texttt{#1}}}
+\newverbcommand{\cverb}
+  {\setbox\verbbox\hbox\bgroup}
+  {\egroup\colorbox{cverbbg}{\box\verbbox}}
+\newcommand{\mystrut}{\vrule height6.0pt depth0pt width0pt}
+\newverbcommand{\cverbfull} % full height box
+  {\setbox\verbbox\hbox\bgroup}
+  {\egroup\colorbox{cverbbg}{\box\verbbox\mystrut}}
+
 
 % Regole custom di sillabazione
 \hyphenation{macOS}  % non sillabare mai!
@@ -152,4 +166,3 @@
 \ifpdf
   \pdfsuppresswarningpagegroup=1
 \fi
-
