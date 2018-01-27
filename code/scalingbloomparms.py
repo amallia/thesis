@@ -45,7 +45,7 @@ class TexOutput:
         print(r"\begin{tabular}{ r | c c r r | c c r r }")
         print(r"    \hline")
         print(r"    \rowcolor{blue!20}           & \multicolumn{4}{c}{Singolo filtro} & \multicolumn{4}{c}{Totale catena} \\")
-        print(r"    \rowcolor{blue!20} \# filtri & $K$ & $E$ & $M$ & $N$              & $K$ & $E$ & $M$ & $N$ \\")
+        print(r"    \rowcolor{blue!20} n. filtri & $K$ & $E$ & $M$ & $N$              & $K$ & $E$ & $M$ & $N$ \\")
         print(r"    \hline")
         self.row = 0
     def printline(self, *args):
