@@ -31,7 +31,7 @@ In particolare, abbiamo identificato i seguenti requisiti:
 	\item \textbf{Scarsa configurabilità}: Redis cerca di offrire strutture dati che siano
 	preconfigurate con default accettabili per la maggior parte dei casi d'uso, e offre la minima
 	configurabilità necessaria ad operare negli scenari applicativi previsti. In particolare,
-	i filtri di Bloom hanno diversi parametri a disposizione e sono quindi richiesti scelte
+	i filtri di Bloom hanno diversi parametri a disposizione e sono quindi richieste scelte
 	oculate.
 \end{itemize}
 
@@ -88,7 +88,7 @@ Questi sono i comandi implementati:
 		\item[BFDEBUG FILTER key idx] Restituisce informazioni su uno specifico filtro
 		della catena; il filtro che si vuole ispezionare deve essere specificato come indice 
 		nel parametro \cverb|idx|. La stringa restituita mostra il numero di sezioni (o funzioni
-		di hash), la dimensione in bit di una sezione, e il numero di bit impostati a 1.
+		di hash), la dimensione in bit di una sezione e il numero di bit impostati a 1.
 		\end{description}
 
 \end{description}
