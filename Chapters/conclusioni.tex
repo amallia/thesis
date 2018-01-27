@@ -1,2 +1,24 @@
 \chapter{Conclusioni}
 
+In questa tesi, si è descritto Redis, uno dei più conosciuti database NoSQL, contestualizzando la
+sua nascita nel periodo storico di sviluppo dell'informatica e della crescente richiesta di velocità
+e dinamicità all'interno dell'industria delle applicazioni web. Si è mostrata l'architettura che
+coniuga un approccio semplificato alla concorrenza e alla transazionalità con un'alta velocità di
+esecuzione dei comandi, e si è descritto i principali comandi e le strutture dati implementate.
+
+L'obiettivo del lavoro, cioè l'introduzione in Redis dei filtri di Bloom, è stato raggiunto tramite
+un iniziale lavoro di design volto a cercare di rispettare tutte le convenzioni usate dai comandi,
+nello stile del codice sorgente scritto, e rispettando l'architettura interna del codice.
+
+Lo studio che è stato fatto sui filtri di Bloom e sulle loro caratteristiche, compresa un'analisi
+approfondita degli scenari d'uso e delle modalità di calcolo dei parametri al fine di ottimizzare le
+prestazioni, ha consentito in primo luogo di scegliere la variante di filtro che si è ritenuta più
+idonea per i requisiti di progetto, cioè i filtri scalabili, e successivamente di effettuare delle
+scelte precise sui valori di default da usare in termini di consumo di memoria e velocità di
+crescita, utili a facilitare l'adozione della struttura dati in diversi contesti.
+
+L'implementazione è stata curata dal punto di vista delle performance e dell'uso della memoria,
+cercando di allinearsi alle richieste avanzate dall'autore di Redis durante i contatti diretti che
+ci sono stati. I test automatici scritti, di cui alcuni molto ampi, confermano la correttezza della
+implementazione. Il codice scritto rispecchia dunque tutti gli standard di qualità di Redis ed è
+potenzialmente integrabile nella base di codice.
