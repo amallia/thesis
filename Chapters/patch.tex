@@ -54,7 +54,7 @@ l'utilizzo della struttura dati, anche in fase di sviluppo.
 Nel progettare i nuovi comandi, abbiamo cercato di adeguarci il più possibile allo stile dei
 comandi esistenti, cercando di mantenere le proprietà evinte durante la fase di analisi.
 
-Abbiamo scelto il prefisso~\cverb|BF| per la famiglia di comandi, indicando chiaramente la
+È stato scelto il prefisso~\cverb|BF| per la famiglia di comandi, indicando chiaramente la
 struttura dati che viene manipolata.
 
 Questi sono i comandi implementati:
@@ -222,18 +222,12 @@ typedef struct bloom {
 La struttura \cverb|bloom| rappresenta l'intero filtro scalabile. I suoi campi sono
 così definiti:
 
-\medskip
-\begin{tabular}{ |l|l|p{200pt}| }
-  \hline
-  \cverb|e| & \cverb|double| & La probabilità richiesta di un falso positivo. Questo è il valore richiesto
-  dall'utente, che il filtro cercherà di rispettare come margine superiore. \\
-
-  \cverb|numfilters| & \cverb|int| & Numero di filtri presenti nella catena. \\
-
-  \cverb|first| & \cverb|filter*| & Puntatore alla testa della lista concatenata di filtri. \\
-  \hline
-\end{tabular}
-\medskip
+\begin{description}[leftmargin=!,labelwidth=8em,font={\bfseries\ttfamily}]
+  \item[double e] La probabilità richiesta di un falso positivo. Questo è il valore richiesto
+      dall'utente, che il filtro cercherà di rispettare come margine superiore.
+  \item[int numfilters] Numero di filtri presenti nella catena.
+  \item[filter *first] Puntatore alla testa della lista concatenata di filtri.
+\end{description}
 
 Come si evince, i filtri sono conservati in una lista a catena singola, e il campo \cverb|first|
 contiene il puntatore alla testa. La scelta di una lista per l'implementazione della catena di
@@ -243,27 +237,17 @@ mai richiesto.
 
 Ciascun filtro è rappresentato dalla struttura \cverb|filter|, definita dai seguenti campi:
 
-\medskip
-\begin{tabular}{ |l|l|p{210pt}| }
-  \hline
-
-  \cverb|next| & \cverb|filter*| & Puntatore al filtro successivo nella catena \\
-
-  \cverb|k| & \cverb|uint32| & Numero di funzioni di hash (e dunque di partizioni) \\
-
-  \cverb|b| & \cverb|uint64| & Numero di bit attualmente impostati a $1$, considerando tutte le partizioni \\
-
-  \cverb|s| & \cverb|uint64| & Dimensione di ciascuna partizione in bit. L'utilizzo di memoria
-  effettivo è $\ceil{s/7}$ \\
-
-  \cverb|bmax| & \cverb|uint64| & Numero di bit che possono essere impostati al massimo a $1$ prima
-  che venga raggiunta la densità scelta come obiettivo (tipicamente, \SI{50}{\percent}). \\
-
-  \cverb|parts| & \cverb|uint8*[]| & Array di puntatori alle partizioni. \\
-
-  \hline
-\end{tabular}
-\medskip
+\begin{description}[leftmargin=!,labelwidth=8em,font={\bfseries\ttfamily}]
+  \item[filter *next] Puntatore al filtro successivo nella catena.
+  \item[uint32 k] Numero di funzioni di hash (e dunque di par\-ti\-zio\-ni).
+  \item[uint64 b] Numero di bit attualmente impostati a $1$, con\-si\-de\-ran\-do tutte le
+    partizioni.
+  \item[uint64 s] Dimensione di ciascuna partizione in bit. L'utilizzo di memoria effettivo è
+      $\ceil{s/7}$.
+  \item[uint64 bmax] Numero massimo di bit che possono essere impostati a $1$ prima che venga
+      raggiunta la densità scelta come obiettivo (tipicamente, \SI{50}{\percent}).
+  \item[{uint8 *parts[]}] Array di puntatori alle partizioni.
+\end{description}
 
 Si noti che l'array \cverb|parts| è definito a dimensione variabile (anche detto \emph{array
 flessibile}), utilizzando la funzionalità introdotta nello standard C99 che consente all'ultimo
@@ -302,36 +286,35 @@ preferito non esporre una configurazione a livello utente.
 
 Questa la descrizione dettagliata di ciascun parametro:
 
-\medskip
-\begin{itemize}
-  \item \cverb|CONFIG_BLOOM_BASESIZE| (\SI{2048}{\byte}). Dimensione iniziale in byte del primo
+\begin{description}[font={\bfseries\ttfamily}]
+
+  \item[CONFIG\_BLOOM\_BASESIZE] ($\SI{2048}{\byte}$) \\ Dimensione iniziale in byte del primo
   filtro della catena. La dimensione è stata calcolata tenendo conto di un bilanciamento tra uso
   della memoria, crescita del numero di filtri nella catena, e velocità (vedi la
   \autoref{sec:patch:basesize}).
 
-  \item \cverb|CONFIG_BLOOM_DEFAULTERROR| ($\SI{0.3}{\percent}$). Probabilità di default di falso
+  \item[CONFIG\_BLOOM\_DEFAULTERROR] ($\SI{0.3}{\percent}$) \\ Probabilità di default di falso
   positivo a cui il filtro scalabile tende asintoticamente. La scelta del valore cerca di
   massimizzare i casi d'uso in cui il filtro può essere usato con successo (vedi la
   \autoref{sec:patch:defaulterror}).
 
-  \item \cverb|CONFIG_BLOOM_DESIREDFILLRATIO| ($\SI{50}{\percent}$). Valore di densità massimo dei filtri
-  nella catena; quando il filtro in fondo alla catena (l'unico su cui si inseriscono nuovi elementi)
-  raggiunge questa densità, un nuovo filtro viene creato. Il valore ottimizza l'uso dei filtri di
-  Bloom, come visto nella \autoref{sec:bloomparms}.
+  \item[CONFIG\_BLOOM\_DESIREDFILLRATIO] ($\SI{50}{\percent}$) \\ Valore di densità massimo dei
+  filtri nella catena; quando il filtro in fondo alla catena (l'unico su cui si inseriscono nuovi
+  elementi) raggiunge questa densità, un nuovo filtro viene creato. Il valore ottimizza l'uso dei
+  filtri di Bloom, come visto nella \autoref{sec:bloomparms}.
 
-  \item \cverb|CONFIG_BLOOM_ITEMGROWTHRATIO| ($\num{2.0}$). Fattore di crescita dei filtri
+  \item[CONFIG\_BLOOM\_ITEMGROWTHRATIO] ($\num{2.0}$) \\ Fattore di crescita dei filtri
   all'interno della catena. Come visto nella \autoref{sec:bloomscalable} dove è chiamato
   $s$, questo fattore delinea una progressione geometrica che consente di adattare la crescita del
   filtro all'aumentare del numero di elementi inseriti senza creare una catena troppo lunga
   né sprecando troppa memoria.
 
-  \item \cverb|CONFIG_BLOOM_TIGHTENINGRATIO| ($\num{0.85}$). Fattore di intensificazione, applicato
+  \item[CONFIG\_BLOOM\_TIGHTENINGRATIO] ($\num{0.85}$) \\ Fattore di intensificazione, applicato
   per creare una progressione geometrica tra le probabilità di falsi positivi dei filtri all'interno
   della catena, come descritto nella \autoref{sec:bloomscalable}. Il valore ottimale è indicato
   essere compreso in $\interval{0.8}{0.9}$ in \cite{bloom-scalable}.
 
-\end{itemize}
-\medskip
+\end{description}
 
 \subsection{Creazione e distruzione di un filtro}
 
@@ -756,18 +739,12 @@ attesa.
 Il quarto argomento è una stringa che codifica una serie di \emph{flag}, una per ciascun carattere.
 Le flag più comuni sono le seguenti:
 
-\medskip
-\begin{tabular}{ |l|l| }
-
-  \multicolumn{2}{c}{Flag della tabella comandi} \\
-  \hline
-  $r$ & Il comando accede al database in sola lettura \\
-  $w$ & Il comando accede al database in lettura e scrittura \\
-  $m$ & Il comando può aumentare la memoria occupata dal database \\
-  $F$ & Il comando ha un'esecuzione molto rapida (\emph{fast}) \\
-  \hline
-\end{tabular}
-\medskip
+\begin{description}[leftmargin=!,labelwidth=2em,font={\bfseries\ttfamily}]
+  \item[r] Il comando accede al database in sola lettura.
+  \item[w] Il comando accede al database in lettura e scrittura.
+  \item[m] Il comando può aumentare la memoria occupata dal database.
+  \item[F] Il comando ha un'esecuzione molto rapida (\emph{fast}).
+\end{description}
 
 Il quinto argomento e gli ultimi due (decimo ed undicesimo), impostati a \cverb|0|, si riferiscono 
 a campi che vengono usati dinamicamente e devono essere inizializzati sempre a $0$.

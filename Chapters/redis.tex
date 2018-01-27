@@ -138,23 +138,23 @@ dentro il server applicativo, poiché i bilanciatori di carico (a meno di comple
 non potevano facilmente garantire che ogni richiesta di una stessa sessione arrivasse allo stesso
 server.
 
-Per ovviare a questo inconveniente, nel 2003 nasce Memcached, scritto da Brad Fitzpatrick per
-implementare la scalabilità orizzontale nel suo popolare gestore di blog LiveJournal. Memcached è di
-fatto una tabella hash chiave-valore, raggiungibile via TCP con un semplice protocollo testuale. Le
-operazioni sono sostanzialmente due: GET e SET. È sufficiente quindi collegare tutti i server
-applicativi ad un unico server Memcached (possibilmente sulla stessa rete fisica, beneficiando
-quindi di una latenza molto bassa) perché possano condividere la stessa cache, aggiornando il codice
-che prima utilizzava una tabella in RAM dentro il processo con una libreria che acceda alla stessa
-tabella tramite chiamate TCP.
+Per ovviare a questo inconveniente, nel 2003 nasce \fnhref{https://www.memcached.org}{Memcached},
+scritto da Brad Fitzpatrick per implementare la scalabilità orizzontale nel suo popolare gestore di
+blog LiveJournal. Memcached è di fatto una tabella hash chiave-valore, raggiungibile via TCP con un
+semplice protocollo testuale. Le operazioni sono sostanzialmente due: \cverb|GET| e \cverb|SET|. È
+sufficiente quindi collegare tutti i server applicativi ad un unico server Memcached (possibilmente
+sulla stessa rete fisica, beneficiando quindi di una latenza molto bassa) perché possano condividere
+la stessa cache, aggiornando il codice che prima utilizzava una tabella in RAM dentro il processo
+con una libreria che acceda alla stessa tabella tramite chiamate remote su TCP.
 
-Memcached è il primo database NoSQL chiave-valore, \emph{ante-litteram}, ed è oggi in uso presso alcuni
-dei più popolari siti al mondo quali YouTube, Reddit, Facebook, Twitter, Tumblr, Wikipedia.
+Memcached è il primo database NoSQL chiave-valore, \emph{ante-litteram}, ed è oggi in uso presso
+alcuni dei più popolari siti al mondo quali YouTube, Reddit, Facebook, Twitter, Tumblr, Wikipedia.
 
 
 \section{Nascita di Redis}
 
-Redis (acronimo di Remote Dictionary Service) è un database chiave-valore in RAM scritto
-da Salvatore Sanfilippo e rilasciato per la prima volta nel 2008 sotto licenza BSD.
+Redis (acronimo di \emph{Remote Dictionary Service}) è un database chiave-valore in RAM scritto
+da Salvatore Sanfilippo e rilasciato per la prima volta nel 2008 sotto licenza open-source.
 
 Redis nasce come costola di un progetto (ora defunto) chiamato ``lloogg'', un servizio di
 analisi in tempo reale di log di siti. Originariamente, Sanfilippo aveva progettato
@@ -182,7 +182,7 @@ per essere compatibile anche con architetture a \SI{32}{\bit}, sebbene la versio
 indirizzamento di memoria.
 
 La compilazione da codice sorgente è molto semplice: Redis è scritto nel linguaggio ANSI C90, e le
-pochissime dipendenze a livello di librerie sono distribuite con il codice sorgente stesso, quindi è
+pochissime librerie da cui dipende sono distribuite con il codice sorgente stesso; è quindi
 sufficiente disporre sul sistema del compilatore GCC. Una volta scaricato l'archivio di codice
 sorgente dalla \fnhref{https://redis.io/download}{pagina di scaricamento ufficiale} o tramite
 \cverb|git| dal \fnhref{https://github.com/antirez/redis}{repositorio ufficiale su GitHub}, è
@@ -208,29 +208,33 @@ Redis implementa un array associativo (tramite tabella hash) in cui le chiavi so
 valori associati sono oggetti di vari tipi (stringhe o strutture dati). Essendo un database
 chiave-valore in RAM, l'intero dataset di chiavi e valori viene memorizzato primariamente in RAM, e
 solo successivamente serializzato su disco con alcune politiche di persistenza configurabili (si
-veda \autoref{sec:persistence}).
+veda \autoref{sec:redis:persistence}).
 
-Per comunicare con Redis, un client si deve connettere via TCP (la porta di default è la 6379) e
-comunicare tramite un protocollo testuale di tipo master/slave. È possibile utilizzare
-anche semplicemente \cverb|telnet| per sperimentare, sebbene sia più comodo utilizzare il
-client dedicato \cverb|redis-cli| che offre il completamento intelligente dei comandi, la
-storia dei comandi inseriti, e la formattazione leggibile dei risultati.
+Per comunicare con Redis, un clienti si deve connettere via TCP (la porta di default è la \num{6379})
+e comunicare tramite un protocollo testuale di tipo master/slave. È possibile utilizzare anche
+semplicemente \cverb|telnet| per sperimentare, sebbene sia più comodo utilizzare il client dedicato
+\cverb|redis-cli| che offre il completamento intelligente dei comandi, l'accesso rapido ai comandi
+già inseriti in precedenza, e la formattazione leggibile dei risultati.
 
 Come esempio, la seguente sessione mostra come scrivere e leggere un valore di tipo
-stringa:
+stringa, all'interno di una connessione avviata tramite \cverb|redis-cli|:
 
 \begin{commentedsource}[style=redis]
-127.0.0.1:6379> SET abc provavalore
+|\lnote|127.0.0.1:6379> SET abc provavalore
 OK
 127.0.0.1:6379> GET abc
 "provavalore"
-|\lnote|127.0.0.1:6379> GET abcd
+|\lnote|127.0.0.1:6379> GET notexisting
 (nil)
 \end{commentedsource}
 
+In questo esempio, il comando \cverb|SET| crea una chiave nel database chiamata \cverb|abc| a cui
+viene assegnato il valore \cverb|provavalore| \lnnum{1}. Il successivo comando \cverb|GET| estrae
+il valore associato alla chiave \cverb|abc| appena creata, confermandone la corretta impostazione.
+
 Il valore di ritorno visualizzato dalla console è fortemente tipizzato nel protocollo;
 nel precedente esempio, il valore di ritorno è sempre una stringa. Quando viene
-richiesto il valore di una stringa che non esiste \lnnum{1}, il valore restituito
+richiesto il valore di una stringa che non esiste \lnnum{2}, il valore restituito
 è una stringa vuota, che viene visualizzata da \cverb|redis-cli| come \cverb|<nil>|,
 invece di \cverb|""|.
 
@@ -245,10 +249,10 @@ arbitrario:
 \end{commentedsource}
 
 In questo caso, il valore di ritorno è un intero, dal quale si può desumere se il comando ha
-effettivamente cancellato un oggetto \lnnum{1}, oppure se l'oggetto non esisteva \lnnum{2}.
+effettivamente cancellato una chiave \lnnum{1}, oppure se la chiave non esisteva \lnnum{2}.
 
-Alcuni comandi possono, in alcuni casi, tornare invece un errore. Gli errori non hanno dei
-tipi definiti nel protocollo, ma contengono semplicemente un messaggio di errore. In questo
+Alcuni comandi possono, in alcuni casi, restituire invece un errore. Gli errori non hanno dei
+tipi definiti nel protocollo, ma contengono semplicemente un messaggio testuale. In questo
 esempio, si vede un errore generato dall'invio di un comando inesistente:
 
 \begin{commentedsource}[style=redis]
@@ -445,11 +449,11 @@ i comandi \cverb|BITCOUNT|, \cverb|SETBIT| e \cverb|GETBIT| per lavorare su cias
 
 \subsection{Liste}
 
-In Redis, le liste sono strutture dati assimilabili, come complessità computazionale,
-alle normali liste con puntatore doppio; i valori contenuti nella lista sono stringhe.
-L'accesso al primo e all'ultimo elemento ha una complessità di $\mathcal{O}(1)$, mentre
-l'accesso all'elemento $N$ richiede $\mathcal{O}(N)$. I comandi principali per manipolare una
-lista sono i seguenti:
+In Redis, le liste sono strutture dati assimilabili, come complessità computazionale, alle normali
+liste con puntatore doppio; i valori contenuti nella lista sono stringhe. L'accesso al primo e
+all'ultimo elemento ha una complessità di $\mathcal{O}(1)$, mentre l'accesso all'elemento in
+posizione $N$ richiede $\mathcal{O}(N)$. I comandi principali per manipolare una lista sono i
+seguenti:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
 	\item[{LPUSH key ele [ele\dots]}] Aggiunge un elemento in testa alla lista.
@@ -548,8 +552,8 @@ e lasciando la lista con 3 elementi come confermato dal successivo comando \cver
 	\end{tabular}
 \end{center}
 
-Il comando \cverb|LINSERT| \lnnum{3} inserisce un nuovo elemento \cverb|walt| immediatamente
-successivo all'emento \cverb|goofy|:
+Il comando \cverb|LINSERT| \lnnum{3} inserisce un nuovo elemento \cverb|walt| im\-me\-dia\-ta\-men\-te
+successivo all'elemento \cverb|goofy|:
 
 \begin{center}
 	\begin{tabular}{c|*{4}{c|}}
@@ -729,11 +733,13 @@ prefisso~\cverb|S|:
 		quelle presenti (se \cverb|count| non viene specificato, il default è $1$).
 	\item[{SPOP key [count]}] Restituisce e rimuove una o più stringhe scelte casualmente tra
 		quelle presenti (se \cverb|count| non viene specificato, il default è $1$).
-	\item[{SUNION key [key\dots]}] Restituisce l'unione tra due o più insiemi.
-	\item[{SINTER key [key\dots]}] Restituisce l'intersezione tra due o più insiemi.
-	\item[{SDIFF key [key\dots]}] Restituisce la differenza tra un insieme e uno o più altri
-		insiemi.
-	\item[{SUNIONSTORE key [key\dots] / SINTERSTORE key [key\dots] / SDIFFSTORE key [key\dots]}] 
+	\item[{SUNION key [key\dots]}] Restituisce l'elenco degli elementi rappresentanti l'unione tra
+		due o più insiemi.
+	\item[{SINTER key [key\dots]}] Restituisce l'elenco degli elementi rappresentanti l'intersezione
+		tra due o più insiemi.
+	\item[{SDIFF key [key\dots]}] Restituisce l'elenco degli elementi rappresentanti la differenza
+		tra un insieme e uno o più altri insiemi.
+	\item[{SUNIONSTORE/SINTERSTORE/SDIFFSTORE key [key\dots]}] 
 		Come i comandi precedenti, ma il risultato dell'operazione viene memorizzato in Redis in una
 		nuova chiave specificata, e viene restituita solo la cardinalità del risultato.
 \end{description}
@@ -899,7 +905,7 @@ intervallo è in realtà correttamente definito solo quando il punteggio di tutt
 stesso, e cioè quando la struttura dati sta di fatto già ordinando alfabeticamente, ma l'esistenza
 di comandi dedicati a questa modalità sottolinea proprio la flessibilità di questa struttura dati.
 
-Questi sono i principali comandi esistenti, identificati dal prefisso~\cverb|Z|:
+Questi sono i principali comandi esistenti, identificati dal pre\-fis\-so~\cverb|Z|:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
 	\item[{ZADD key score ele [score ele\dots]}] Aggiunge una o più elementi (stringhe) all'insieme
@@ -916,7 +922,7 @@ Questi sono i principali comandi esistenti, identificati dal prefisso~\cverb|Z|:
 	    appartenenza.
 	\item[ZCARD key] Restituisce la cardinalità dell'insieme, cioè il numero di
 		stringhe contenute.
-	\item[{ZINTERSTORE / ZUNIONSTORE dest numkeys key [key\dots] [WEIGHTS weight [weight\dots]]
+	\item[{ZINTERSTORE / ZUNIONSTORE dest numkeys key [key\dots]} \\ {[WEIGHTS weight [weight\dots]]
 		[AGGREGATE SUM|MIN|MAX]}] Come le controparti per gli insiemi, effettuano le operazioni
 		(rispettivamente) di unione e intersezione, memorizzando il risultato in un nuovo insieme
 		ordinato. Il punteggio ottenuto è la somma dei punteggi specificati negli insiemi di
@@ -924,16 +930,16 @@ Questi sono i principali comandi esistenti, identificati dal prefisso~\cverb|Z|:
 		massimo) tramite l'opzione \cverb|AGGREGATE|, ed applicare dei pesi (fattori moltiplicativi)
 		ai punteggi tramite l'opzione \cverb|WEIGHTS|.
 	\item[ZRANGE key start stop] Restituisce gli elementi all'interno dell'intervallo
-		specificato come indice di sequenza. Per esempio, specificando come intervallo inclusivo
-		\cverb|0 4|, si ottengono i primi 5 elementi, cioè i 5 elementi con minor punteggio
-		attualmente presenti nell'insieme. È possibile usare gli indici negativi per fare
-		riferimento alla fine della sequenza (per esempio, \cverb|-1| indica l'elemento con
+		specificato in termini di indice di sequenza ordinata. Per esempio, specificando come
+		intervallo inclusivo \cverb|0 4|, si ottengono i primi 5 elementi, cioè i 5 elementi
+		con minor punteggio attualmente presenti nell'insieme. È possibile usare gli indici negativi
+		per fare riferimento alla fine della sequenza (per esempio, \cverb|-1| indica l'elemento con
 		punteggio più alto).
 	\item[{ZRANGEBYSCORE key min max [LIMIT offset count]}] Restituisce gli elementi all'interno
-		dell'intervallo specificato come punteggi. Per esempio, specificando come intervallo
-		\cverb|100.2 100.8|, si ottengono tutti gli elementi i cui punteggi sono $\in
+		dell'intervallo specificato in termini di punteggi. Per esempio, specificando come
+		intervallo \cverb|100.2 100.8|, si ottengono tutti gli elementi i cui punteggi sono $\in
 		\interval{100.2}{100.8}$. Gli estremi dell'intervallo si intendo chiusi, ma possono essere
-		specificati come aperti tramite il prefisso \cverb|(|: per esempio \cverb|5.4 (8|
+		specificati come aperti tramite il pre\-fis\-so~\cverb|(|: per esempio \cverb|5.4 (8|
 		indica l'intervallo $\interval[open right]{5.4}{8}$. È possibile inoltre specificare un
 		numero massimo di elementi restituiti tramite l'opzione \cverb|LIMIT|, per evitare
 		trasferimenti troppo pesanti, consentendo quindi la paginazione.
@@ -945,9 +951,9 @@ Questi sono i principali comandi esistenti, identificati dal prefisso~\cverb|Z|:
 		massimo agli elementi restituiti. Come già descritto, questo comando funziona correttamente
 		solo con insiemi ordinati in cui tutti gli elementi hanno lo stesso punteggio.
 	\item[ZREVRANGE / ZREVRANGEBYSCORE / ZREVRANGEBYLEX] Simili ai precedenti comandi, ma
-		considerano l'insieme ordinato al contrario, cioè in ordine decrescente di punteggio.
+		considerano l'insieme or\-di\-na\-to al contrario, cioè in ordine decrescente di punteggio.
 	\item[ZREMRANGEBYRANK / ZREMRANGEBYSCORE / ZREMRANGEBYLEX] Simili ai precedenti comandi, ma
-		rimuovono gli elementi all'interno degli intervalli specificati invece che restituirli.
+		rimuovono gli elementi al\-l'in\-ter\-no degli intervalli specificati invece che restituirli.
 \end{description}
 
 Anche gli insiemi ordinati, come gli insiemi, si prestano molto bene a creare indici manuali,
@@ -1120,12 +1126,13 @@ riportato.
 Questi sono i comandi esistenti, identificati dal prefisso~\cverb|PF|:
 
 \begin{description}[style=nextline,font={\bfseries\ttfamily}]
-	\item[PFADD] Aggiunge una o più stringhe all'HyperLogLog spe\-ci\-fi\-ca\-to,
-	creandone uno se non esiste già.
-	\item[PFCOUNT] Restituisce l'attuale stima di cardinalità dell'HyperLogLog
-	specificato.
-	\item[PFMERGE] Fonde due o più HyperLogLog, creando un nuovo HyperLogLog che
-	stima la cardinalità dell'unione degli insiemi specificati.
+	\item[{PFADD key ele [ele\dots]}] Aggiunge una o più stringhe all'HyperLogLog specificato,
+	cre\-an\-do\-ne uno se non esiste già.
+	\item[{PFCOUNT key [key\dots]}] Restituisce l'attuale stima di cardinalità dell'HyperLogLog
+	specificato. Se vengono specificate più chiavi, la stima calcolata rappresenta la cardinalità
+	dell'insieme unione.
+	\item[{PFMERGE dest key [key\dots]}] Fonde due o più HyperLogLog, creando un nuovo HyperLogLog
+	rappresentante l'unione degli insiemi specificati.
 \end{description}
 
 Un tipico caso d'uso è quello di conteggiare i cosiddetti \emph{DAU}, ``daily active users'', cioè
@@ -1487,7 +1494,7 @@ sono indicizzata a partire da $1$, per cui \cverb|KEYS[1]| si riferisce al primo
 dell'array.
 
 Per provare ad eseguire lo script durante la fase di sviluppo, è consigliabile l'utilizzo
-dell'opzione \cverb|--eval| del comando \cverb|redis-cli|:
+dell'opzione \cverb|--eval| offerta dal comando \cverb|redis-cli|:
 
 \begin{commentedsource}[style=redis]
 $ redis-cli
@@ -1597,7 +1604,7 @@ i comandi \cverb|TTL| e \cverb|PTTL| confermano che c'è un tempo di scadenza co
 il numero di secondi mancanti dal momento dell'esecuzione (si noti come il valore tornato da
 \cverb|PTTL| è circa $1000$ volte maggiore in quanti in millisecondi).
 
-Successivamente, la data di scadenza viene cambiata tramite \cverb|PEXPIRE| \lnnum{3},
+Successivamente, la data di scadenza viene cambiata eseguendo \cverb|PEXPIRE| \lnnum{3},
 configurandola a soli $\num{100}$ millisecondi dal momento di esecuzione del comando. Provando
 subito dopo a rileggere la chiave, essa risulta non più presente \lnnum{4}, in quanto è stata
 cancellata automaticamente per superamento della data di scadenza.
@@ -1633,7 +1640,7 @@ impiega un tempo non trascurabile rispetto alla reale esecuzione delle operazion
 nel caso in cui non è conteso.
 
 \section{Persistenza}
-\label{sec:persistence}
+\label{sec:redis:persistence}
 
 Il dataset di Redis si trova primariamente in RAM. Questo rende tutte le operazioni sulle strutture
 dati estremamente rapide poiché non è mai necessario eseguire I/O di nessun tipo, né adottare
