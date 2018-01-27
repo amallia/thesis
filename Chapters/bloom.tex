@@ -752,23 +752,17 @@ stato creato da zero, inserendo solamente $A$, il bit 2 risulterebbe impostato a
 \section{Ottimizzazione dei parametri}
 \label{sec:bloomparms}
 
-Ci sono diversi parametri di interesse quando si analizza un filtro di Bloom, riassunti in questa
-tabella.
+Nelle sezioni precedenti, sono stati introdotti diversi parametri che possono essere usati
+per definire un filtro di Bloom:
 
-\medskip
-\begin{tabular}{ |l|l| }
-  \multicolumn{2}{c}{Parametri di un filtro} \\
-  \hline
-  $M$ & Dimensione in bit dell'array \\
-  $K$ & Numero delle funzioni di hash (e delle sezioni) \\
-  $m$ & Dimensione in bit di una sezione \\
-  $N$ & Numero di elementi presenti nel filtro \\
-  $p$ & Densità \\
-  $P$ & Probabilità di un falso positivo \\
-  \hline
-\end{tabular}
-
-\medskip
+\begin{description}[labelindent=2\parindent,labelwidth=3em]
+	\item[$M$] Dimensione in bit dell'array.
+	\item[$K$] Numero delle funzioni di hash (e delle sezioni).
+	\item[$m$] Dimensione in bit di una sezione.
+	\item[$N$] Numero di elementi presenti nel filtro.
+	\item[$p$] Densità (numero di bit impostati a 1 sul totale).
+	\item[$P$] Probabilità di un falso positivo.
+\end{description}
 
 Vediamo ora come è possibile ottimizzare i parametri, cercando di minimizzare $P$, la probabilità
 di un falso positivo, come descritto in \cite{bloom-scalable}.

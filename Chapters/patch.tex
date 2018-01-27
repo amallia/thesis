@@ -145,29 +145,21 @@ indicare che l'elemento è presente. Successivamente, viene effettuato un second
 Il comando \cverb|BFDEBUG STATUS| viene usato per ispezionare lo
 stato del filtro \lnnum{5}. La stringa restituita è composta da due valori:
 
-\medskip
-\begin{tabular}{ |l|l|p{240pt}| }
-  \hline
-  $n$ & $1$ & La catena del filtro scalabile contiene un solo filtro \\
-  $e$ & $0.003$ & La probabilità di falsi positivi è impostata a \SI{0.3}{\percent} \\
-  \hline
-\end{tabular}
-\medskip
+\begin{description}[labelindent=2\parindent,leftmargin=!,labelwidth=6em,font={\bfseries\ttfamily}]
+  \item[n = 1] La catena del filtro scalabile contiene un solo filtro.
+  \item[e = 0.003] La probabilità di falsi positivi è impostata a \SI{0.3}{\percent}.
+\end{description}
 
 Per finire, il comando \cverb|BFDEBUG FILTER| serve a ispezionare lo stato del primo filtro della
 catena \lnnum{6}. La stringa restituita contiene tre valori:
 
-\medskip
-\begin{tabular}{ |l|l|p{240pt}| }
-  \hline
-  $k$ & $11$ & Il filtro utilizza $11$ funzioni di hash, cioè è diviso in $11$ sezioni \\
-  $s$ & $1798$ & Ciascuna sezione è formata da \SI{1798}{\bit}, per un totale di $\num{1798 x 11} =
-  \SI{19778}{\bit}$ \\
-  $b$ & $77$ & Al momento ci sono \SI{77}{\bit} impostati a $1$. Questo corrisponde infatti a $7$
-  elementi inseriti con $11$ funzioni di hash, e senza che si sia verificata alcuna collisione. \\
-  \hline
-\end{tabular}
-\medskip
+\begin{description}[labelindent=2\parindent,leftmargin=!,labelwidth=6em,font={\bfseries\ttfamily}]
+  \item[k = 12] Il filtro utilizza $12$ funzioni di hash, cioè è diviso in $12$~sezioni.
+  \item[s = 1811] Ciascuna sezione è formata da \SI{1811}{\bit}, per un totale di 
+      $\num{1811} \times \num{12} = \SI{21732}{\bit}$.
+  \item[b = 84] Al momento ci sono \SI{84}{\bit} impostati a $1$. Questo corrisponde infatti a $7$
+  elementi inseriti con $12$ funzioni di hash, senza che si sia verificata alcuna collisione.
+\end{description}
 
 Per modificare la probabilità di falso positivo di un filtro, è possibile specificare un valore
 durante il primo inserimento:
@@ -196,7 +188,7 @@ aumentando l'errore consentito.
 Le modifiche effettuate a Redis sono disponibili su GitHub, all'interno del
 \fnhref{https://github.com/rasky/redis/tree/bloomfilter}{repositorio fork di Redis}, in un branch
 chiamato \cverb|bloomfilter|, e la parte principale del codice è riportata anche
-nella \autoref{sec:modredis}.
+nella \autoref{sec:code:modredis}.
 
 \subsection{Strutture dati}
 
@@ -222,7 +214,7 @@ typedef struct bloom {
 La struttura \cverb|bloom| rappresenta l'intero filtro scalabile. I suoi campi sono
 così definiti:
 
-\begin{description}[leftmargin=!,labelwidth=8em,font={\bfseries\ttfamily}]
+\begin{description}[labelindent=2\parindent,leftmargin=!,labelwidth=8em,font={\bfseries\ttfamily}]
   \item[double e] La probabilità richiesta di un falso positivo. Questo è il valore richiesto
       dall'utente, che il filtro cercherà di rispettare come margine superiore.
   \item[int numfilters] Numero di filtri presenti nella catena.
@@ -237,12 +229,12 @@ mai richiesto.
 
 Ciascun filtro è rappresentato dalla struttura \cverb|filter|, definita dai seguenti campi:
 
-\begin{description}[leftmargin=!,labelwidth=8em,font={\bfseries\ttfamily}]
+\begin{description}[labelindent=2\parindent,leftmargin=!,labelwidth=8em,font={\bfseries\ttfamily}]
   \item[filter *next] Puntatore al filtro successivo nella catena.
   \item[uint32 k] Numero di funzioni di hash (e dunque di par\-ti\-zio\-ni).
   \item[uint64 b] Numero di bit attualmente impostati a $1$, con\-si\-de\-ran\-do tutte le
     partizioni.
-  \item[uint64 s] Dimensione di ciascuna partizione in bit. L'utilizzo di memoria effettivo è
+  \item[uint64 s] Dimensione di ciascuna partizione in bit. La memoria effettivamente utilizzata È
       $\ceil{s/7}$.
   \item[uint64 bmax] Numero massimo di bit che possono essere impostati a $1$ prima che venga
       raggiunta la densità scelta come obiettivo (tipicamente, \SI{50}{\percent}).
@@ -621,9 +613,9 @@ $s = m/k$, approssimando all'intero più vicino e accumulando il numero di eleme
 
 Il codice visto nei precedenti listati implementa un filtro scalabile di Bloom ma è necessario
 implementare ancora i comandi proposti in \autoref{sec:patch:newcommands}. Il codice completo è
-disponibile in \autoref{sec:modredis} e in questa sezione verrà analizzato solo un comando a titolo
-di esempio, \cverb|BFEXIST|, poiché una trattazione dettagliata richiederebbe di entrare nel merito
-anche delle numerose librerie e API interne di Redis.
+disponibile in \autoref{sec:code:modredis} e in questa sezione verrà analizzato solo un comando a
+titolo di esempio, \cverb|BFEXIST|, poiché una trattazione dettagliata richiederebbe di entrare nel
+merito anche delle numerose librerie e API interne di Redis.
 
 \begin{commentedsource}[style=csource,caption=Implementazione comando BFEXIST,label={lst:bfexistCommand}]
 /* BFEXIST key elem -> 0/1 */
@@ -739,10 +731,10 @@ attesa.
 Il quarto argomento è una stringa che codifica una serie di \emph{flag}, una per ciascun carattere.
 Le flag più comuni sono le seguenti:
 
-\begin{description}[leftmargin=!,labelwidth=2em,font={\bfseries\ttfamily}]
+\begin{description}[labelindent=2\parindent,leftmargin=!,labelwidth=2em,font={\bfseries\ttfamily}]
   \item[r] Il comando accede al database in sola lettura.
   \item[w] Il comando accede al database in lettura e scrittura.
-  \item[m] Il comando può aumentare la memoria occupata dal database.
+  \item[m] Il comando può aumentare la memoria usata dal database.
   \item[F] Il comando ha un'esecuzione molto rapida (\emph{fast}).
 \end{description}
 
@@ -760,6 +752,33 @@ gestire comandi con struttura più complessa, è possibile implementare un algor
 degli indici delle chiavi su misura, passando il puntatore alla funzione nel sesto argomento
 (impostato a \cverb|NULL| in \lnnum{2}).
 
+\subsection{Test automatici}
+
+Redis contiene al proprio interno un'ampia collezione di test automatici che vengono eseguiti
+durante lo sviluppo per verificare che le funzionalità implementate continuino a funzionare come
+previsto. La presenza di questi test è particolarmente fondamentale nel caso di interventi di
+\emph{refactoring}, cioè modifiche strutturali alla base di codice che dovrebbero essere invarianti
+rispetto alle funzionalità esposte. I test automatici sono scritti in TCL, un linguaggio di
+scripting, e possono essere invocati tramite il comando \cverb|make test| dalla directory in cui
+si trova l'albero dei sorgenti.
+
+Per poter verificare il corretto funzionamento di tutti i comandi implementati, sono stati
+scritti diversi test, contenuti all'interno del file \cverb|bloom.tcl| il cui listato completo
+è riportato nella \autoref{sec:code:test}. 
+
+Nel listato, si possono trovare alcuni semplici test che verificano il comportamento atteso dei
+comandi sia in condizioni normali (cioè equiperabili a degli esempi d'uso) sia in caso di possibili
+errori di sintassi (per esempio, un tentativo di cambiare la probabilità di falso positivo tramite
+\cverb|BFADD| dopo che il filtro è stato già creato).
+
+Inoltre è stato scritto un test più completo, chiamato ``Bloom testing different error rate``,
+che effettua un inserimento di $50$ milioni di elementi generati pseudo-casualmente, verificando poi
+sperimentalmente che la probabilità di falsi positivi sia contenuta entro il limite configurato,
+tramite $1$ milione di test di appartenenza. Il test viene inoltre ripetuto con tre diverse
+probabilità configurate in fase di creazione di filtro (\SI{10}{\%}, \SI{1}{\%}, \SI{0.1}{\%}). 
+
+Il test è stato usato durante la fase di sviluppo e dà esito positivo, ad ulteriore conferma della
+correttezza dell'implementazione.
 
 \section{Configurazione dei parametri di default}
 

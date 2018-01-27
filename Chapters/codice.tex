@@ -33,7 +33,7 @@ Si veda la \autoref{sec:bloomparms} per maggiori informazioni.
 
 
 \section{Modifica al database Redis}
-\label{sec:modredis}
+\label{sec:code:modredis}
 
 I seguenti listati mostrano la parte principale della modifica al database Redis:
 l'implementazione del filtro di Bloom, e i test automatizzati che verificano la correttezza
@@ -43,7 +43,8 @@ del codice. Si veda la \autoref{sec:patchexplain} per una descrizione dettagliat
 \sourcecode[language=C]{code/bloom.h}
 \sourcecode[language=C]{code/bloom.c}
 
-\subsection{Test di unità}
+\subsection{Test autmatici}
+\label{sec:code:test}
 \sourcecode[language=tcl]{code/bloom.tcl}
 
 \subsection{Analisi dei parametri del filtro scalabile}
