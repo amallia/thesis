@@ -169,3 +169,17 @@
 \ifpdf
   \pdfsuppresswarningpagegroup=1
 \fi
+
+% Spegni warning di pdflatex relativo al riuso dei target hyperref
+% tra algoritmi diversi. In realtà, al momento questo tipo di target non viene
+% neppure mai utilizzato (utilizziamo \lnote e \lnnum definiti sopra), ma
+% in questo modo il warning scompare.
+% https://tex.stackexchange.com/questions/177025/hyperref-cleveref-and-algpseudocode-same-identifier-warning
+\makeatletter
+\newcounter{algorithmicH}% New algorithmic-like hyperref counter
+\let\oldalgorithmic\algorithmic
+\renewcommand{\algorithmic}{%
+  \stepcounter{algorithmicH}% Step counter
+  \oldalgorithmic}% Do what was always done with algorithmic environment
+\renewcommand{\theHALG@line}{ALG@line.\thealgorithmicH.\arabic{ALG@line}}
+\makeatother
