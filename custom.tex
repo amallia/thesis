@@ -161,7 +161,7 @@
 % https://tex.stackexchange.com/questions/115479/insert-footnotes-with-href
 % con l'aggiunta di \RaggedRight per disattivare la giustificazione e dunque
 % evitare i warning di hbox undefull.
-\newcommand\fnhref[2]{%
+\newcommand{\fnhref}[2]{%
   \href{#1}{#2}\footnote{\RaggedRight\url{#1}}%
 }
 
