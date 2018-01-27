@@ -865,33 +865,33 @@ filtri nella catena per poter inserire il numero di elementi richiesto. In quell
   composta come si può vedere dalla tabella.
 \end{itemize}
 
-\begin{table}[htb]
+\begin{table}[p]
   \centering
-  \hspace*{-2cm}
-  \input{code/scalingbloomparms}
+  \hspace*{-4cm}%
+  \input{code/scalingbloomparms}%
+  \hspace*{-4cm}
   \caption{Analisi dell'andamento dei parametri al crescere della catena}
   \label{tbl:scalingbloomparms}
-  \hspace*{-2cm}
 \end{table}
 
 \clearpage
 \begin{figure}
   \centering
   \begin{minipage}[c]{0.7\textwidth}
-    \subfloat[][Crescita dell'errore (valore configuro: \SI{0.3}{\%})]{
-      \includegraphics[width=\textwidth]{img/scalingbloom_error}
+    \subfloat[][Crescita dell'errore (valore configuro: \SI{0.3}{\%})]{%
+      \includegraphics[width=\textwidth]{img/scalingbloom_error}%
     }
   \end{minipage}
   \qquad
   \begin{minipage}[c]{0.7\textwidth}
-    \subfloat[][Crescita delle funzioni di hash]{
-      \includegraphics[width=\textwidth]{img/scalingbloom_hash}
+    \subfloat[][Crescita delle funzioni di hash]{%
+      \includegraphics[width=\textwidth]{img/scalingbloom_hash}%
     }
   \end{minipage}
   \qquad
   \begin{minipage}[c]{0.7\textwidth}
-    \subfloat[][Crescita del consumo di memoria]{
-      \includegraphics[width=\textwidth]{img/scalingbloom_memory}
+    \subfloat[][Crescita del consumo di memoria]{%
+      \includegraphics[width=\textwidth]{img/scalingbloom_memory}%
     }
   \end{minipage}
 
@@ -899,19 +899,3 @@ filtri nella catena per poter inserire il numero di elementi richiesto. In quell
   default}
   \label{fig:scalingbloom}
 \end{figure}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -13,6 +13,7 @@
 \usepackage{needspace} % Evita listati/tabelle orfani
 \usepackage{enumitem} % Più opzioni per le definition list
 \usepackage{fancyvrb,newverbs} % Per colorare il bkg dei verbatim
+\usepackage{ragged2e} % Per disattivare giustificazione nelle note che contengono URL
 
 % Definisci \EUR come unità di misura con il simbolo dell'euro
 \usepackage{eurosym}  
@@ -156,10 +157,12 @@
 \hyphenation{macOS}  % non sillabare mai!
 
 % Mostra le URL come note a pié di pagina, per essere leggibili anche in caso
-% di stampa.
+% di stampa. Derivato da:
 % https://tex.stackexchange.com/questions/115479/insert-footnotes-with-href
+% con l'aggiunta di \RaggedRight per disattivare la giustificazione e dunque
+% evitare i warning di hbox undefull.
 \newcommand\fnhref[2]{%
-  \href{#1}{#2}\footnote{\url{#1}}%
+  \href{#1}{#2}\footnote{\RaggedRight\url{#1}}%
 }
 
 % Spegni warning su inclusione immagini PDF

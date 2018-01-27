@@ -61,7 +61,7 @@ class TexOutput:
         print(r"    " + " & ".join([idx, k, e, m, n, ck, ce, cm, cn]) + r" \\")
     def finalize(self):
         print(r"    \hline")
-        print(r"\end{tabular}")
+        print(r"\end{tabular}%")
 
 out = TexOutput()
 
