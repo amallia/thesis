@@ -33,7 +33,6 @@
 #define __BLOOM_H
 #include <stdint.h>
 
-/* --------- BEGIN: Structures --------- */
 typedef struct filter {
     struct filter *next;  /* next filter in chain */
     uint64_t s;           /* size of each partition in bits */
@@ -48,7 +47,6 @@ typedef struct bloom {
 	int numfilters;       /* number of filters in the chain */
 	filter *first;        /* first filter in the chain */
 } bloom;
-/* --------- END: Structures --------- */
 
 bloom *bloomNew(void);
 void bloomRelease(bloom *bf);
