@@ -3,11 +3,11 @@
 \section{Obiettivo}
 
 L'obiettivo della modifica a Redis svolta per questa tesi è introdurre il supporto per i filtri di
-Bloom. È stato effettuata prima una fase di progettazione dei nuovi comandi da aggiungere e di
-conseguenza della variante esatta di filtro da implementare; è stata preparata una prima
-implementazione completa di copertura tramite test automatizzati; infine, sono state effettuate
-delle analisi sui parametri di configurazione di default, cercando di studiare il compromesso tra
-utilizzo della memoria, tempo di esecuzione, e probabilità di falsi positivi.
+Bloom. È stata effettuata prima una fase di progettazione dei nuovi comandi da aggiungere e una
+analisi della variante esatta di filtro da implementare; è stata preparata una prima implementazione
+completa di verifica tramite test automatici; infine, sono state effettuate delle analisi sui
+parametri di configurazione di default, cercando di studiare il compromesso tra utilizzo della
+memoria, tempo di esecuzione, e probabilità di falsi positivi.
 
 \section{Scelta della variante di filtro}
 
@@ -26,7 +26,7 @@ In particolare, abbiamo identificato i seguenti requisiti:
 	\item \textbf{Scalabilità}: l'utilizzo della memoria deve essere molto contenuto quando la
 	struttura dati contiene pochi elementi, e crescere gradualmente all'aumentare degli elementi.
 	Eventuali pre-allocazioni devono essere molto limitate. Per esempio, non sarebbe accettabile che
-	il filtro possa occupare \SI{1}{\mega\byte} di RAM alla creazione.
+	il filtro possa occupare \SI{1}{\mebi\byte} di RAM alla creazione.
 
 	\item \textbf{Scarsa configurabilità}: Redis cerca di offrire strutture dati che siano
 	preconfigurate con default accettabili per la maggior parte dei casi d'uso, e offre la minima
@@ -65,7 +65,7 @@ Questi sono i comandi implementati:
 	elementi che risultavano non presenti al momento dell'inserimento (dato soggetto quindi ad
 	errore).
 
-	L'errore $P$ può essere indicato opzionalmente solo al momento della creazione, cioè del primo
+	L'errore \cverb|p| può essere indicato opzionalmente solo al momento della creazione, cioè del primo
 	inserimento; se viene specificato in un filtro già esistente, e il valore specificato è diverso
 	da quello con cui il filtro è stato creato, il comando restituisce un errore senza effettuare
 	alcun inserimento.
@@ -96,9 +96,9 @@ Questi sono i comandi implementati:
 Si noti come, avendo esposto il solo parametro di probabilità, di fatto i comandi si applicano ad
 una qualunque struttura dati probabilistica che implementa un insieme, consentendo in futuro di
 cambiare implementazione se lo si ritenesse necessario, senza invalidare l'utilizzo da parte dei
-client. I comandi di Redis, infatti, mantengono una compatibilità completa rispetto alla prima
+client.\footnote{I comandi di Redis mantengono una compatibilità completa rispetto alla prima
 versione in cui vengono implementati, in modo che sia sempre possibile aggiornare il server senza
-causare problemi ai client.
+causare problemi ai client.}
 
 \section{Esempio d'uso dei comandi}
 
@@ -241,12 +241,13 @@ Ciascun filtro è rappresentato dalla struttura \cverb|filter|, definita dai seg
   \item[{uint8 *parts[]}] Array di puntatori alle partizioni.
 \end{description}
 
-Si noti che l'array \cverb|parts| è definito a dimensione variabile (anche detto \emph{array
-flessibile}), utilizzando la funzionalità introdotta nello standard C99 che consente all'ultimo
-membro di una struttura, se array, di avere una dimensione non dichiarata staticamente, ma gestita
-dinamicamente al momento di allocare la struttura stessa sullo heap. Poiché la dimensione dell'array
-è pari a \cverb|k| e non cambia mai dopo l'inizializzazione della struttura, questa scelta consente
-di allocare la struttura \cverb|filter| e l'array di puntatori dinamico con una sola allocazione.
+Si noti che l'array \cverb|parts| è definito a dimensione variabile, detto anche ``array
+flessibile'' (\emph{flexibile array}), utilizzando la funzionalità introdotta nello standard C99 che
+consente all'ultimo membro di una struttura, se array, di avere una dimensione non dichiarata
+staticamente, ma gestita dinamicamente al momento di allocare la struttura stessa sullo heap. Poiché
+la dimensione dell'array è pari a \cverb|k| e non cambia mai dopo l'inizializzazione della
+struttura, questa scelta consente di allocare la struttura \cverb|filter| e l'array di puntatori
+dinamico con una sola allocazione.
 
 \subsection{Parametri di configurazione statici}
 \label{sec:patch:staticparms}
@@ -492,10 +493,10 @@ avanzato, visto nella \autoref{sec:bloom:hash}. L'algoritmo richiede in partenza
 hash ($h_a$ e $h_b$): nell'implementazione viene utilizzata la funzione di hash
 \cverb|MurmurHash64A| \lnnum{1}, una variante a \SI{64}{\bit} della funzione MurMurHash2
 (\autoref{alg:murmurhash2}). Di questa funzione, è presente già un'implementazione dentro il
-codice sorgente di Redis, e poiché l'output è a \SI{64}{\bit}, consideriamo la suddivisione in due
+codice sorgente di Redis, e poiché l'output è a \SI{64}{\bit}, si considera la suddivisione in due
 valori a \SI{32}{\bit} come l'output di due funzioni di hash separate, ottenendo così i due valori
 \cverb|a| e \cverb|b| \lnnum{2} utili come input per l'algoritmo di doppio hash avanzato. La funzione
-\cverb|MurMurHash64A| richiede come abbiamo visto un seme; in questo caso è necessario poter 
+\cverb|MurMurHash64A| richiede (come si è visto) un seme; in questo caso è necessario poter 
 ricostruire sempre lo stesso hash a partire dallo stesso elemento, quindi il seme deve essere
 fisso. È stato quindi calcolato in fase di sviluppo un valore casuale ed inserito nel
 codice (\cverb|0xc5fb9af2|).
@@ -506,8 +507,9 @@ funzione di hash all'interno del dominio scelto \lnnum{4}. Invece del classico a
 riduzione $idx = hash \bmod s$ (con $s$ dimensione in bit della sezione), utilizziamo la formula
 $idx = hash \times s / 2^{32}$ che effettua comunque la riduzione richiesta, considerando che $index
 \in \interval[open right]{0}{2^{32}}$, ma senza richiedere una divisione, che anche nei moderni
-processori ha una latenza elevata (circa $26$ cicli, contro i $4$ di una moltiplicazione). Si veda
-\cite{lemire-reduction} per i dettagli relativi a questa formula di riduzione.
+processori ha una latenza elevata.\footnote{Una divisione ha una latenza di circa $26$ cicli,
+contro i $4$ di una moltiplicazione.} Si veda \cite{lemire-reduction} per i dettagli relativi a
+questa formula di riduzione.
 
 A questo punto, subito prima di impostare il bit a $1$, si verifica lo stato del bit \lnnum{5}; se
 esso è impostato a zero, si incrementa un contatore chiamato \cverb|nbits| che tiene conto di quanti
@@ -657,15 +659,15 @@ rappresentante il database per la chiave specificata; in caso che la chiave non 
 al client il valore $0$ come risposta, e restituisce il valore \cverb|NULL| al chiamante. In questo
 caso, non è necessario fare più nulla ed è possibile quindi uscire direttamente dalla funzione.
 
-Se invece viene trovato un elemento nel database, è necessario verificare se sia del tipo giusto.
-Per l'implementazione dei filtri di Bloom, è stato definito un nuovo tipo di dato chiamato 
-\cverb|OBJ_BLOOM| (tutti i tipi di strutture dati hanno una macro con prefisso \cverb|OBJ_| che
-si espande ad un progressivo, definite nel file \cverb|server.h|). La funzione \cverb|checkType| si
-occupa di verificare se il tipo è giusto \lnnum{2}, e in caso negativo prepara già un messaggio di
-errore e lo restituisce al client. Anche questa funzione infatti è pensata per essere usata nel
-contesto dell'implementazione di un comando e si occupa quindi non solo del test in sé ma anche di
-creare un messaggio di errore opportuno. Se la funzione restituisce falso, non c'è altro da fare se
-non uscire.
+Se invece viene trovato un elemento nel database, è necessario verificare se sia del tipo
+giusto.\footnote{Per l'implementazione dei filtri di Bloom, è stato definito un nuovo identificatore
+di tipo di dato chiamato \ctexttt{OBJ\_BLOOM}. Tutti i tipi di strutture dati hanno una macro con
+prefisso \ctexttt{OBJ\_} che si espande ad un progressivo, definite nel file \ctexttt{server.h}.} La
+funzione \cverb|checkType| si occupa di fare questo controllo \lnnum{2}, e in caso negativo
+prepara già un messaggio di errore e lo restituisce al client. Anche questa funzione infatti è
+pensata per essere usata nel contesto dell'implementazione di un comando e si occupa quindi non solo
+del test in sé ma anche di creare un messaggio di errore opportuno. Se la funzione restituisce
+falso, non c'è altro da fare se non uscire.
 
 Se il tipo è corretto, possiamo finalmente accedere al dato in memoria, che sarà un'istanza della
 struttura \cverb|bloom| (\autoref{lst:bloomStruct}), e chiamare la funzione  \cverb|bloomExist|

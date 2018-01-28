@@ -30,7 +30,7 @@ Ci sono due principali famiglie di algoritmi probabilistici:
 \end{itemize}
 
 Nelle strutture dati, invece, l'utilizzo del caso permette la memorizzazione di un'informazione
-parziale, consentendo comunque di elaborarla almeno parzialmente ma con margini di errori
+parziale, consentendo comunque di elaborarla almeno in parte ma con margini di errori
 accettabili. Si tratta tipicamente di strutture dati molto specialistiche, utili ad implementare un
 solo specifico algoritmo, poiché la perdita di informazione controllata è orientata a memorizzare il
 minimo indispensabile per lo specifico scenario d'uso, ma impedendo ovviamente delle operazioni che
@@ -42,33 +42,32 @@ Un insieme è una struttura dati che memorizza un gruppo di elementi distinti, s
 essi (quindi né ordinamento intrinseco dei dati, né ordinamento esterno quale per esempio l'ordine
 di inserimento).
 
-Le operazioni principali che si possono effettuare sulla struttura dati sono le seguenti:
+Le operazioni principali che si possono effettuare su un insieme sono le seguenti:
 
-\begin{itemize}
-	\item \textbf{Inserimento}: aggiunge un elemento all'insieme. Se l'elemento è già presente,
-	l'operazione non modifica la struttura dati. In alcune implementazioni, l'operazione può 
-	restituire un codice di errore per indicare che l'inserimento non è stato effettuato
-	perché l'elemento era già presente.
+\begin{description}[labelindent=2\parindent,labelwidth=10em,leftmargin=!,font=\normalfont\bfseries]
+	\item[Inserimento] Aggiunge un elemento all'insieme. Se l'elemento è già presente,
+	l'operazione non modifica la struttura dati.
 
-	\item \textbf{Test di appartenenza}: controlla se un elemento è presente nell'in\-sie\-me.
+	\item[Test di appartenenza] Controlla se un elemento è presente nel\-l'in\-sie\-me.
 
-	\item \textbf{Cardinalità}: restituisce il numero di elementi presenti nell'in\-sie\-me.
+	\item[Cardinalità] Restituisce il numero di elementi presenti nell'in\-sie\-me.
 
-	\item \textbf{Unione}: restituisce un insieme che contiene tutti gli elementi presenti in almeno
+	\item[Unione] Restituisce un insieme che contiene tutti gli elementi presenti in almeno
 	uno degli insiemi forniti in ingresso.
 
-	\item \textbf{Intersezione}: restituisce un insieme che contiene tutti gli e\-le\-men\-ti
+	\item[Intersezione] Restituisce un insieme che contiene tutti gli e\-le\-men\-ti
 	presenti in tutti gli insiemi forniti in ingresso.
-\end{itemize}
+\end{description}
 
 Alcune implementazioni offrono anche operazioni più avanzate legate alla teoria degli insiemi,
 come per esempio la differenza o la differenza simmetrica. 
 
-Un'implementazione classica di un'insieme prevede l'utilizzo di una tabella hash: l'inserimento
-di un elemento avviene codificandolo con una funzione hash, memorizzandolo all'interno della
-tabella, gestendo in modo opportuno le collisioni; il test di appartenenza può essere fatto così in
-modo efficiente effettuando una ricerca nella tabella hash. Entrambe queste operazioni così 
-implementate richiedono quindi un tempo d'esecuzione ammortizzato costante ($\mathcal{O}(1)$).
+Un'implementazione classica di un'insieme prevede l'utilizzo di una tabella hash: l'inserimento di
+un elemento avviene calcolando un codice tramite una funzione hash, che viene usato poi per
+memorizzarlo all'interno della tabella, gestendo in modo opportuno le collisioni; il test di
+appartenenza può essere fatto così in modo efficiente effettuando una ricerca nella tabella hash.
+Entrambe queste operazioni, così implementate, richiedono quindi un tempo d'esecuzione ammortizzato
+costante ($\mathcal{O}(1)$).
 
 Al contrario di un array associativo, un insieme non ha dati associati all'elemento stesso, ma
 nonostante questo è spesso possibile riutilizzare la stessa implementazione di tabella hash,
@@ -77,8 +76,8 @@ nelle librerie che mettono a disposizione una struttura dati di tipo array assoc
 completa); per esempio, il linguaggio Python fin dalla versione 1.0 prevedeva \cverb|dict| come
 struttura dati (un array associativo implementato con tabella hash), mentre \cverb|set|, per la
 gestione degli insiemi di dati, è stato aggiunto nella versione 2.3; prima di allora, era comune
-implementare l'insieme con un dizionario i cui valori erano semplicemente valori booleani (di solito
-\cverb|True|).
+implementare un insieme con un \cverb|dict| i cui valori erano semplicemente valori booleani (
+per esempio, la costante \cverb|True|).
 
 \section{Proprietà dei filtri di Bloom}
 
@@ -87,10 +86,11 @@ filtro infatti non vengono memorizzati per intero tutti gli elementi, ma ne vien
 una rappresentazione parziale, che consente di effettuare comunque alcune operazioni, mantenendo
 però dei margini di errore controllati.
 
-In particolare, il test di appartenenza restituisce un valore probabilistico, con la presenza di
-falsi valori positivi (cioè il test restituisce un valore di successo anche per elementi non
-effettivamente presenti). Il margine di errore può essere controllato tramite alcuni parametri, che
-vengono stabiliti al momento della creazione del filtro stesso.
+In particolare, il test di appartenenza restituisce un esito probabilistico, con la presenza di
+alcuni errati valori positivi, detti comunemente \emph{falsi positivi} (cioè valori per i quali
+il test ha successo anche se non effettivamente presenti). Il margine di errore può essere
+controllato tramite alcuni parametri, che vengono stabiliti al momento della creazione del filtro
+stesso.
 
 Vediamo nel dettaglio come i filtri si comportano relativamente alle operazioni principali sugli
 insiemi elencate precedentemente:
@@ -127,21 +127,24 @@ insiemi elencate precedentemente:
 	massimo di elementi previsto dai parametri di creazione, altrimenti non sarà utilizzabile.
 
 	\item
-	\textbf{Intersezione}: è possibile calcolare con precisione l'intersezione di due filtri,
-	purché siano creati con gli stessi parametri.
+	\textbf{Intersezione}: è possibile calcolare con precisione l'intersezione di due filtri, purché
+	siano creati con gli stessi parametri. Il filtro risultante è di qualità potenzialmente peggiore
+	di quello che si sarebbe potuto creare inserendo gli elementi dell'insieme intersezioni in un
+	filtro vuoto, ma se non si ha più accesso agli elementi può essere comunque un'operazione
+	utile.
 
 \end{itemize}
 
 \section{Scenari applicativi}
 \label{sec:bloom:scenari}
 
-I filtri di Bloom hanno conosciuto negli anni una ampia adozione, in diversi scenari applicativi. 
+I filtri di Bloom hanno conosciuto negli anni un'ampia adozione, in diversi scenari applicativi. 
 In linea generale, consentono di ottenere una rappresentazione compatta di un insieme di dati,
 che può essere usata sia come cache ad accesso veloce (in RAM) per un controllo preliminare
 di esistenza di un elemento, sia trasferita in modo efficiente via rete ad un altro nodo per
 fornire una vista parziale di un set di dati.
 
-Un approfondimento degli scenari applicativi presentati qui può essere trovata in
+Un approfondimento degli scenari applicativi qui presentati può essere trovata in
 \cite{bloom-network}.
 
 \subsection{Controllo ortografico e sillabazione}
@@ -153,25 +156,26 @@ di sillabazione molto complesse, con numerose eccezioni. Bloom pensò di ottimiz
 utilizzando un filtro per memorizzare tutte le parole che richiedevano un'eccezione; il programma
 poteva così verificare velocemente se una parola era soggetta ad eccezione o meno con un test
 di appartenenza nel filtro; nel caso il test restituisse un valore positivo, il programma poteva
-effettuare un controllo più lento nel dizionario completo delle eccezione. Le parole soggette
+effettuare un controllo più lento nel dizionario completo delle eccezioni. Le parole soggette
 a falso positivo venivano riportate al caso standard al termine del controllo nel dizionario.
 
 Allo stesso modo, i filtri di Bloom vennero usati per i primi programmi di controllo ortografico
 negli anni 80. Era possibile infatti memorizzare una versione compatta di un dizionario di tutte le
 parole conosciute (complete anche tutte le forme verbali che possono essere costruite tramite
 algoritmo), ed utilizzarlo per effettuare il controllo; in questo caso, i falsi positivi
-corrispondevano a parole non esistenti che veniva erroneamente ignorate durante il controllo. Visto
-che all'epoca non era possibile distribuire l'intero dizionario, questa soluzione era un compromesso
-accettabile.
+corrispondevano a parole non esistenti che venivano erroneamente ignorate durante il controllo.
+Visto che all'epoca non era possibile distribuire l'intero dizionario, questa soluzione era un
+compromesso accettabile.
 
 \subsection{Proxy Cache distribuita}
 
 In \cite{bloom-proxy}, viene introdotto uno dei primi casi di utilizzo dei filtri di Bloom per
-ottimizzare i trasferimenti di rete. Lo scenario prevedeva una rete di proxy web, che comunicavano
-tra loro. Nel momento in cui veniva effettuata una richiesta ad un proxy per una pagina web non
-presente nella cache, il proxy poteva comunicare con gli altri proxy della rete, chiedendo loro
-se qualcuno aveva nella propria cache la pagina richiesta, in modo da accedervi senza contattare
-il server d'origine.
+ottimizzare i trasferimenti di rete. Lo scenario prevedeva una rete di proxy web\footnote{Un
+\emph{proxy web} è un programma che veicola richieste HTTP da un client verso il server,
+intercettandole di fatto per scopi vari: caching, filtri, monitoraggio.}, che comunicavano tra loro.
+Nel momento in cui veniva effettuata una richiesta ad un proxy per una pagina web non presente nella
+cache, il proxy poteva comunicare con gli altri proxy della rete, chiedendo loro se qualcuno avesse
+nella propria cache la pagina richiesta, in modo da accedervi senza contattare il server d'origine.
 
 Per diminuire il traffico generato per la comunicazione tra proxy, fu introdotto un meccanismo
 tramite il quale ciascun proxy periodicamente pubblicava in broadcast un filtro di Bloom contenente
@@ -195,14 +199,15 @@ vengono infatti aggiunti e rimossi con alta frequenza ogni ora.
 Un applicativo che volesse verificare la presenza di un sito all'interno dell'elenco potrebbe
 effettuare una interrogazione via API ai server di Google; il tempo di esecuzione di questo
 controllo comprende però almeno 1 \emph{roundtrip} di rete tra il client e il server, che può
-richiedere tempi variabile a seconda della qualità della connessione Internet, ma può salire fino a
-centinaia di millisecondi per una connessione mobile (anche in presenza di segnale ottimale). Questo
-genere di attesa prima della visualizzazione di una pagina è considerato non accettabile per un
-browser come Google Chrome, il quale cerca di minimizzare il tempo di apertura dei siti.
+richiedere un tempo variabile a seconda della qualità della connessione Internet, ma può aumentare
+fino a centinaia di millisecondi per una connessione \emph{mobile} (anche in presenza di segnale
+ottimale). Un'attesa di questa lunghezza prima della visualizzazione di una pagina è considerata non
+accettabile per un browser come Google Chrome, il quale cerca di minimizzare il tempo di apertura
+dei siti.
 
 Scaricare l'intera lista di siti richiederebbe probabilmente molta banda, soprattutto per le
 numerose sincronizzazioni che sarebbero necessarie periodicamente. Vista l'alta volatilità della
-lista, infatti, sarebbe necessario effettuare sincronizzazioni con alta frequenza, per evitare di
+lista, infatti, sarebbe necessario effettuare sincronizzazioni molto spesso onde evitare di
 consultare una lista troppo vecchia, e questi aggiornamenti avrebbero impatti importanti
 sull'utilizzo di banda Internet da parte del client.
 
@@ -215,31 +220,31 @@ Ogni volta che l'utente navigava su un nuovo sito, il client verificava prima se
 presente nel filtro: nel caso più comune (sito non malevole), il filtro restituiva correttamente
 esito negativo, e il browser consentiva l'accesso all'utente senza nessun rallentamento. Solo nei
 casi in cui il filtro restituiva esito positivo, il client effettuava una chiamata alle API di
-Google per verificare se l'indirizzo era veramente malevolo o se si trattasse di un falso positivo;
-con parametri di creazione adeguati, era possibile fare in modo che questa chiamata avvenisse
-pochissime volte nel corso di una navigazione normale, impattando così il meno possibile i tempi
-di apertura dei siti.
+Google per verificare se l'indirizzo fosse veramente malevolo o se si trattasse di un falso
+positivo; con parametri di creazione adeguati, era possibile fare in modo che questa chiamata
+avvenisse pochissime volte nel corso di una navigazione normale, impattando così il meno
+frequentemente possibile i tempi di apertura dei siti.
 
 Con il passare del tempo, la lista è cresciuta troppo, e di conseguenza il filtro ha iniziato ad
 avere dimensioni importanti; di conseguenza, è stato scelto di usare un'altra struttura dati
-probabilistica (gli insiemi di Golomb-Rice \cite{golomb,rice,golomb-rice}), che ha una
+probabilistica: gli insiemi di Golomb-Rice \cite{golomb,rice,golomb-rice}, che hanno una
 rappresentazione in memoria compressa, dunque più compatta, sebbene più lenta da utilizzare
 \cite{golomb-safebrowsing}.
 
 \subsection{Riconciliazione di una rete di distribuzione con\-te\-nu\-ti}
 \label{sec:bloomcdn}
 
-Le reti di distribuzione contenuti (\emph{Content Delivery Network} o \emph{CDN}) sono delle reti
-di server distribuiti geograficamente che memorizzano copie di dati statici (immagini, font, 
-fogli di stile, sorgenti javascript) richiesti durante la navigazione di siti ad alto traffico. 
-Memorizzando una copia di questi contenuti sui nodi della CDN, il contenuto può essere offerto
-al visitatore da un server geograficamente più vicino a lui e quindi con una latenza di rete
-inferiore, migliorando la velocità di accesso al sito; inoltre, il traffico si distribuisce
-così su tanti nodi, diminuendo l'impatto del traffico sul server principale.
+Le reti di distribuzione contenuti (\emph{Content Delivery Network} o CDN) sono delle reti di server
+distribuiti geograficamente che memorizzano copie di dati statici\footnote{Tipicamente, si tratta di
+immagini, font, fogli di stile e sorgenti Javascript.} richiesti durante la navigazione di siti ad
+alto traffico. Memorizzando una copia di questi dati sui nodi della CDN, il contenuto può
+essere offerto al visitatore da un server geograficamente più vicino a lui e quindi con una latenza
+di rete inferiore, migliorando la velocità di accesso al sito; inoltre, il traffico si distribuisce
+così su tanti nodi, diminuendo l'impatto a livello di banda utilizzata sul server principale.
 
 In alcuni casi, può essere richiesto che i nodi della CDN si \emph{riscaldino}, popolando le
 proprie cache di contenuti che si ritiene verranno richiesti a breve dagli utenti. In questo caso,
-le CDN lavorano con una logica di rete P2P, trasferendo i dati da nodo a nodo. Per sincronizzare
+le CDN lavorano con una logica di rete peer-to-peer, trasferendo i dati da nodo a nodo. Per sincronizzare
 il contenuto del nodo $N1$ con il nodo $N2$, $N1$ invia a $N2$ un filtro di Bloom contentente
 l'elenco dei contenuti presenti nella propria cache. $N2$ può quindi utilizzare il filtro
 per individuare i contenuti che $N1$ non possiede, ed inviargieli. In caso di falso positivo,
@@ -249,23 +254,25 @@ elevata per non impattare sulle prestazioni: infatti $N1$ non avrà il dato disp
 della prima richiesta, e si occuperà di scaricarlo in quel momento. 
 
 L'azienda Akamai (leader di mercato nel settore delle CDN) utilizza i filtri di Bloom anche per
-evitare di memorizzare contenuti richiesti una sola volta (come descritto in \cite{bloom-akamai}).
-Infatti ogni nodo conserva un filtro di Bloom dei contenuti richiesti almeno una volta. Alla prima
-richiesta, il contenuto non è ancora presente nel filtro e viene aggiunto ma non viene cachato
-dal nodo. In questo modo, si evita di inserire in cache contenuti non popolari che possono 
-utilizzare spazio meglio utilizzato da contenuti più richiesti. I falsi positivi corrispondono
-a contenuti richiesti la prima volta che risultano però già richiesti; in questo caso, poiché
-la probabilità è bassa, l'ottimizzazione ha comunque successo nel non appesantire troppo la cache.
+evitare di memorizzare contenuti richiesti una sola volta \cite{bloom-akamai}. Infatti ogni nodo
+conserva un filtro di Bloom dei contenuti richiesti almeno una volta. Alla prima richiesta, il
+contenuto non è ancora presente nel filtro e viene aggiunto al filtro ma senza inserirne il
+contenuto nella cache del nodo. In questo modo, si evita di inserire in cache contenuti non popolari
+che possono utilizzare spazio meglio destinato a contenuti più richiesti. I falsi positivi
+corrispondono a contenuti richiesti la prima volta, ma che a causa dell'errore del test di appartenenza
+appaiono come già acceduti in passato; in questo caso, poiché la probabilità con cui questo
+evento avviene è bassa, l'ottimizzazione ha comunque successo e la maggior parte dei contenuti
+viene aggiunto alla cache solo al secondo accesso.
 
 \subsection{Routing ottimale in reti P2P}
 
-All'interno delle reti puramente P2P, il routing è l'algoritmo che consente ad ogni nodo di
+All'interno delle reti puramente peer-to-peer (P2P), per ``routing'' si intende l'algoritmo che consente ad ogni nodo di
 decidere verso quale altro nodo inviare un pacchetto. È possibile pensare alla rete P2P come
 ad un grafo, e al problema del routing come alla ricerca di un percorso tra nodi all'interno
 del grafo. La ricerca del percorso ottimale è di solito possibile tramite dei protocolli di 
 \emph{path discovery}, che sono però abbastanza onerosi. Di conseguenza, è possibile memorizzare
-l'esito della ricerca del percorso all'interno di un bloom filter associato ad ogni arco uscente.
-Se viene richiesto di effettuare lo stesso routing, il bloom filter consente di individuare
+l'esito della ricerca del percorso all'interno di un filtro di Bloom associato ad ogni arco uscente.
+Se viene richiesto di effettuare lo stesso routing, il filtro consente di individuare
 rapidamente l'arco da utilizzare per inviare il pacchetto. I falsi positivi in questo caso
 corrispondono a routing non ottimali: il pacchetto viene inviato erroneamente al nodo sbagliato,
 ma probabilmente raggiungerà comunque poi la destinazione, sebbene non nel modo più efficiente. 
@@ -280,8 +287,8 @@ dei filtri).
 
 Un filtro di Bloom è un array di bit, utilizzato come tabella hash, di dimensione arbitraria $M$
 fissata al momento della creazione in base ai parametri (vedi la \autoref{sec:bloomparms}). Quando
-il filtro è vuoto, tutti i bit sono impostati a 0. La seguente tabella mostra un filtro vuoto
-composto di 11 bit:
+il filtro è vuoto, tutti i bit sono impostati a 0. La seguente figura mostra un filtro vuoto
+composto da \SI{11}{\bit}:
 
 \begin{center}
   \begin{tabular}{*{11}{|c}|}
@@ -298,10 +305,10 @@ composto di 11 bit:
 \subsection{Inserimento di un elemento}
 \label{sec:bloom:add}
 
-L'inserimento di un elemento $X$ (\autoref{alg:bloominsert}) avviene calcolando alcune funzioni di
-hash $h_i(X)$ prestabilite sull'elemento (il numero delle funzioni $K$ è anch'esso un parametro del
-filtro). I $K$ valori risultanti $h_0(X), h_1(X), \dots , h_{K-1}(X)$ sono utilizzati per
-identificare singoli bit all'interno dell'array (per esempio, scegliendo il bit con indice $h_i(X)
+L'inserimento di un elemento $x$ (\autoref{alg:bloominsert}) avviene calcolando alcune funzioni di
+hash $h_i(x)$ prestabilite sull'elemento (il numero delle funzioni $K$ è anch'esso un parametro del
+filtro). I $K$ valori risultanti $h_1(x), h_1(x), \dots , h_{K}(x)$ sono utilizzati per
+identificare singoli bit all'interno dell'array (per esempio, scegliendo il bit con indice $h_i(x)
 \bmod M$), e i bit così identificati vengono impostati a 1. Si noti che nessuna altra informazione
 sull'elemento viene memorizzata dentro il filtro.
 
@@ -310,7 +317,7 @@ sull'elemento viene memorizzata dentro il filtro.
 \label{alg:bloominsert}
 \begin{algorithmic}[1]
 \Procedure{BloomInsert}{$bf$, $x$}
-	\For {$i=0$ \textbf{to} $K-1$}
+	\For {$i=1$ \textbf{to} $K$}
 		\State $j \gets h_i(x) \bmod M$
 		\State $bf(j) \gets 1$
 	\EndFor
@@ -376,7 +383,8 @@ conflitto di funzione di hash ($h_1(A) = h_2(C)$) che è possibile ignorare:
   \end{tabular}
 \end{center}
 
-A questo punto, l'inserimento dei 3 elementi è terminato.
+A questo punto, l'inserimento dei 3 elementi è terminato, avendo impostato a 1 un totale di $5$
+bit, indipendentemente dalla grandezza originale degli elementi.
 
 \subsection{Test di appartenenza}
 
@@ -391,7 +399,7 @@ presente} all'interno del filtro; se almeno uno dei bit è impostato a 0, l'elem
 \label{alg:bloomtest}
 \begin{algorithmic}[1]
 \Procedure{BloomTest}{$bf$, $x$}
-	\For {$i=0$ \textbf{to} $K-1$}
+	\For {$i=1$ \textbf{to} $K$}
 		\State $j \gets h_i(x) \bmod M$
 		\If{$bf(j) = 0$}
 			\State \Return \textit{false}
@@ -407,7 +415,7 @@ Il motivo per cui il test di appartenenza non può asserire con certezza la pres
 elementi distinti; quando il test verifica se un determinato bit è impostato a 1, non può sapere
 se quel bit è stato impostato tramite l'inserimento dell'elemento su cui si sta effettuando il test,
 o tramite l'inserimento di un altro elemento che è in conflitto a livello di funzione di hash. Se
-un elemento che non è presente utilizza, per il test di primalità, $K$ bit che sono stati
+un elemento che non è presente utilizza, per il test di appartenenza, $K$ bit che sono stati
 precedenti accesi da altri elementi tramite le varie funzioni di hash ad essi applicate, l'elemento
 risulterà falsamente presente nel filtro, causando un cosiddetto \emph{falso positivo}.  
 
@@ -480,38 +488,41 @@ l'elemento $F$ non era stato precedentemente inserito nel filtro.
 
 Come abbiamo visto, ogni filtro richiede l'utilizzo di un certo numero $K$ di funzioni di hash; la
 scelta del valore ideale per $K$ verrà analizzata nella \autoref{sec:bloomparms}, ma non è inusuale
-utilizzare filtri configurati con più di 5 funzioni (e a volte più di 10). 
+utilizzare filtri configurati con più di 10 funzioni. 
 
 Le caratteristiche richieste per una funzione di hash utilizzata in un filtro sono le stesse che si
 ricercano quando la funzione viene utilizzata in una tabella hash, cioè l'uniformità e il
 determinismo. In particolare, non è strettamente necessario utilizzare una funzione crittografica di
 hash, che garantisce anche altre proprietà come la non reversibilità e la resistenza ad attacchi
-quali la collisione e la pre-immagine, sebbene ovviamente ci sono scenari applicativi
-(come nella \autoref{sec:bloomcdn}) in cui una funzione di hash banalmente soggetta a ricerca di collisione
-potrebbe causare attacchi di tipo avvelenamento della cache con possibili \emph{denial of service}.
-Anche il parametro della velocità di esecuzione deve essere tenuto in considerazione, e tipicamente
-le funzioni crittografiche di hash sono più lente delle funzioni non crittografiche.
+quali la collisione e la pre-immagine. Anche la velocità di esecuzione della funzione scelta deve
+essere tenuto in considerazione, e tipicamente le funzioni crittografiche di hash sono più lente
+delle funzioni non crittografiche.\footnote{Bisogna però considerare ci sono scenari
+applicativi quali le CDN (viste nella \autoref{sec:bloomcdn}) in cui una funzione di hash che
+risultasse facilmente soggetta a ricerca di collisione potrebbe consentire attacchi di tipo
+avvelenamento della cache, fino a possibili \emph{denial of service}. In questi casi, l'uso di una
+funzione crittografica è consigliato.}
 
-Una volta identificata una funzione di hash $h$ appropriata allo scenario applicativo, è possibile
-utilizzarla come base per generare la famiglia di $K$ funzioni di hash richieste ($h_1, h_2, ...,
-h_K)$. Un primo metodo, intuitivamente semplice, è quello di creare una funzione derivata $h'$ che
-accetti un seme oltre al dato da processare; alcune funzioni di hash offrono già nativamente la
-possibilità di definire un seme, mentre per le altre si può per esempio concatenare il seme al
+Una volta identificata una funzione di hash $h(x)$ appropriata allo scenario applicativo, è
+possibile utilizzarla come base per generare la famiglia di $K$ funzioni di hash richieste ($h_1(x),
+h_2(x), \dots, h_K(x)$). Un primo metodo, intuitivamente semplice, è quello di creare una funzione
+derivata $h'(x)$ che accetti un seme oltre al dato da processare; alcune funzioni di hash offrono
+già nativamente la possibilità di definire un seme (come MurMurHash, visto nella
+\autoref{sec:redis:murmur}), mentre per le altre si può per esempio concatenare il seme al
 contenuto, cioè definire $h'(seed, msg) = h(seed\,\Vert\,msg)$ (dove $\Vert$ indica la
-concatenazione). Di conseguenza, è possibile banalmente definire $h_i(msg) = h'(i, msg)$,
-creando così una famiglia di funzioni di hash, utilizzabili nel filtro.
+concatenazione). Di conseguenza, è possibile banalmente definire $h_i(msg) = h'(i, msg)$, creando
+così una famiglia di funzioni di hash, utilizzabili nel filtro.
 
 Questo approccio però richiede di eseguire la funzione di hash $K$ volte per ogni elemento che si
-vuole inserire nel filtro, impattando quindi in modo significativo sulla velocità di esecuzione al
-crescere di $K$. Una soluzione alternativa (proposta per la prima volta in \cite{bloom-doublehash}) è
-quella di utilizzare l'\autoref{alg:doublehash} di hash doppio, utilizzato comunemente come
-metodo per la risoluzione di collisioni nelle tabelle hash. In termini matematici, date 2 funzioni
-di hash $h_a$ e $h_b$ (magari generate con un seme da una medesima funzione, come visto in
-precedenza) è possibile definire la seguente famiglia di funzioni:
+vuole inserire nel filtro, usando ogni volta un seme differente, impattando quindi in modo
+misurabile sulla velocità di esecuzione al crescere di $K$. Una soluzione alternativa (proposta per
+la prima volta in \cite{bloom-doublehash}) è quella di utilizzare l'\autoref{alg:doublehash} di hash
+doppio, utilizzato comunemente come metodo per la risoluzione di collisioni nelle tabelle hash. In
+termini matematici, date 2 funzioni di hash $h_a(x)$ e $h_b(x)$ (magari generate con un seme da una
+medesima funzione, come visto in precedenza) è possibile definire la seguente famiglia di funzioni:
 
 $$ h_i(x) = h_a(x) + ih_b(x) \pmod M $$ 
 
-calcolando così un numero arbitrario di funzioni di hash utilizzando un tempo computazionale
+calcolando così un numero arbitrario di funzioni di hash, ma utilizzando un tempo computazionale
 assimilabile al calcolo di 2 sole funzioni.
 
 \begin{algorithm}
@@ -521,8 +532,8 @@ assimilabile al calcolo di 2 sole funzioni.
 \Procedure{DoubleHash}{$x$, $h_a$, $h_b$}
 	\State $a \gets h_a(x)$
 	\State $b \gets h_b(x)$
-	\State $h(0) \gets a \bmod M$
-	\For {$i=1$ \textbf{to} $k-1$}
+	\State $h(1) \gets a \bmod M$
+	\For {$i=2$ \textbf{to} $K$}
 		\State $a \gets a+b$
 		\State $h(i) \gets a \bmod M$
 	\EndFor
@@ -537,14 +548,14 @@ ovviamente aumenta notevolemente le possibilità di collisioni; allo stesso modo
 $M$, il numero di valori distinti generati sarà $\min(k, m/h_b(x))$ che nel caso peggiore potrebbe
 addirittura essere \num{2}. Se $M$ è una potenza di \num{2}, è possibile forzare $h_b(x)$ ad essere
 sempre dispari, ma questo riduce l'uniformità della funzione. Per finire, ci saranno alcuni casi in
-cui le sequenze di indici tra due elementi potrebbe essere parzialmente sovrapposte sebbene gli hash
-siano diversi; si pensi per esempio a $h_b(x_1) = 2h_b(x_2) \bmod M$.
+cui le sequenze di indici tra due elementi $x_1, x_2$ potrebbe essere parzialmente sovrapposte
+sebbene gli hash siano diversi; si pensi per esempio al caso in cui $h_b(x_1) = 2h_b(x_2) \bmod M$.
 
 Per risolvere questi problemi, \cite{bloom-doublehash} propone di usare una tecnica per la
 composizione degli hash chiamata ``hash doppio avanzato'', descritta
 nell'\autoref{alg:ehndoublehash}. Volendo derivare matematicamente la formula, otteniamo:
 
-$$ h_i(x) = h_a(x) + ih_b(x) + \frac{i^3-i}{6} \pmod M $$.
+$$ h_i(x) = h_a(x) + ih_b(x) + \frac{i^3-i}{6} \pmod M $$
 
 \begin{algorithm}
 \caption{Generazione di indici tramite hash doppio avanzato}
@@ -553,8 +564,8 @@ $$ h_i(x) = h_a(x) + ih_b(x) + \frac{i^3-i}{6} \pmod M $$.
 \Procedure{EnhancedDoubleHash}{$x$, $h_a$, $h_b$}
 	\State $a \gets h_a(x)$
 	\State $b \gets h_b(x)$
-	\State $h(0) \gets a \bmod M$
-	\For {$i=1$ \textbf{to} $K-1$}
+	\State $h(1) \gets a \bmod M$
+	\For {$i=2$ \textbf{to} $K$}
 		\State $a \gets a+b$
 		\State $b \gets b+i$
 		\State $h(i) \gets a \bmod M$
@@ -571,9 +582,9 @@ $$ h_i(x) = h_a(x) + ih_b(x) + \frac{i^3-i}{6} \pmod M $$.
 dalla densità, come descritto in \cite{bloom-scalable}.
 
 Si noti che un filtro di dimensione $M$ con $K$ funzioni di hash può essere implementato, senza
-perdita di genericità, con $K$ array distinti di $m=\frac{M}{K}$ bit ciascuno, chiamati
+perdita di genericità, con $K$ array distinti di $m=M/K$ bit ciascuno, chiamati
 \emph{sezioni}; in questo caso, le funzioni di hash dovranno essere utilizzate per indicizzare
-ciascuno un bit all'interno di una sezione distinta, utilizzando per esempio $h_i(X) \bmod m$.
+ciascuna un bit all'interno di una sezione distinta, utilizzando per esempio $h_i(x) \bmod m$.
 
 Ciascuna sezione inizia il ciclo di vita con tutti i bit impostati a 0. Dopo l'inserimento di un
 elemento nel filtro, un solo bit sarà stato impostati a 1, per cui la probabilità $p$ che un bit
@@ -642,7 +653,7 @@ e nel secondo filtro in input.
 \begin{algorithmic}[1]
 \Require $bf_1$ e $bf_2$ devono essere costruiti con gli stessi pa\-ra\-me\-tri
 \Procedure{BloomUnion}{$bf_1$, $bf_2$}
-	\For {$i=0$ \textbf{to} $M-1$}
+	\For {$i=1$ \textbf{to} $M$}
 		\State $out(i) \gets bf_1(i) \lor bf_2(i)$
 	\EndFor
 	\State \Return $out$
@@ -664,7 +675,7 @@ filtro intersezione è potenzialmente non ottimale.
 \begin{algorithmic}[1]
 \Require $bf_1$ e $bf_2$ devono essere costruiti con gli stessi pa\-ra\-me\-tri
 \Procedure{BloomIntersect}{$bf_1$, $bf_2$}
-	\For {$i=0$ \textbf{to} $m-1$}
+	\For {$i=1$ \textbf{to} $M$}
 		\State $out(i) \gets bf_1(i) \land bf_2(i)$
 	\EndFor
 	\State \Return $out$
@@ -828,11 +839,12 @@ Vediamo ora due esempi di derivazione di parametri ottimali.
 	$$ M = \ceil*{n\frac{|\ln(P)|}{0.480453014}} = \ceil*{25000\frac{|\ln(0.005)|}{0.480453014}} = \num{275694} $$
 	$$ K = \ceil*{-\log_2{P}} = \ceil*{-\log_2{0.005}} = 8 $$
 
-	Quindi è necessario utilizzare un filtro di circa \SI{33}{\kibi\byte} con \num{8} funzioni di hash.
+	Quindi è necessario utilizzare un filtro di $\SI{275694}{\bit} \approx \SI{33}{\kibi\byte}$ con 
+	\num{8} funzioni di hash.
 
-	\item Supponiamo di avere \SI{1}{\mebi\byte} di RAM a disposizione per creare un filtro di Bloom che deve
-	memorizzare 2 milioni di elementi. Qual è il valore minimo di falso positivo che possiamo
-	ottenere, e con quante funzioni di hash lo otterremo? È presto detto:
+	\item Supponiamo di avere \SI{1}{\mebi\byte} di RAM a disposizione per creare un filtro di Bloom
+	che deve memorizzare 2 milioni di elementi. Qual è il valore minimo di falso positivo che
+	possiamo ottenere, e con quante funzioni di hash lo otterremo? È presto detto:
 
 	$$ M = \num{1024 x 1024 x 8} = \num{8388608} $$
 	$$ N = \num{2000000} $$
@@ -874,11 +886,12 @@ Per risolvere questo problema, \cite{bloom-scalable} propone di creare un \emph{
 scalabile} (SBF) formato da uno o più filtri in catena; quando i filtri raggiungono la densità
 scelta come obiettivo (di solito $p=0.5$), un nuovo filtro viene aggiunto in coda alla catena,
 facendo spazio così per l'inserimento di nuovi elementi. Il test di appartenenza dovrà quindi
-ricercare l'elemento all'interno di tutti i filtri della catena. Ogni filtro che viene creato avrà
-una nuova probabilità $P_j$ per i falsi positivi, seguendo una progressione geometrica ($P_i =
-rP_{i-1} = r^iP_0$), in modo che la probabilità composta $P$ dell'intera catena converga verso il
-valore richiesto. Il fattore $r \in \interval[open]{0}{1}$ è detto \emph{fattore di
-intensificazione} (``tighten ratio'').
+ricercare l'elemento all'interno di tutti i filtri della catena. 
+
+Ogni filtro che viene creato avrà una nuova probabilità $P_j$ per i falsi positivi, seguendo una
+progressione geometrica ($P_i = rP_{i-1} = r^iP_0$), in modo che la probabilità composta $P$
+dell'intera catena converga verso il valore richiesto. Il fattore $r \in \interval[open]{0}{1}$ è
+detto ``fattore di intensificazione'' (\emph{tighten ratio}).
 
 La probabilità composta $P$, ottenuta ricercando l'elemento negli $l$ filtri della catena, può
 essere quindi calcolata così:
@@ -902,7 +915,7 @@ Possiamo anche calcolare il numero ottimale di funzioni di hash che deve usare o
 catena:
 
 $$ k_0 = -\log_2{P_0} $$
-$$ k_i = -\log_2{P_i} = -\log_2{(r^iP_0)} = k_0 + i \log_2{\frac{1}{r}} $$
+$$ k_i = -\log_2{P_i} = -\log_2{(r^iP_0)} = k_0 - i \log_2{r} $$
 
 Per quanto concerne invece la dimensione $M_i$ dei filtri, è consigliabile utilizzare anche qui
 una progressione geometrica (il cui fattore è chiamato $s$), che si adatta velocemente ad una
