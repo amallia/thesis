@@ -1,5 +1,9 @@
 ## Aggiunta dei filtri di Bloom al Database NoSQL Redis
 
+[![Made with: LaTeX](https://img.shields.io/badge/Made%20with-LaTeX-yellowgreen.svg)]()
+[![License: CC-BY-ND](https://img.shields.io/badge/License-CC--BY--ND-green.svg)]()
+[![BadBoxes: 0](https://img.shields.io/badge/BadBoxes-0-blue.svg)]()
+
  * English version: **Adding Bloom filter to the NoSQL Database Redis**
  * Tesi di laurea triennale, Corso di Laurea in Informatica, Università agli
    Studi di Firenze
