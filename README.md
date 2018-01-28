@@ -4,7 +4,7 @@
 [![License: CC-BY-ND](https://img.shields.io/badge/License-CC--BY--ND-green.svg)]()
 [![BadBoxes: 0](https://img.shields.io/badge/BadBoxes-0-blue.svg)]()
 
- * English version: **Adding Bloom filter to the NoSQL Database Redis**
+ * English title: **Adding Bloom filter to the NoSQL Database Redis**
  * Tesi di laurea triennale, Corso di Laurea in Informatica, Università agli
    Studi di Firenze
  * Leggi la [tesi in PDF](https://github.com/rasky/thesis/releases/download/1.0/thesis.pdf)
