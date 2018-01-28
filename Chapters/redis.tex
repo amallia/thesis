@@ -108,14 +108,14 @@ del processo del webserver; in caso di traffico troppo elevato, l'unica soluzion
 era quella della cosiddetta ``scalabilità verticale'', cioè eseguire il servizio su un
 server più potente.
 
-Il tema dei picchi di traffico, così alti e improvvisi da mettere fuori uso i siti,
-era così dibattuto da avere anche un nome preciso: era comunemente chiamato ``Slashdot
-effect'', dal nome del famoso portale Slashdot che, all'epoca, era molto visitato dagli
-informatici di tutto il mondo. Il sito, ancora oggi operativo (sebbene non più così
-visitato), pubblica una raccolta curata di notizie e link dedicati al mondo della tecnologia
-e delle scienza. Accadeva spesso che alcuni siti, quando venivano pubblicati su Slashdot,
-ricevessero una mole di visite troppo elevate che di fatto li mandava fuori uso; da qui
-il nome.
+Il tema dei picchi di traffico, così alti e improvvisi da mettere fuori uso i siti, era così
+dibattuto da avere anche un nome preciso: era comunemente chiamato ``Slashdot effect'', dal nome del
+famoso portale Slashdot che, all'epoca, era molto visitato dagli informatici di tutto il
+mondo.\footnote{Il sito, ancora oggi operativo all'indirizzo \url{https://www.slashdot.org}, sebbene
+non più così visitato, pubblica una raccolta curata di notizie e link dedicati al mondo della
+tecnologia e delle scienza.} Accadeva spesso che alcuni siti, quando venivano pubblicati su
+Slashdot, ricevessero una mole di visite troppo elevate che di fatto li mandava fuori uso; da qui il
+nome.
 
 In ottica di pura scalabilità verticale, uno dei modi più comuni per ottimizzare il software
 applicativo è quello di aggiungere uno strato di cache in RAM, anteposta quindi al database, per
@@ -143,9 +143,9 @@ scritto da Brad Fitzpatrick per implementare la scalabilità orizzontale nel suo
 blog LiveJournal. Memcached è di fatto una tabella hash chiave-valore, raggiungibile via TCP con un
 semplice protocollo testuale. Le operazioni sono sostanzialmente due: \cverb|GET| e \cverb|SET|. È
 sufficiente quindi collegare tutti i server applicativi ad un unico server Memcached (possibilmente
-sulla stessa rete fisica, beneficiando quindi di una latenza molto bassa) perché possano condividere
-la stessa cache, aggiornando il codice che prima utilizzava una tabella in RAM dentro il processo
-con una libreria che acceda alla stessa tabella tramite chiamate remote su TCP.
+sulla stessa rete fisica, beneficiando quindi di una latenza di rete molto bassa) perché possano
+condividere la stessa cache, aggiornando il codice che prima utilizzava una tabella in RAM dentro il
+processo con una libreria che acceda alla stessa tabella tramite chiamate remote su TCP.
 
 Memcached è il primo database NoSQL chiave-valore, \emph{ante-litteram}, ed è oggi in uso presso
 alcuni dei più popolari siti al mondo quali YouTube, Reddit, Facebook, Twitter, Tumblr, Wikipedia.
@@ -164,7 +164,7 @@ performance desiderate in un contesto particolarmente intensivo dal punto di vis
 scritture come quello degli aggregatori di log \cite{nascita}.
 
 Sanfilippo aveva necessità di memorizzare velocemente i dati in arrivo, e di eseguire
-delle semplice query strutturate tipo "estrai gli ultimi N dati inseriti". Questo genere
+delle semplice query strutturate tipo "estrai gli ultimi $N$ dati inseriti". Questo genere
 di struttura non si applica bene al modello relazionale, in particolare perché l'ordine
 di inserimento dei dati non viene preservato, e richiede quindi un'operazione di ordinamento
 (o aggiornamento di un indice di ordinamento) ogni volta che un dato viene inserito.
@@ -210,11 +210,11 @@ chiave-valore in RAM, l'intero dataset di chiavi e valori viene memorizzato prim
 solo successivamente serializzato su disco con alcune politiche di persistenza configurabili (si
 veda \autoref{sec:redis:persistence}).
 
-Per comunicare con Redis, un clienti si deve connettere via TCP (la porta di default è la \num{6379})
+Per comunicare con Redis, un client si deve connettere via TCP (la porta di default è la \num{6379})
 e comunicare tramite un protocollo testuale di tipo master/slave. È possibile utilizzare anche
 semplicemente \cverb|telnet| per sperimentare, sebbene sia più comodo utilizzare il client dedicato
 \cverb|redis-cli| che offre il completamento intelligente dei comandi, l'accesso rapido ai comandi
-già inseriti in precedenza, e la formattazione leggibile dei risultati.
+già inseriti in precedenza e la formattazione leggibile dei risultati.
 
 Come esempio, la seguente sessione mostra come scrivere e leggere un valore di tipo
 stringa, all'interno di una connessione avviata tramite \cverb|redis-cli|:
@@ -270,12 +270,12 @@ chiamata MurMurHash2.
 
 \fnhref{https://sites.google.com/site/murmurhash/}{MurMurHash2} è una funzione di hash non
 crittografica creata nel 2008 da Austin Appleby, un ingegnere di Google, ed è la seconda versione
-della famiglia MurMur. Il nome MurMur deriva dalla combinazione delle due operazioni fondamentali
-che compongono la funzione: la moltiplicazione (``mu'' per ``multiplication'') e la rotazione di bit
-(``r'' per ``rotation'').
+della famiglia MurMur.\footnote{Il prefisso \emph{MurMur} è un acronimo ottenuto dalla combinazione
+delle due operazioni fondamentali che compongono la funzione: la moltiplicazione (``mu'' per
+``multiplication'') e la rotazione di bit (``r'' per ``rotation'').}
 
 MurMurHash2 è descritto in \autoref{alg:murmurhash2}) e gode di una buona popolarità poiché unisce
-una buona velocità di esecuzione a una buona diffusione dei dati in ingresso (cosiddetto ``effetto
+una buona velocità di esecuzione ad una buona diffusione dei dati in ingresso (cosiddetto ``effetto
 valanga'').
 
 \begin{algorithm}
@@ -303,7 +303,7 @@ valanga'').
 \end{algorithmic}
 \end{algorithm}
 
-La funzione accetta in input il messaggio su cui calcolare l'hash e un seme. Il seme può essere
+La funzione accetta in input un seme e il messaggio su cui calcolare l'hash. Il seme può essere
 usato per variare l'output a parità di messaggio, ma è ovviamente necessario memorizzarlo
 separatamente per poter ricostruire lo stesso output. Se si desidera una funzione di hash
 riproducibile attraverso più esecuzioni, il seme può essere impostato ad una costante arbitraria,
@@ -322,7 +322,7 @@ all'hash parziale \lnnum{4}. Una volta terminato il messaggio, l'hash stesso vie
 dei passaggi irreversibili moltiplicativi e di shift con $m$ e $r$ \lnnum{5}, prima di restituire il
 valore finale.
 
-MurMurHash2 è considerata oggi obsoleta e sorpassata da MurMurHash3, poiché è stata individuata una
+MurMurHash2 è considerata oggi obsoleta e sorpassata da Mur\-Mur\-Hash3, poiché è stata individuata una
 falla in caso di blocchi di dati identici consecutivi \cite{murmur2flaw}. Infatti, se la chiave
 contiene due blocchi da \SI{32}{\bit} (es: \cverb|abcdabcd|), ciascun blocco viene modificato nello
 stesso modo tramite le costanti, e poi mixato al valore di hash tramite un semplice \cverb|XOR|, che
@@ -353,7 +353,7 @@ struttura dati del tipo specificato, associandola alla chiave. Per esempio, il c
 conseguenza, il comando \cverb|SADD test1 elem1 elem2| creerà automaticamente un insieme 
 associato alla chiave \cverb|test1|, contenente i due elementi \cverb|elem1| e \cverb|elem2|.
 Se \cverb|test1| esistesse già nella base di dati ma fosse di tipo diverso (per esempio,
-una lista), il comando \cverb|SADD| ritornerebbe un errore (\cverb|WRONGTYPE|).
+una lista), il comando \cverb|SADD| restituirebbe un errore (\cverb|WRONGTYPE|).
 
 Viceversa, come già visto nella \autoref{sec:redis:arch}, è previsto un comando di cancellazione
 generale (\cverb|DEL|) che rimuove la chiave e l'oggetto ad essa associato dal database,
@@ -439,13 +439,10 @@ che stiamo sempre manipolando una stringa.
 
 Allo stesso modo, il comando \cverb|DECRBY| \lnnum{3} sottrae il valore $24$ all'attuale valore
 di \cverb|foo|, ottenendo come risultato $100$, che viene restituito come intero. Il comando
-\cverb|GET| finale mostra il contenuto di \cverb|foo| questa volta come stringa.
+\cverb|GET| finale mostra il contenuto di \cverb|foo|, questa volta come stringa.
 
 Oltre agli interi, viene fornito un supporto molto primitivo per i numeri in virgola
 mobile, tramite il solo comando \cverb|INCRBYFLOAT|. 
-
-Una possibilità più avanzata è poi quella di considerare la stringa come un array di bit utilizzando
-i comandi \cverb|BITCOUNT|, \cverb|SETBIT| e \cverb|GETBIT| per lavorare su ciascun bit.
 
 \subsection{Liste}
 
@@ -462,16 +459,16 @@ seguenti:
 		errore se la lista è vuota.
 	\item[RPOP key] Rimuove e restituisce un elemento dalla coda della lista. Re\-sti\-tui\-sce
 		errore se la lista è vuota.
-	\item[{BLPOP key [key\dots] timeout / BRPOP key [key\dots] timeout}] Come i precedenti, ma se la
-		lista è vuota il client resta bloccato in attesa che venga aggiunto un elemento da un altro
-		client. Inoltre, è possibile specificare più di una lista su cui attendere elementi. Il
-		timeout deve essere specificato in secondi; se è $0$, le funzioni non bloccano mai
-		e si comportano come \cverb|LPOP|/\cverb|RPOP|.
+	\item[{BLPOP/BRPOP key [key\dots] timeout}] Come i precedenti, ma se la lista è vuota il client
+		resta bloccato in attesa che venga aggiunto un elemento da un altro client. Inoltre, è
+		possibile specificare più di una lista su cui restare in attesa di elementi. Il timeout deve
+		essere specificato in secondi; se è $0$, le funzioni non bloccano mai e si comportano come
+		\cverb|LPOP|/\cverb|RPOP|.
 	\item[RPOP key] Rimuove un elemento dal fondo della lista.
 	\item[LLEN key] Restituisce la lunghezza della lista.
 	\item[LINDEX key idx] Restituisce l'elemento della lista all'indice specificato.
 	\item[LRANGE key first last] Restituisce tutti gli elementi all'interno
-		di un range di indici.
+		di un intervallo chiuso di indici.
 	\item[LSET key idx ele] Sostituisce l'elemento della lista all'indice specificato con
 		l'e\-le\-men\-to passato come argomento.
 	\item[LINSERT key AFTER/BEFORE pivot ele] Inserisce un elemento prima o
@@ -607,9 +604,10 @@ I comandi principali sono i seguenti, caratterizzati dal prefisso \cverb|H|:
 	\item[{HMGET key field [field\dots]}] Legge uno o più valori associati a uno o più campi della
 		tabella.
 	\item[{HDEL key field [field\dots]}] Cancella uno o più campi dalla tabella. Si noti che
-		non esiste in questo caso \cverb|HMDEL| perché questo comando ha già effetto multiplo. I
-		comandi \cverb|HSET| e \cverb|HGET| sono il lascito di un vecchio approccio al design dei
-		comandi e sono di fatto deprecati.
+		non esiste in questo caso \cverb|HMDEL| perché questo comando ha già effetto
+		multiplo.\footnote{I comandi \ctexttt{HSET} e \ctexttt{HGET} sono il lascito di un vecchio
+		approccio al design dei comandi e possono essere considerati di fatto deprecati, non
+		offrendo nulla di più rispetto a \ctexttt{HMSET} e \ctexttt{HMGET}.}
 	\item[HEXISTS key field] Verifica se un campo è presente nella tabella.
 	\item[HLEN key] Restituisce il numero di campi presenti nella tabella.
 	\item[HGETALL key] Restituisce tutti i campi e tutti i valori nella tabella.
@@ -892,7 +890,7 @@ Il punteggio deve essere specificato come un valore decimale con virgola, e le s
 ordinate secondo l'ordinamento crescente. In caso due stringhe abbiano lo stesso punteggio, si
 utilizza l'ordinamento lessicografico tra le stringhe stesse per deciderne l'ordine. In virtù di
 questa proprietà, è comune utilizzare un insieme ordinato in cui tutti i valori hanno un medesimo
-punteggio (di solito 0), utilizzando quindi le stringhe stesse per l'ordinamento, e ottenendo di
+punteggio (di solito~0), utilizzando quindi le stringhe stesse per l'ordinamento, e ottenendo di
 fatto l'equivalente di una lista di stringhe univoche ordinate alfabeticamente.
 
 Come precedentemente accennato, è possibile estrarre sotto\-se\-quen\-ze dell'insieme ordinato tramite
@@ -958,7 +956,7 @@ Questi sono i principali comandi esistenti, identificati dal pre\-fis\-so~\cverb
 
 Anche gli insiemi ordinati, come gli insiemi, si prestano molto bene a creare indici manuali,
 sempre ordinati, su cui effettuare poi operazioni di estrazione e ricerca. Vista la flessibilità
-della struttura dati, indichiamo alcuni possibili scenari applicativi.
+della struttura dati, indichiamo alcuni possibili scenari applicativi:
 
 \begin{itemize}
 	\item Un esempio di struttura dati facilmente rappresentabile tramite insieme ordinato è una
@@ -1117,11 +1115,11 @@ risultante è pari a $1.04 / \sqrt{m}$, con $m$ pari al numero di registri.
 Per distribuire uniformemente le stringhe in input, Redis utilizza una funzione di hash a
 \SI{64}{\bit} (come suggerito in \cite{hyperloglog-plusplus}), in particolare scegliendo
 MurMurHash64, una versione a \SI{64}{\bit} del già citato
-\fnhref{https://github.com/aappleby/smhasher/wiki/MurmurHash3}{MurMurHash3}. Essendo quindi il
-prefisso massimo lungo appunto 64 bit, i registri richiedono 6 bit. Redis sceglie di usare $2^{14}$
-registri, ottenendo quindi un errore pari a $1.04 / \sqrt{2^{14}} = \SI{0.8}{\percent}$, e
-utilizzando un totale di $2^{14} * 6 / 8 = \num{12228}$ byte di memoria necessaria, come già
-riportato.
+\fnhref{https://github.com/aappleby/smhasher/wiki/MurmurHash3}{MurMurHash3}
+(\autoref{sec:redis:murmur}). Essendo quindi il prefisso massimo lungo \SI{64}{\bit}, i
+registri richiedono $log_2{64} = \SI{6}{\bit}$. Redis sceglie di usare $2^{14}$ registri, ottenendo
+quindi un errore pari a $1.04 / \sqrt{2^{14}} = \SI{0.8}{\percent}$, e utilizzando un totale di
+$2^{14} * 6 / 8 = \SI{12228}{\byte}$ di memoria necessaria, come già riportato.
 
 Questi sono i comandi esistenti, identificati dal prefisso~\cverb|PF|:
 
@@ -1131,22 +1129,22 @@ Questi sono i comandi esistenti, identificati dal prefisso~\cverb|PF|:
 	\item[{PFCOUNT key [key\dots]}] Restituisce l'attuale stima di cardinalità dell'HyperLogLog
 	specificato. Se vengono specificate più chiavi, la stima calcolata rappresenta la cardinalità
 	dell'insieme unione.
-	\item[{PFMERGE dest key [key\dots]}] Fonde due o più HyperLogLog, creando un nuovo HyperLogLog
+	\item[{PFMERGE dest key [key\dots]}] Fonde due o più HyperLogLog, creando un nuovo Hyper\-Log\-Log
 	rappresentante l'unione degli insiemi specificati.
 \end{description}
 
-Un tipico caso d'uso è quello di conteggiare i cosiddetti \emph{DAU}, ``daily active users'', cioè
+Un tipico caso d'uso è quello di conteggiare i cosiddetti ``DAU'' (\emph{daily active users}), cioè
 il numero di utenti attivi in un'applicazione all'interno di ciascuna giornata solare.
 L'applicazione, alla mezzanotte, può creare un nuovo HyperLogLog utilizzando una chiave derivata dal
 giorno in corso (per esempio, \cverb|DAU-2017-09-02|), aggiungendo via via l'ID di ciascun utente
 (tramite \cverb|PFADD|) ogni volta che ne viene rilevata una qualunque attività, senza doversi
-preoccupare di tenere conto se l'utente era già stato conteggiato come attivo o meno. Al termine
-della giornata, è possibile stimare i \emph{DAU} tramite il comando \cverb|PFCOUNT|. Lo storico può
-essere conservato per ragioni di analisi a posteriori, e può essere aggregato tramite
+preoccupare di tenere conto se l'utente sia già stato conteggiato come attivo o meno. Al termine
+della giornata, è possibile stimare i DAU tramite il comando \cverb|PFCOUNT|. Lo storico può
+essere conservato per effettuare analisi a posteriori, e può essere aggregato tramite
 \cverb|PFMERGE| per ottenere stime di attività su finestre temporali diverse, per esempio su base
-settimanale o mensile (cosiddetti rispettivamente \emph{WAU} o \emph{MAU}). Grazie all'HyperLogLog,
+settimanale o mensile (cosiddetti rispettivamente ``WAU'' e ``MAU''). Grazie all'HyperLogLog,
 l'utilizzo di memoria è costante indipendentemente dal numero di utenti attivi, anche se questi
-dovessero raggiungere importanti volumi; a titolo di esempio, il numero di \emph{MAU} su Facebook in
+dovessero raggiungere importanti volumi; a titolo di esempio, il numero di MAU su Facebook nel
 Giugno 2017 è stato più di 2 miliardi \cite{fb-mau}.
 
 Qui si può vedere una sessione interattiva di esempio di uso di HyperLogLog:
@@ -1171,10 +1169,10 @@ viene quindi creato con questo primo comando), e successivamente si può verific
 cardinalità dell'insieme è al momento quella attesa, cioè $1$.
 
 Vengono poi aggiunti un gruppo di valori \lnnum{2} di cui alcuni non già presenti (i numeri dal $51$
-al $59$) ma altri invece già presenti (il numero $50$, che viene aggiunto per 3 volte nella
-sequenza, pur essendo già presente). La cardinalità però risulta comunque corretta: infatti
-\cverb|PFCOUNT| restituisce il valore atteso $10$, visto che in questo momento nella struttura sono
-stati inseriti tutti i valori tra il $50$ e il $59$. 
+al $59$) ma altri invece precedentemente inseriti, come il numero $50$ che viene aggiunto per 3
+volte nella sequenza, pur essendo già presente. La cardinalità però risulta comunque corretta:
+infatti \cverb|PFCOUNT| restituisce il valore atteso $10$, visto che in questo momento nella
+struttura sono stati inseriti tutti i valori tra il $50$ e il $59$.
 
 Infine, si prova nuovamente ad inserire un insieme di valori \lnnum{3} tutti già visti tranne
 l'ultimo ($61$). La cardinalità ancora una volta è corretta, poiché misura $11$, avendo scartato
@@ -1184,15 +1182,22 @@ correttamente i valori già visti e aggiunto solo l'elemento $61$.
 
 Nella teoria delle basi di dati, una transazione è una sequenza di operazioni disgiunte che
 modificano la base di dati in modo corretto solo se eseguite accorpate, come fossero una singola
-operazione. Le proprietà che un sistema di transazioni può offrire sono 4: atomicità (la transazione
-viene eseguita nel suo complesso, oppure fallisce senza che nessun risultato parziale sia visibile),
-coerenza (vengono rispettati i vincoli di integrità all'inizio e alla fine della transazione),
-isolamento (durante l'esecuzione di una transizione, lo stato che essa osserva della base di dati
-non deve essere modificato da operazioni che avvengono parallelamente), e durabilità (una
-transazione eseguita con successo modifica la base di dati in modo persistente, senza cioè che la
-modifica possa più essere persa a causa di un arresto anomalo). Queste proprietà vengono comunemente
-chiamate tramite il loro acronimo ACID, e un database è detto supportare transazioni ACID se espone
-un sistema di transazioni che verifichino contemporaneamente le 4 proprietà.
+operazione. Le proprietà che un sistema di transazioni può offrire sono 4: 
+\begin{description}[labelindent=2\parindent,leftmargin=!,labelwidth=6em,font={\normalfont\bfseries}]
+	\item[Atomicità] la transazione viene eseguita nel suo complesso, oppure fallisce senza che
+		nessun risultato parziale sia visibile
+	\item[Coerenza] vengono rispettati i vincoli di integrità all'inizio e alla fine della
+		transazione
+	\item[Isolamento] durante l'esecuzione di una transizione, lo stato che essa osserva della base
+		di dati non deve essere modificato da operazioni che avvengono parallelamente
+	\item[Durabilità] una transazione eseguita con successo modifica la base di dati in modo
+		persistente, senza cioè che la modifica possa più essere persa a causa di un arresto
+		anomalo
+\end{description}
+
+Queste proprietà vengono comunemente chiamate tramite il loro acronimo ``ACID'', e
+un database è detto supportare transazioni ACID se mette a disposizione un sistema di transazioni
+che verifichino contemporaneamente le 4 proprietà.
 
 Il supporto per le transazioni di Redis è molto primitivo: è possibile infatti raggruppare
 una sequenza di comandi in modo che venga eseguita atomicamente dal server, senza possibilità che
@@ -1240,15 +1245,17 @@ hash sia dall'indice, e il valore di ritorno \cverb|QUEUED| \lnnum{3} \lnnum{4} 
 i comandi non sono stati eseguiti immediatamente, ma accodati in attesa della fine della 
 definizione della transazione, delimitata dal comando \cverb|EXEC| \lnnum{5}.
 
-Relativamente alle proprietà ACID sopra descritte, è possibile osservare che:
+Relativamente alle proprietà ACID sopra descritte, è possibile osservare che non tutte vengono
+rispettate. Infatti:
 
 \begin{itemize}
 	\item \textbf{Atomicità}: la proprietà non viene rispettata, poiché se un comando all'interno
-	delle transazione fallisce, la transazione viene bloccata a metà della propria esecuzione,
-	ma senza effettuare un ripristino del database allo stato iniziale. Si noti inoltre che i
-	comandi di Redis tipicamente non restituiscono errori su chiavi non trovate o non esistenti, 
+	delle transazione fallisce, la transazione viene bloccata a metà della propria esecuzione, ma
+	senza effettuare un ripristino del database allo stato iniziale.\footnote{Si noti inoltre che i
+	comandi di Redis tipicamente non restituiscono errori su chiavi non trovate o non esistenti,
 	preferendo restituire valori speciali come numeri negativi; in questi casi, la transazione
-	continua. 
+	continua.}. Nella \autoref{sec:redis:transcond} vedremo come implementare parzialmente
+	l'atomicità tramite il comando \cverb|WATCH|.
 
 	\item \textbf{Coerenza}: questa proprietà non si applica a Redis perché non è possibile definire 
 	veri vincoli d'integrità nella base di dati.
@@ -1256,22 +1263,23 @@ Relativamente alle proprietà ACID sopra descritte, è possibile osservare che:
 	\item \textbf{Isolamento}: la proprietà viene rispettata perché l'esecuzione dei comandi
 	della transazione è perfettamente isolata da altri client, che rimangono in attesa. Questo
 	comportamento è ottenuto semplicemente tramite l'approccio a singolo thread di esecuzione (si
-	veda la \autoref{sec:concurrency} per maggiori informazioni).
+	veda la \autoref{sec:redis:concurrency} per maggiori informazioni).
 
-	\item \textbf{Durabilità}: questa possibilità può essere rispettata se Redis viene configurato
-	per effettuare una piena persistenza dei dati dopo ciascun comando. Questa possibilità
-	verrà dettagliata nella	\autoref{sec:durability:aof}.
+	\item \textbf{Durabilità}: questa proprietà può essere rispettata se Redis viene configurato
+	per effettuare una piena persistenza dei dati dopo ciascun comando, come descritto nella
+	\autoref{sec:durability:aof}.
 \end{itemize}
 
 
 \subsection{Transazioni condizionali}
+\label{sec:redis:transcond}
 
 Come appena descritto, il sistema di transazioni di Redis si basa su accodare comandi ed eseguirli
-poi sequenzialmente in modo atomico; ma, poiché qualunque comando viene accodato, non è possibile
-inviare un comando i cui parametri dipendono da valori restituiti da comandi precedenti; infatti il
-client non avrà accesso al valore di ritorno di un comando fino a che l'intera transazione non sarà
-stata eseguita, né è disponibile una sintassi speciali per referenziare il valore restituito da un
-comando precedente.
+poi sequenzialmente in modo atomico; ma, poiché qualunque comando all'interno della transazione
+viene accodato, non è possibile inviare un comando i cui parametri dipendono da valori restituiti da
+comandi precedenti; infatti il client non avrà accesso al valore restituito da un comando fino a che
+l'intera transazione non sarà stata eseguita, né è disponibile una sintassi speciale per
+referenziare il valore restituito da un comando precedente.
 
 Supponiamo di implementare un social network e di voler incrementare in modo atomico un campo
 memorizzato all'interno di una tabella hash, per esempio il numero di commenti che un determinato
@@ -1309,8 +1317,8 @@ Per risolvere queste situazioni, Redis utilizza un comune pattern di transazione
 valore non sia mutato rispetto a quanto atteso. Il comando \cverb|WATCH| infatti consente di
 annullare automaticamente una transazione se il valore di una chiave cambia tra il momento in cui
 viene eseguito e il momento in cui la transazione viene eseguita, cioè se si è effettivamente
-verificata una race condition. In questo caso, il client vorrà probabilmente provare nuovamente ad
-eseguire la transazione, nella speranza di riuscire a vincere la corsa.
+verificata una \emph{race condition}. In questo caso, il client vorrà probabilmente provare
+nuovamente ad eseguire la transazione, nella speranza di riuscire a vincere la corsa.
 
 Questo è l'uso corretto di \cverb|WATCH| nell'esempio che stiamo a\-na\-liz\-zan\-do:
 
@@ -1327,7 +1335,7 @@ QUEUED
 1) (integer) 0
 \end{commentedsource}
 
-In questo caso, dopo aver attivata l'osservazione della chiave con \cverb|WATCH| \lnnum{1}, il
+Dopo aver attivato l'osservazione della chiave con \cverb|WATCH| \lnnum{1}, il
 comando di lettura viene eseguito prima della transazione, ricevendo quindi il valore
 attuale del campo richiesto \lnnum{2}, che può essere incrementato e modificato durante la transazione
 \lnnum{3}.
@@ -1351,39 +1359,86 @@ QUEUED
 \end{commentedsource}
 
 In questo caso, l'esempio simula una modifica \lnnum{2} effettuata dopo la lettura della chiave
-\lnnum{1}, come se fosse stata fatta da un altro client in modo concorrente; questa modifica fa sì
-che la transazione non venisse eseguita e fosse annullata: il client può rilevare questa condizione
-dal valore restituito da \cverb|EXEC| (che è \cverb|nil| \lnnum{3}, invece che un array contenente i
-valori restituiti dai comandi della transazione), e riprovare nuovamente la sequenza.
+\lnnum{1}, come se fosse stata eseguita da un altro client in modo concorrente; questa modifica fa sì
+che la transazione non venga eseguita e sia annullata: il client può rilevare il fallimento della
+transazione dal valore restituito da \cverb|EXEC| (che è \cverb|nil| \lnnum{3}, invece che una lista
+di valori restituiti dai comandi), e comportarsi di conseguenza.
 
 \section{Velocità}
 
-(benchmark)
-(segnalare problema del rountrip di rete)
+Redis è progettato per essere veloce: le strutture dati che abbiamo visto rappresentano semplici
+operazioni su strutture dati che i moderni processori sono in grado di eseguire con rapidità. Il
+modello di concorrenza (descritto nella \autoref{sec:redis:concurrency}) è basato su un singolo
+thread di esecuzione e di conseguenza l'implementazione delle strutture dati non deve essere
+protetta tramite operazioni di mutua esclusione tipicamente implementate con chiamate al kernel.
 
+\begin{table}
+	\centering
+	\begin{tabular}{lS[table-format=5.2,table-number-alignment=center]}
+		\toprule
+		\rowcolor{blue!25}                                 & {Velocità} \\
+		\rowcolor{blue!25} \multirow{-2}{*}{Nome del test} & {(\SI{}{\req/\second})} \\
+		\midrule
+		\cverb|PING_INLINE| & 60132.29 \\
+		\cverb|PING_BULK| & 62344.14 \\
+		\midrule
+		\cverb|SET| & 59988.00 \\
+		\cverb|GET| & 61538.46 \\
+		\cverb|INCR| & 61652.28 \\
+		\cverb|LPUSH| & 61312.08 \\
+		\cverb|RPUSH| & 61500.61 \\
+		\midrule
+		\cverb|LRANGE_100| & 20321.07 \\
+		\cverb|LRANGE_300| & 8129.42 \\
+		\cverb|LRANGE_500| & 6503.64 \\
+		\midrule
+		\cverb|MSET| (10 keys) & 32216.49 \\
+		\bottomrule
+	\end{tabular}
+	\caption{Velocità di Redis su Intel I7-6567U \SI{3.3}{\giga\hertz} con 50 client paralleli}
+	\label{tbl:redis:speed}
+\end{table}
+
+Nella \autoref{tbl:redis:speed}, è possibile vedere la velocità di esecuzione di alcune richieste
+effettuate ad un server Redis, misurate su un laptop Mac\-Book Pro 2016. Il test è stato effettuato
+utilizzando \cverb|redis-benchmark|, un programma distribuito assieme a Redis che consente di
+effettuare dei semplici test in diversi scenari.\footnote{La misurazione non avviene in modo
+totalmente scientifico: manca per esempio un calcolo accurato della varianza del dato, e di
+conseguenza i valori sono soggetti ad oscillazioni in base al carico del sistema operativo e al
+cambio di frequenza automatico dei processori di tipo \emph{mobile}.} Studiando il risultato
+generato dall'esecuzione di questo programma, si nota che le operazioni semplici (come inserire una
+chiave nel database tramite il comando \verb|SET|) vengono eseguite alla velocità di $\approx
+\SI{60}{\kilo\req/\second} \approx
+\SI{16.67}{\micro\second/\req}$.
+
+Poiché le latenze di rete si misurano normalmente nell'ordine dei millisecondi, la componente 
+principale del tempo di esecuzione sarà spesso la latenza, cioè il tempo necessario ai pacchetti
+del client a raggiungere il server, e viceversa. 
 
 \section{Pipelining}
 
-Come dettagliato nella precedente sessione, le prestazioni ottenute nell'utilizzo di Redis sono
+Come dettagliato nella precedente sezione, le prestazioni ottenute nell'utilizzo di Redis sono
 fortemente influenzate dalla velocità di rete. Sebbene le migliori pratiche di installazione in
-ambiente di produzione consigliano di posizionare rete su un server (o gruppi di server) fisicamente
-vicini al server dove girare l'applicazione client, in popolari ambienti cloud come Amazon Web
-Services è possibile misurare latenze anche nell'ordine di \SI{50}{\milli\second} se si considerano
-misure al 99-esimo percentile, sebbene con valori mediani stabilmente sotto il millisecondo
-\cite{aws-latency}.
+ambiente di produzione consiglino di posizionare Redis su un server (o gruppi di server) fisicamente
+vicini a quello dove è in esecuzione il software client, in popolari ambienti cloud come Amazon
+Web Services è possibile misurare latenze anche nell'ordine di \SI{50}{\milli\second} se si
+considerano misure al 99-esimo percentile, sebbene con valori mediani stabilmente sotto il
+millisecondo \cite{aws-latency}.
 
-L'utilizzo di transazioni, sebbene utile per introdurre il concetto di atomicità di esecuzione,
-non migliora la latenza poiché ogni comando viene inviato separatamente e necessita quindi di un 
-roundtrip (ai quali si sommano addirittura i due roundtrip richiesti da \cverb|MULTI| e \cverb|EXEC|).
+L'utilizzo di transazioni, per quanto utile ad introdurre il concetto di atomicità di esecuzione, non
+migliora la latenza poiché ogni comando viene inviato separatamente e necessita quindi di un
+\emph{roundtrip} (al quale si somma addirittura i due \emph{roundtrip} richiesti da \cverb|MULTI| e
+\cverb|EXEC|).
 
-Per arginare questo problema, Redis consente il \emph{pipelining}, una tecnica molto comune, 
-utilizzata anche da altri protocolli di tipo master-slave come HTTP, IMAP e POP3. Dopo l'invio 
-di un comando, il client può immediatamente inviarne un secondo senza necessariamente leggere
-la risposta del primo dalla rete; il server infatti è in grado di mantenere memorizzate le risposte
-dei comandi (memoria permettendo) indefinitamente, in attesa che il client le richieda. Dovendo
-quindi eseguire una sequenza predeterminata di comandi, come nel caso di una transazione, il
-pipelining risulta particolarmente comodo perché l'intera transazione (comprensiva dei delimitatori
-\cverb|MULTI| e \cverb|EXEC|) può essere inviata consecutivamente, praticamente senza attese.
+Per arginare questo problema, Redis consente il \emph{pipelining}, una tecnica molto comune,
+utilizzata anche da altri protocolli di tipo ma\-ster/\-slave come HTTP, IMAP e POP3. La tecnica è
+schematizzata nella \autoref{fig:redis:pipelining}: dopo l'invio di un comando, il client può
+immediatamente inviarne un secondo senza necessariamente leggere la risposta del primo dalla rete;
+il server infatti è in grado di mantenere memorizzate le risposte dei comandi (memoria permettendo)
+indefinitamente, in attesa che il client le richieda. Dovendo quindi eseguire una sequenza
+predeterminata di comandi, come nel caso di una transazione, il \emph{pipelining} risulta
+particolarmente comodo perché l'intera transazione (comprensiva dei delimitatori \cverb|MULTI| e
+\cverb|EXEC|) può essere inviata consecutivamente, praticamente senza attese.
 
 \begin{figure}
 	\centering
@@ -1429,69 +1484,107 @@ pipelining risulta particolarmente comodo perché l'intera transazione (comprens
 
 	\caption{Diagramma di sequenza che mostra l'uso del \emph{pipelining} per diminuire
 		il tempo totale d'e\-se\-cu\-zio\-ne di 3 comandi}
+	\label{fig:redis:pipelining}
 \end{figure}
 
+\begin{table}
+	\centering
+	\begin{tabular}{lS[table-format=4.2,table-number-alignment=center]S[table-format=6.2,table-number-alignment=center]}
+		\toprule
+		\rowcolor{blue!25}                                 & {Senza pipelining}      & {Con pipelining} \\
+		\rowcolor{blue!25} \multirow{-2}{*}{Nome del test} & {(\SI{}{\req/\second})} & {(\SI{}{\req/\second})} \\
+		\midrule
+		\cverb|PING_INLINE| & 4653.33 & 42553.19 \\
+		\cverb|PING_BULK| & 4616.81 & 43290.04 \\
+		\midrule
+		\cverb|SET| & 4610.42 & 42735.04 \\
+		\cverb|GET| & 4644.68 & 42735.04 \\
+		\cverb|INCR| & 4644.68 & 43103.45 \\
+		\cverb|LPUSH| & 4612.55 & 41666.67 \\
+		\cverb|RPUSH| & 4319.65 & 42016.80 \\
+		\midrule
+		\cverb|LRANGE_100| & 4359.20 & 20833.33 \\
+		\cverb|LRANGE_300| & 3838.77 & 7812.50 \\
+		\cverb|LRANGE_500| & 3460.21 & 5854.80 \\
+		\midrule
+		\cverb|MSET| (10 keys) & 4486.32 & 40000.00 \\
+		\bottomrule
+	\end{tabular}
+	\caption{Confronto della velocità di Redis attivando il \emph{pipelining} fino a 10 comandi, con
+	latenza di \SI{10}{\milli\second}}
+	\label{tbl:redis:pipelining}
+\end{table}
+
+Nella \autoref{tbl:redis:pipelining}, possiamo vedere l'effetto del \emph{pipelining} su una
+connessione con una latenza fissa di \SI{10}{\ms}.\footnote{La latenza fissa è stata ottenuta
+forzando artificialmente un ritardo sull'interfaccia di rete locale (\emph{localhost}), utilizzando
+una funzionalità del kernel di macOS, accessibile tramite il pacchetto \ctexttt{pf}.} In questo
+caso, il \emph{pipelining} è stato limitato a $10$ comandi in contemporanea: dai risultati, è
+possibile infatti misurare un incremento di velocità fino a circa $10$ volte rispetto allo stesso
+comando eseguito senza \emph{pipelining}.
+
 Si noti che, se si è interessati ad ottenere la massima performance, è consigliabile anche
-disattivare il controllo della congestione del TCP, descritto in
-\cite{rfc896} (detto anche \emph{algoritmo di Nagle} dal nome
-dell'autore), che rallenta l'invio di pacchetti piccoli di dati aggregandoli in ``segmenti'',
-diminuendo il traffico sulla rete ma aumentando la latenza fino anche a \SI{500}{\milli\second}), ed
-utilizzare le opzioni \cverb|TCP_NODELAY| e \cverb|TCP_CORK| per gestire manualmente il buffering
-\cite{tcp-cork}. Molte librerie client Redis per i principali linguaggi di programmazione si
-occupano di questi dettagli automaticamente; si veda a titolo di esempio i 
+disattivare il controllo della congestione del TCP, descritto in \cite{rfc896} (detto anche
+``algoritmo di Nagle'' dal nome dell'autore), che rallenta l'invio di pacchetti piccoli di dati
+aggregandoli in ``segmenti'', diminuendo il traffico sulla rete ma aumentando la latenza fino anche
+a \SI{500}{\milli\second}. Per farlo, si può utilizzare le opzioni \cverb|TCP_NODELAY| e
+\cverb|TCP_CORK| per gestire manualmente il buffering \cite{tcp-cork}. Molte librerie client Redis
+per i principali linguaggi di programmazione si occupano di questi dettagli automaticamente; si veda
+a titolo di esempio i
 \fnhref{https://github.com/andymccurdy/redis-py/blob/8a186eb/redis/connection.py\#L517}{sorgenti della libreria \texttt{redis-py}}.
 
 \section{Stored procedure in LUA}
 \label{sec:redis:lua}
 
-Il \emph{pipelining} non è però in grado di essere sempre utilizzato: per esempio, può essere
-necessario verificare che un comando abbia successo prima di procedere al successivo; oppure
-può essere necessario utilizzare il valore restituito da un comando per definire il parametro 
-di un comando successivo. In questi casi, è necessario quindi introdurre un nuovo roundtrip di
-rete per leggere la risposta, processarla, e inviare il successivo comando.
+Non è possibile, purtroppo, utilizzare però sempre il \emph{pipelining} in modo indiscriminato: per
+esempio, può essere necessario verificare che un comando abbia successo prima di procedere al
+successivo; oppure può essere necessario utilizzare il valore restituito da un comando per definire
+il parametro di un comando successivo. In questi casi, è necessario quindi introdurre un nuovo
+\emph{roundtrip} di rete per leggere la risposta, processarla, e inviare il successivo comando.
 
 Esattamente come nel caso dei comuni database SQL, Redis consente di risolvere in modo più completo
-il problema della latenza di rete tramite le cosiddette \emph{stored procedure}: il programmatore
-può inviare al database un programma speciale, che viene memorizzato per usi successivi, ed
+il problema della latenza di rete tramite le cosiddette \emph{stored procedure}: il client può
+inviare al database un programma speciale, che viene memorizzato dentro il database stesso, ed
 eseguirlo poi successivamente; questo programma può quindi effettuare più operazioni in successione,
-oltre che utilizzare istruzioni per controllo di flusso, pagando, in termini di latenza, un solo
-roundtrip di rete. Inoltre, specialmente nel caso in cui sia necessario effettuare delle funzioni di
-aggregazione di dati (es: calcolo di una media), non è necessario trasferire via rete tutti i dati,
-ma solamente il risultato.
+oltre che eseguire cicli tramite normali istruzioni per controllo di flusso, pagando, in termini di
+latenza, un solo \emph{roundtrip} di rete. Inoltre, specialmente nel caso in cui sia necessario
+effettuare delle funzioni di aggregazione di dati (es: calcolo di una media), non è necessario
+trasferire via rete tutti i dati, ma solamente il risultato.
 
 Invece che utilizzare un linguaggio di programmazione progettato ad-hoc (come per esempio il
 \fnhref{https://www.postgresql.org/docs/9.6/static/plpgsql.html}{linguaggio PL/pgSQL} utilizzato dal
 famoso database PostgreSQL), Redis utilizza un linguaggio già esistente:
 \fnhref{https://www.lua.org}{LUA}. LUA è un linguaggio di scripting, tipizzato dinamicamente,
 normalmente eseguito tramite un interprete molto efficiente e compatto, facilmente adatto
-all'integrazione (embedding). Già dai primi anni 2000, ha ottenuto popolarità nell'industria
+all'integrazione (\emph{embedding}). Già dai primi anni 2000, ha ottenuto popolarità nell'industria
 di videogiochi come linguaggio di scripting, proprio in virtù del profilo di performance e
 compatezza che lo rendeva utilizzabile anche all'interno di console con processori non troppo
-potenti e quantitativi di memoria limitati (si pensi per esempio alla Sony Playstation 2, che era
-comandata da un processore MIPS R5900 a \SI{300}{\mega\hertz} con \SI{32}{\mebi\byte} di RAM), ed è
-stato utilizzato all'interno di successi quali Angry Birds \cite{lua-angry} o World of Warcraft
+potenti e quantitativi di memoria limitati\footnote{Si pensi per esempio alla Sony Playstation 2,
+una \emph{console} videoludica in cui l'uso di LUA è stato molto frequente, che era controllata da
+un processore MIPS R5900 a \SI{300}{\mega\hertz} con \SI{32}{\mebi\byte} di RAM.}, ed è stato
+utilizzato all'interno di titoli di successo quali Angry Birds \cite{lua-angry} o World of Warcraft
 \cite{lua-wow}.
 
-Supponiamo di voler scrivere una stored procedure che calcoli un dato statistico aggregato; per
-esempio, dato un insieme ordinato \cverb|paying-users| in cui le stringhe sono gli ID degli utenti di
-un sistema, e il punteggio associato è il totale speso dall'utente nell'applicazione, vogliamo
-calcolare qual è la media di spesa degli utenti ``premium'', cioè che hanno speso più di
+Supponiamo di voler scrivere una \emph{stored procedure} che calcoli un dato statistico aggregato;
+per esempio, dato un insieme ordinato \cverb|paying-users| in cui le stringhe sono gli ID degli
+utenti di un sistema, e il punteggio associato è il totale speso dall'utente nell'applicazione,
+vogliamo calcolare qual è la media di spesa degli utenti ``premium'', cioè che hanno speso più di
 \SI{1000}{\EUR}. Per fare questo, è necessario estrarre prima la lista degli utenti ``premium''
 tramite il comando \cverb|ZRANGEBYSCORE|, e poi iterare in questa lista calcolando il valore medio.
-L'utilizzo di una stored precedure ci consente di fare questo senza trasferire sulla rete le
+L'utilizzo di una \emph{stored procedure} ci consente di fare questo senza trasferire sulla rete le
 informazioni relative a tutti gli utenti ``premium'', che potrebbero essere migliaia o anche più. Il
 sorgente LUA che implementa questo semplice algoritmo è mostrato nel seguente listato:
 
 \medskip
 \sourcecode[language={[5.0]lua}]{code/zsetaverage.lua}
 
-Le stored procedure in Redis ricevono in ingresso due array di parametri che possono essere passati
-dal chiamante: uno chiamato \cverb|KEYS| che contiene chiavi di oggetti nel database, e uno chiamato
-\cverb|ARGV|, che contiene argomenti arbitrari di altro tipo. Nello script d'esempio, si è scelto di
-passare come parametri il nome dell'insieme ordinato in \cverb|KEYS[1]|, e la soglia minima di spesa
-in \cverb|ARGV[1]|, rendendo così lo script più generico e flessibile. Si noti che in Lua, gli array
-sono indicizzata a partire da $1$, per cui \cverb|KEYS[1]| si riferisce al primo elemento 
-dell'array.
+Le \emph{stored procedure} in Redis ricevono in ingresso due array di parametri che possono essere
+passati dal chiamante: uno chiamato \cverb|KEYS| che contiene chiavi di oggetti nel database, e uno
+chiamato \cverb|ARGV|, che contiene argomenti arbitrari di tipo stringa. Nello script d'esempio, si
+è scelto di passare come parametri il nome dell'insieme ordinato in \cverb|KEYS[1]|, e la soglia
+minima di spesa in \cverb|ARGV[1]|, rendendo così lo script più generico e flessibile.\footnote{Si
+noti che in Lua, gli array sono indicizzati a partire da $1$, per cui \ctexttt{KEYS[1]} si riferisce
+al primo elemento dell'array.}
 
 Per provare ad eseguire lo script durante la fase di sviluppo, è consigliabile l'utilizzo
 dell'opzione \cverb|--eval| offerta dal comando \cverb|redis-cli|:
@@ -1506,7 +1599,7 @@ $ redis-cli --eval zsetaverage.lua paying_users , 2000
 (integer) 2666
 \end{commentedsource}
 
-Si noti che, a linea di comando, è necessario separare esplicitamente gli argomenti che
+Sulla linea di comando, è necessario separare esplicitamente gli argomenti che
 popolano \cverb|KEYS| da quelli che popolano \cverb|ARGV|, perché altrimenti non sarebbe chiaro
 per Redis dove finiscono gli uni e iniziano gli altri. Il separatore da usare è l'identificatore 
 \cverbfull|,|. Di conseguenza, usando la sequenza di argomento \cverb|paying_users , 1000|
@@ -1516,11 +1609,11 @@ per Redis dove finiscono gli uni e iniziano gli altri. Il separatore da usare è
 Vediamo un esempio di come usare invece una stored procedure in produzione:
 
 \begin{commentedsource}[style=redis]
-|\lnote|127.0.0.1:6379> SCRIPT LOAD "-- zsetaverage.lua: calcola la media di spesa degli utenti paganti sopra\n-- una certa soglia.\n--\n-- Argomenti:\n--     KEYS[1] - chiave dell'insieme ordinato\n--     ARGV[1] - soglia di spesa\n\n-- Estrae tutti gli utenti con un punteggio maggiore a quello specificato.\n-- L'opzione WITHSCORES dice a Redis di tornare non solo le stringhe\n-- dell'insieme ordinato (quindi gli ID degli utenti) ma anche i \n-- punteggi associati.\n-- matches sara' quindi un array contenente in sequenza ID1, SCORE1, ID2, SCORE2, ecc.\nlocal matches = redis.call('ZRANGEBYSCORE', KEYS[1], ARGV[1], '+inf', 'WITHSCORES')\n\nlocal total = 0\n\n-- Attraversa l'array a partire dal secondo elemento, fino alla sua lunghezza,\n-- con passo 2. In questo modo ad ogni passo indirizziamo direttamente i punteggi\n-- saltando gli ID\n-- Si noti che in LUA il primo elemento di un array ha indice 1\nfor idx=2, #matches, 2 do\n    total = total + tonumber(matches[idx])\nend\n\n-- Calcola la media\nreturn total / (#matches / 2)\n"
-"52b441d3009877c4473f02e4c9c4535962cdf64f"
-|\lnote|127.0.0.1:6379> EVALSHA 52b441d3009877c4473f02e4c9c4535962cdf64f 1 paying_users 1000
+|\lnote|127.0.0.1:6379> SCRIPT LOAD "-- zsetaverage.lua: calcola la media di spesa degli utenti paganti sopra\n-- una certa soglia.\n--\n-- Argomenti:\n--     KEYS[1] - chiave dell'insieme ordinato\n--     ARGV[1] - soglia di spesa\n\n-- Estrae tutti gli utenti con un punteggio maggiore a quello specificato.\n-- L'opzione WITHSCORES dice a Redis di tornare non solo le stringhe\n-- dell'insieme ordinato (quindi gli ID degli utenti) ma anche i \n-- punteggi associati.\n-- matches sar\xc3\xa0 quindi un array contenente in sequenza ID1, SCORE1, \n-- ID2, SCORE2, ecc.\nlocal matches = redis.call('ZRANGEBYSCORE', KEYS[1], \n\tARGV[1], '+inf', 'WITHSCORES')\n\nlocal total = 0\n\n-- Attraversa l'array a partire dal secondo elemento, fino alla sua lunghezza,\n-- con passo 2. In questo modo ad ogni passo indirizziamo direttamente i punteggi\n-- saltando gli ID\nfor idx=2, #matches, 2 do\n    total = total + tonumber(matches[idx])\nend\n\n-- Calcola la media\nreturn total / (#matches / 2)\n"
+"108a35a1e1b28db81fee2935c729abd25a830bcb"
+|\lnote|127.0.0.1:6379> EVALSHA 108a35a1e1b28db81fee2935c729abd25a830bcb 1 paying_users 1000
 (integer) 2250
-127.0.0.1:6379> EVALSHA 52b441d3009877c4473f02e4c9c4535962cdf64f 1 paying_users 2000
+127.0.0.1:6379> EVALSHA 108a35a1e1b28db81fee2935c729abd25a830bcb 1 paying_users 2000
 (integer) 2666
 \end{commentedsource}
 
@@ -1564,7 +1657,7 @@ I comandi che manipolano la scadenza delle chiavi sono i seguenti:
 		comando viene eseguito.
 	\item[EXPIREAT key timestamp / PEXPIREAT key mstimestamp] Modificano la data di scadenza di una
 		chiave in modo assoluto, specificandola cioè come data, calcolata rispettivamente in secondi
-		o millisecondi dalla cosiddetta \emph{UNIX epoch}, cioè il 1° Gennaio 1970.
+		o millisecondi dalla cosiddetta ``UNIX epoch'', cioè il 1° Gennaio 1970.
 	\item[TTL key / PTTL key] Restituiscono il tempo di vita rimasto di una chiave, rispettivamente
 		in secondi o millisecondi. Se la chiave non esiste viene restituito il valore speciale $-2$,
 		mentre se la chiave esiste ma non ha una data di scadenza viene restituito il valore $-1$.
@@ -1595,14 +1688,14 @@ OK
 |\lnote|(nil)
 \end{commentedsource}
 
-Subito dopo aver creato una chiave \cverb|data|, il comando \cverb|TTL| ritorna il valore speciale
-\cverb|-1| \lnnum{1} per indicare che non c'è una data di scadenza configurata. 
+Subito dopo aver creato una chiave \cverb|data|, il comando \cverb|TTL| restituisce il valore
+speciale \cverb|-1| \lnnum{1} per indicare che non c'è una data di scadenza configurata. 
 
 Tramite il comando \cverb|EXPIREAT| \lnnum{2} viene inserita una data di scadenza nel futuro:
 $\num{2545662795}$ secondi dal 1° Gennaio 1970, cioè più o meno il 9 Gennaio 2050. Successivamente,
-i comandi \cverb|TTL| e \cverb|PTTL| confermano che c'è un tempo di scadenza configurato, ritornando
+i comandi \cverb|TTL| e \cverb|PTTL| confermano che c'è un tempo di scadenza configurato, restituendo
 il numero di secondi mancanti dal momento dell'esecuzione (si noti come il valore tornato da
-\cverb|PTTL| è circa $1000$ volte maggiore in quanti in millisecondi).
+\cverb|PTTL| è circa $1000$ volte maggiore in quanto in millisecondi).
 
 Successivamente, la data di scadenza viene cambiata eseguendo \cverb|PEXPIRE| \lnnum{3},
 configurandola a soli $\num{100}$ millisecondi dal momento di esecuzione del comando. Provando
@@ -1610,7 +1703,7 @@ subito dopo a rileggere la chiave, essa risulta non più presente \lnnum{4}, in 
 cancellata automaticamente per superamento della data di scadenza.
 
 \section{Concorrenza}
-\label{sec:concurrency}
+\label{sec:redis:concurrency}
 
 Coerentemente con la sua architettura orientata alla semplicità e al minimalismo, Redis ha un
 supporto primitivo ma efficace per la concorrenza, che è basato sulla serializzazione delle
@@ -1619,11 +1712,11 @@ dei casi) molto veloce anche con grossi dataset, come si è visto, trattandosi d
 su specifiche strutture dati completamente conservate in memoria, senza necessità di interrogare o
 aggiornare indici, né effettuare I/O di alcun tipo.
 
-All'interno di ciascuna connessione TCP, l'esecuzione dei comandi abbiamo visto essere sempre
+All'interno di ciascuna connessione TCP, l'esecuzione dei comandi (come si è visto) è sempre
 serializzata, cioè i comandi vengono eseguiti in sequenza uno alla volta, anche se un comando
-venisse inviato prima del termine del precedente, tramite pipelining.
+venisse inviato tramite \emph{pipelining} prima del termine del precedente.
 
-Per quanto concerne comandi inviati da clienti diversi (e quindi tramite più connessioni TCP) in
+Per quanto riguarda comandi inviati da client diversi (e quindi tramite più connessioni TCP) in
 parallelo, Redis provvede a serializzarli tra loro in automatico poiché il codice del server si
 basa su un singolo thread di esecuzione, e gestisce l'accesso ai socket in parallelo tramite
 programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive quali 
@@ -1634,7 +1727,7 @@ programmazione asincrona e accesso I/O non bloccante, appoggiandosi a primitive 
 Questa architettura rende il codice di Redis più semplice e veloce, perché non è necessario
 acquisire né lock granulari nell'accesso ai singoli oggetti e strutture dati, né un lock globale per
 serializzare gli accessi tra diversi thread in carico di gestire ciascuna connessione. L'uso di lock
-quale per esempio un ``mutex'' implementato dalla libreria \cverb|pthread| avrebbe un impatto non
+quale per esempio un mutex implementato dalla libreria \cverb|pthread| avrebbe un impatto non
 solo a livello di semplicità di codice sorgente, ma anche di performance, poiché acquisire un lock
 impiega un tempo non trascurabile rispetto alla reale esecuzione delle operazioni richieste, anche
 nel caso in cui non è conteso.
@@ -1663,17 +1756,17 @@ serializzandolo su disco. Il processo principale nel frattempo continua a proces
 in arrivo dai client, senza però influenzare il dataset del processo figlio che rimane indipendente
 grazie al ``fork''.
 
-Nei sistemi UNIX moderni, la primitiva fork (implementata dal kernel) utilizza la tecnica di
-copy-on-write sulle pagine della memoria: in altre parole, sebbene i due processi risultanti abbiano
-ciascuno una copia del dataset indipendente, questa copia è in realtà simulata tramite l'MMU del
-processo mappando le medesime pagine fisiche di memoria (normalmente, di 4 KiB ciascuna); solo
-quando uno dei due processi prova per la prima volta a scrivere in una qualunque delle pagine, il
-kernel effettua una duplicazione della pagina stessa. In questo modo, si ottengono due vantaggi:
-l'operazione di fork è molto veloce, perché non deve immediatamente copiare tutta la memoria del
-processo (operazione che può essere onerosa se il dataset è molto grosso, e che causerebbe quindi un
-ritardo nell'esecuzione dei comandi del client), ed inoltre la memoria occupata non è immediatamente
-raddoppiata, superando potenzialmente la memoria fisica presente e costringendo ad onerose
-operazioni di swapping.
+Nei sistemi UNIX moderni, la primitiva di ``fork'' (implementata dal kernel) utilizza la tecnica di
+\emph{copy-on-write} sulle pagine della memoria: in altre parole, sebbene i due processi risultanti
+abbiano ciascuno una copia del dataset indipendente, questa copia è in realtà simulata tramite l'MMU
+del processore, visualizzando su indirizzi virutali diversi le medesime pagine fisiche di memoria
+(normalmente, di \SI{4}{\kilo\byte} ciascuna); solo quando uno dei due processi prova per la prima
+volta a scrivere in una qualunque delle pagine, il kernel effettua una duplicazione della pagina
+stessa. In questo modo, si ottengono due vantaggi: l'operazione di fork è molto veloce, perché non
+deve immediatamente copiare tutta la memoria del processo (operazione che può essere onerosa se il
+dataset è molto grosso, e che causerebbe quindi un ritardo nell'esecuzione dei comandi del client),
+ed inoltre la memoria effettivamente occupata non è immediatamente raddoppiata, superando
+potenzialmente la memoria fisica presente e costringendo ad onerose operazioni di \emph{swapping}.
 
 Ad ogni nuovo avvio, Redis carica il contenuto del file RDB in RAM, deserializzandone il contenuto,
 prima di iniziare a ricevere comandi dai client.
@@ -1720,18 +1813,15 @@ che un database ad alta frequenza di scrittura venga salvato più spesso), ma co
 basati su immagini, i dati risultanti dagli ultimi comandi eseguiti non saranno presenti.
 
 Viceversa, la persistenza in AOF viene aggiornata ad ogni comando scritto, e rappresenta sempre
-quindi uno stato aggiornato del dataset. Chiaramente, è necessario molto più I/O su disco ma
-da questo punto di vista, per limitare l'impatto, è possibile configurare la frequenza alla
-quale Redis invoca il comando ``fsync'' del kernel (che forza l'effettiva scrittura su
-disco, poiché viceversa le scritture sono normalmente bufferizzate a livello kernel per
-efficienza), indicando l'intervallo in secondi; se si vuole ottenere la massima persistenza a
-discapito delle performance, è possibile forzare l'uso di ``fsync'' dopo l'esecuzione di
-ciascun comando.
+quindi uno stato aggiornato del dataset. Chiaramente, è necessario molto più I/O su disco ma da
+questo punto di vista, per limitare l'impatto, è possibile configurare la frequenza alla quale Redis
+chiede al kernel di persistere su disco le scritture effettuate, indicando l'intervallo in
+secondi.\footnote{Normalmente, le operazioni di I/O richieste dai programmi vengono accodate in
+buffer a livello kernel ed effettivamente eseguite su disco a gruppi, per efficienza. Il comando
+``fsync'' del kernel forza immediatamente l'effettiva scrittura su disco, ed è quello che viene
+chiamato da Redis all'intervallo specificato.} Se si vuole ottenere la massima persistenza a
+discapito delle performance, è possibile forzare la scrittura effettiva su disco dopo l'esecuzione
+di ciascun comando.
 
 I due tipi di persistenza non sono mutualmente esclusivi: infatti possono essere attivati o 
-disattivati separatamente tramite file di configurazione.
-
-
-
-
-
+disattivati separatamente, tramite file di configurazione.

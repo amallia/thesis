@@ -9,15 +9,16 @@
 -- L'opzione WITHSCORES dice a Redis di tornare non solo le stringhe
 -- dell'insieme ordinato (quindi gli ID degli utenti) ma anche i 
 -- punteggi associati.
--- matches sara' quindi un array contenente in sequenza ID1, SCORE1, ID2, SCORE2, ecc.
-local matches = redis.call('ZRANGEBYSCORE', KEYS[1], ARGV[1], '+inf', 'WITHSCORES')
+-- matches sarà quindi un array contenente in sequenza ID1, SCORE1, 
+-- ID2, SCORE2, ecc.
+local matches = redis.call('ZRANGEBYSCORE', KEYS[1], 
+	ARGV[1], '+inf', 'WITHSCORES')
 
 local total = 0
 
 -- Attraversa l'array a partire dal secondo elemento, fino alla sua lunghezza,
 -- con passo 2. In questo modo ad ogni passo indirizziamo direttamente i punteggi
 -- saltando gli ID
--- Si noti che in LUA il primo elemento di un array ha indice 1
 for idx=2, #matches, 2 do
     total = total + tonumber(matches[idx])
 end
