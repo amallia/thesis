@@ -43,9 +43,9 @@ lettera a Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 ### Come compilare la tesi
 
-La tesi è stata scritta per pdflatex. Una volta installata una distribuzione
-LaTeX sul proprio computer, è necessario lanciare latex e biber in sequenza
-più volte, come usuale:
+La tesi è stata scritta per `pdflatex`. Una volta installata una distribuzione
+LaTeX sul proprio computer, è necessario lanciare `pdflatex` e `biber` in
+sequenza più volte, come usuale:
 
 	$ pdflatex thesis.tex
 	$ biber thesis.bcf
@@ -53,7 +53,7 @@ più volte, come usuale:
 	$ biber thesis.bcf
 	$ pdflatex thesis.tex
 
-A questo punto, sarà stato creato un file thesis.pdf corretto. L'ultima
+A questo punto, sarà stato creato un file `thesis.pdf` corretto. L'ultima
 compilazione dovrebbe avvenire con 0 errori, 0 warnings, e 0 bad boxes.
 
 ### Altri motori Latex
