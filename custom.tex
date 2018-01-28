@@ -168,9 +168,13 @@
   \href{#1}{#2}\footnote{\RaggedRight\url{#1}}%
 }
 
-% Spegni warning su inclusione immagini PDF
 \ifpdf
+  % Spegni warning su inclusione immagini PDF
   \pdfsuppresswarningpagegroup=1
+
+  % Build riproducibile (non inserisce timestamp e version banner nel PDF)
+  \pdfinfoomitdate=1
+  \pdftrailerid{}
 \fi
 
 % Spegni warning di pdflatex relativo al riuso dei target hyperref
