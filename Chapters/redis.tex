@@ -166,7 +166,7 @@ performance desiderate, in un contesto particolarmente intensivo dal punto di vi
 scritture come quello degli aggregatori di log \cite{nascita}.
 
 Sanfilippo aveva necessità di memorizzare velocemente i dati in arrivo, e di eseguire
-delle semplice query strutturate come <<estrai gli ultimi $N$ dati inseriti>>. Questo genere
+delle semplici query strutturate come <<estrai gli ultimi $N$ dati inseriti>>. Questo genere
 di struttura non si applica bene al modello relazionale, in particolare perché l'ordine
 di inserimento dei dati non viene preservato e richiede quindi un'operazione di ordinamento
 (o aggiornamento di un indice di ordinamento) ogni volta che un dato viene inserito.
@@ -689,7 +689,7 @@ mostra che \cverb|HGETALL| restituisce l'intera tabella \lnnum{4}, alternando ca
 nell'array che viene restituito; invece \cverb|HKEYS| e \cverb|HVALS| restituiscono rispettivamente
 solo le chiavi o solo i valori (cioè il contenuto delle due colonne rappresentate qui sopra).
 
-Infinie, \cverb|HEXISTS| verifica se il campo \cverb|name| è stato definito \lnnum{4}, restituendo $1$
+Infine, \cverb|HEXISTS| verifica se il campo \cverb|name| è stato definito \lnnum{4}, restituendo $1$
 per indicare successo. Richiamando invece \cverb|HEXISTS| erroneamente con una stringa che 
 corrisponde ad un valore invece che ad un campo (\cverb|giovanni| nell'esempio), il valore
 restituito $0$ indica il fallimento del test.
