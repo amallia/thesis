@@ -1,7 +1,7 @@
 \chapter{Introduzione}
 
-Questa tesi presenta una modifica a Redis, un popolare database NoSQL, con la quale vengono
-introdotti i filtri di Bloom quale struttura dati aggiuntiva a quelle già presenti. In particolare,
+Questa tesi presenta una modifica a Redis, un popolare database NoSQL, che introduce i filtri di
+Bloom quale struttura dati aggiuntiva a quelle già presenti. In particolare, 
 l'aggiunta è utile per arricchire il sempre crescente numero di strutture dati che Redis offre agli
 utilizzatori come strumento di catalogazione dell'informazione.
 
@@ -9,29 +9,29 @@ Sono sempre stato interessato alle strutture dati probabilistiche fin da quando 
 capacità di poter arbitrariamente disfarsi di una parte di informazione mantenendone un sottoinsieme
 che, per quanto non sufficiente a ricostruire l'intero set di dati, è comunque sufficiente ad alcuni
 scopi, è sempre stata per me affascinante, in quanto strettamente legata all'ottimizzazione e
-l'efficienza degli algoritmi.
+all'efficienza degli algoritmi.
 
 L'obiettivo di questo lavoro è stato quindi quello di approfondire un database NoSQL che ho avuto
 modo di utilizzare, Redis, studiandone più da vicino il funzionamento e contemporaneamente
 potenziandone le funzionalità. Redis implementa già ad oggi una struttura dati probabilistica
-(HyperLogLog) e avendo trovato riferimenti dell'interesse dell'autore ad espandere il progetto in
+(HyperLogLog) e, avendo trovato riferimenti dell'interesse dell'autore ad espandere il progetto in
 questo senso, ho ritenuto che fosse un percorso di ricerca adatto alle mie competenze e alla mia
 passione. Ho scelto dunque di concentrarmi sui filtri di Bloom, una struttura dati utilizzata
-per implementare test di appartenenza probabilistici, una funzionalità attualmente assente da
+per ottenere test di appartenenza probabilistici, una funzionalità attualmente assente da
 Redis ma che è ampiamente richiesta nel panorama informatico odierno e dunque perfettamente
 allineata alla continua evoluzione del database, volta ad ampliare le possibilità offerte a
 supporto di problemi implementativi di scala sempre più ampia.
 
-La tesi è articolata in cinque capitoli: oltre a questa introduzione, nel secondo capitolo viene
+La tesi è articolata in cinque capitoli: dopo questa introduzione, nel secondo capitolo viene
 descritto il funzionamento e l'architettura di Redis, descrivendo il contesto scientifico e
-industriale che ne ha portato alla nascita, gli scenari applicativi principali in cui viene
+industriale che ha portato alla sua nascita, gli scenari applicativi principali in cui viene
 utilizzato, le strutture dati che offre, le funzionalità più avanzate e le caratteristiche di
 persistenza. Nel terzo capitolo invece vengono descritti i filtri di Bloom, studiandone gli scenari
 applicativi, le principali caratteristiche, gli algoritmi e analizzando nel dettaglio come scegliere
-i parametri che li definiscono. Nel quarto capitolo, viene presentato il lavoro svolto di modifica
+i parametri che li definiscono. Nel quarto capitolo viene presentato il lavoro svolto di modifica
 al codice sorgente di Redis, sottolineando le principali sfide incontrate e i risultati raggiunti in
-termini di funzionalità e performance. Nel quinto ed ultimo capitolo, si commentano i risultati
+termini di funzionalità e performance. Nel quinto ed ultimo capitolo si commentano i risultati
 ottenuti e si descrive una possibile evoluzione del lavoro.
 
 Il lavoro di questa tesi è disponibile online ed è stato inviato agli autori di Redis per
-l'integrazione nella base di codice ufficiale.
+proporlo come integrazione nella base di codice ufficiale.
