@@ -61,5 +61,5 @@ La tesi può essere compilata correttamente anche con `xelatex`, ma l'uso di fon
 leggermente diversi provocherà alcuni piccoli errori tipografici (e molti bad
 boxes).
 
-È possibile usare anche [tectonic](https://tectonic.newton.cx) che è un
+È possibile usare anche [tectonic](https://tectonic-typesetting.github.io/en-US/) che è un
 ambiente di compilazione autocontenuto senza dipendenze.
