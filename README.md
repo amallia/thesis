@@ -50,7 +50,6 @@ sequenza più volte, come usuale:
 	$ pdflatex thesis.tex
 	$ biber thesis.bcf
 	$ pdflatex thesis.tex
-	$ biber thesis.bcf
 	$ pdflatex thesis.tex
 
 A questo punto, sarà stato creato un file `thesis.pdf` corretto. L'ultima
