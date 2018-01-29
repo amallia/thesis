@@ -57,7 +57,7 @@ compilazione dovrebbe avvenire con 0 errori, 0 warnings, e 0 bad boxes.
 
 ### Altri motori Latex
 
-La tesi può essere compilata correttamente anche con xelatex, ma l'uso di font
+La tesi può essere compilata correttamente anche con `xelatex`, ma l'uso di font
 leggermente diversi provocherà alcuni piccoli errori tipografici (e molti bad
 boxes).
 
