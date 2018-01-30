@@ -7,15 +7,15 @@ Bloom. È stata effettuata prima una fase di progettazione dei nuovi comandi da 
 analisi della variante esatta di filtro da implementare; è stata preparata una prima implementazione
 completa di verifica tramite test automatici; infine, sono state effettuate delle analisi sui
 parametri di configurazione di default, cercando di studiare il compromesso tra utilizzo della
-memoria, tempo di esecuzione, e probabilità di falsi positivi.
+memoria, tempo di esecuzione e probabilità di falsi positivi.
 
 \section{Scelta della variante di filtro}
 
-Nella fase iniziale di design, abbiamo comunicato più volte con l'autore di Redis (Salvatore
-Sanfilippo), cercando di stabilire insieme i requisiti che l'implementazione del filtro dovesse
+Nella fase iniziale di design, si è comunicato più volte con l'autore di Redis, Salvatore
+Sanfilippo, cercando di stabilire insieme i requisiti che l'implementazione del filtro dovesse
 avere perché la modifica corrispondesse agli standard di Redis.
 
-In particolare, abbiamo identificato i seguenti requisiti:
+In particolare, sono stati identificati i seguenti requisiti:
 
 \begin{itemize}
 	\medskip
@@ -24,9 +24,9 @@ In particolare, abbiamo identificato i seguenti requisiti:
 	sul sistema. Nessuna struttura dati richiede un dimensionamento fisso.
 
 	\item \textbf{Scalabilità}: l'utilizzo della memoria deve essere molto contenuto quando la
-	struttura dati contiene pochi elementi, e crescere gradualmente all'aumentare degli elementi.
+	struttura dati contiene pochi elementi e crescere gradualmente all'aumentare degli stessi.
 	Eventuali pre-allocazioni devono essere molto limitate. Per esempio, non sarebbe accettabile che
-	il filtro possa occupare \SI{1}{\mebi\byte} di RAM alla creazione.
+	il filtro occupasse \SI{1}{\mebi\byte} di RAM alla creazione.
 
 	\item \textbf{Scarsa configurabilità}: Redis cerca di offrire strutture dati che siano
 	preconfigurate con default accettabili per la maggior parte dei casi d'uso, e offre la minima
@@ -35,9 +35,9 @@ In particolare, abbiamo identificato i seguenti requisiti:
 	oculate.
 \end{itemize}
 
-Per soddisfare i requisiti, ci si è orientati su implementare i filtri di Bloom scalabili
+Per soddisfare i requisiti, ci si è orientati sull'implementare i filtri di Bloom scalabili
 (\autoref{sec:bloomscalable}), i quali eliminano la necessità di determinare in anticipo il
-dimensionamento della struttura (in termini di byte o di numero di elementi), e la cui crescita
+dimensionamento della struttura (in termini di byte o di numero di elementi) e la cui crescita
 esponenziale di occupazione della memoria consente una sostanziale scalabilità.
 
 Si è ritenuto essenziale esporre all'applicativo che utilizza Redis il parametro $P$ di probabilità
@@ -66,7 +66,7 @@ Questi sono i comandi implementati:
 	errore).
 
 	L'errore \cverb|p| può essere indicato opzionalmente solo al momento della creazione, cioè del primo
-	inserimento; se viene specificato in un filtro già esistente, e il valore specificato è diverso
+	inserimento; se viene specificato in un filtro già esistente e il valore specificato è diverso
 	da quello con cui il filtro è stato creato, il comando restituisce un errore senza effettuare
 	alcun inserimento.
 
@@ -82,8 +82,8 @@ Questi sono i comandi implementati:
 
 		\begin{description}[style=nextline,font={\bfseries\ttfamily}]
 		\item[BFDEBUG STATUS key] Restituisce una stringa che contiene informazioni sullo
-		stato attuale del filtro, e in particolare il numero di filtri presenti nella catena, e
-		l'errore che è stato specificato.
+    stato attuale del filtro: in particolare, i valori restituiti sono il numero di filtri presenti
+    nella catena e l'errore che è stato specificato.
 
 		\item[BFDEBUG FILTER key idx] Restituisce informazioni su uno specifico filtro
 		della catena; il filtro che si vuole ispezionare deve essere specificato come indice 
@@ -133,7 +133,7 @@ restituisce il valore corretto $5$.
 Successivamente, viene fatto un secondo inserimento \lnnum{3}; questa volta, oltre a due
 elementi nuovi (stringhe \cverb|f| e \cverb|g|), viene inserito anche un elemento che era stato
 già precedentemente inserito: la lettera \cverb|a|. Il comando restituisce $2$, riportando
-correttamente il numero di nuovi elementi inseriti, e anche il successivo calcolo della
+correttamente il numero di nuovi elementi inseriti; anche il successivo calcolo della
 cardinalità è corretto, poiché restituisce $7$.
 
 Poi viene effettuato un primo test di appartenenza al filtro tramite il comando \cverb|BFEXIST|
@@ -176,8 +176,8 @@ durante il primo inserimento:
 
 In questo caso il filtro viene creato con una probabilità di falso positivo del \SI{5}{\%},
 specificata tramite il parametro \cverb|ERROR 0.05| \lnnum{1}. Vengono poi inseriti i medesimi
-elementi dell'esempio precedente, ed è possibile verificare che i parametri del primo filtro 
-della catena sono ora diversi \lnnum{2}: in particolare, sono sufficienti $8$ funzioni di hash
+elementi dell'esempio precedente ed è possibile verificare che i parametri del primo filtro 
+della catena sono ora diversi \lnnum{2}. In particolare, sono sufficienti $8$ funzioni di hash
 contro le $12$ usate precedentemente; il numero di bit impostati è quindi anch'esso inferiore
 ($56$), portando quindi ad un uso minore di memoria a parità di elementi, come ci si aspetta
 aumentando l'errore consentito.
@@ -187,7 +187,7 @@ aumentando l'errore consentito.
 
 Le modifiche effettuate a Redis sono disponibili su GitHub, all'interno del
 \fnhref{https://github.com/rasky/redis/tree/bloomfilter}{repositorio fork di Redis}, in un branch
-chiamato \cverb|bloomfilter|, e la parte principale del codice è riportata anche
+chiamato \cverb|bloomfilter|. La parte principale del codice è riportata anche
 nella \autoref{sec:code:modredis}.
 
 \subsection{Strutture dati}
@@ -300,7 +300,7 @@ Questa la descrizione dettagliata di ciascun parametro:
   all'interno della catena. Come visto nella \autoref{sec:bloomscalable} dove è chiamato
   $s$, questo fattore delinea una progressione geometrica che consente di adattare la crescita del
   filtro all'aumentare del numero di elementi inseriti senza creare una catena troppo lunga
-  né sprecando troppa memoria.
+  e non sprecando troppa memoria.
 
   \item[CONFIG\_BLOOM\_TIGHTENINGRATIO] ($\num{0.85}$) \\ Fattore di intensificazione, applicato
   per creare una progressione geometrica tra le probabilità di falsi positivi dei filtri all'interno
@@ -339,14 +339,14 @@ strato di codice sopra l'allocatore standard per tracciare l'occupazione totale 
 informazioni utili a livello statistico e per debugging.
 
 Si noti che durante la creazione del filtro scalabile, la catena viene lasciata completamente vuota
-\lnnum{2}: ritardando la creazione del primo filtro della catena all'inserimento del primo elemento,
-è possibile infatti accorgersi velocemente se, in un dato momento, è stato mai inserito un elemento,
-caratteristica utile alla corretta implementazione del comando \cverb|BFADD| che deve discriminare il
-primo inserimento per permettere la configurazione del parametro di errore.
+\lnnum{2}. Ritardando la creazione del primo filtro della catena all'inserimento del primo elemento,
+è possibile infatti accorgersi velocemente se, in un dato momento, è stato mai inserito un elemento;
+questa possibilità è utile alla corretta implementazione del comando \cverb|BFADD| che deve
+discriminare il primo inserimento per permettere la configurazione del parametro di errore.
 
 La funzione \cverb|bloomRelease| rilascia la memoria allocata dall'intero filtro scalabile,
 percorrendo la catena \lnnum{3} e chiamando la funzione di distruzione di ciascun filtro \lnnum{4},
-terminando poi rilasciando la memoria occupata dalla struttura del filtro stessa \lnnum{5}.
+terminando poi con il rilasciare la memoria occupata dalla struttura del filtro stessa \lnnum{5}.
 
 \begin{commentedsource}[style=csource,caption=Creazione e distruzione di un filtro,label={lst:bloomFilterNew}]
 filter* bloomFilterNew(bloom *bf) {
@@ -392,7 +392,7 @@ void bloomFilterRelease(filter *flt) {
 }
 \end{commentedsource}
 
-La funzione \cverb|bloomFilterNew| riceve in input un filtro scalabile e ritorna un filtro appena
+La funzione \cverb|bloomFilterNew| riceve in input un filtro scalabile e restituisce un filtro appena
 creato con i parametri adatti ad essere l'ultimo filtro della catena.
 
 Il calcolo dei parametri del filtro ricalca quanto visto nella \autoref{sec:bloomparms} e nella
@@ -493,7 +493,7 @@ avanzato, visto nella \autoref{sec:bloom:hash}. L'algoritmo richiede in partenza
 hash ($h_a$ e $h_b$): nell'implementazione viene utilizzata la funzione di hash
 \cverb|MurmurHash64A| \lnnum{1}, una variante a \SI{64}{\bit} della funzione MurMurHash2
 (\autoref{alg:murmurhash2}). Di questa funzione, è presente già un'implementazione dentro il
-codice sorgente di Redis, e poiché l'output è a \SI{64}{\bit}, si considera la suddivisione in due
+codice sorgente di Redis; poiché l'output è a \SI{64}{\bit}, si considera la suddivisione in due
 valori a \SI{32}{\bit} come l'output di due funzioni di hash separate, ottenendo così i due valori
 \cverb|a| e \cverb|b| \lnnum{2} utili come input per l'algoritmo di doppio hash avanzato. La funzione
 \cverb|MurMurHash64A| richiede (come si è visto) un seme; in questo caso è necessario poter 
@@ -576,7 +576,7 @@ secondo l'\autoref{alg:ehndoublehash} \lnnum{2}.
 
 Una volta identificato l'indice, si verifica se il corrispondente bit è spento \lnnum{3}, nel qual
 caso si restituisce immediatamente $0$ indicando così che l'elemento non è presente. Solo nel caso
-in cui tutti i bit corrispondenti a tutte le funzioni di hash sono accesi, è possibile restituire il
+in cui tutti i bit corrispondenti a tutte le funzioni di hash siano accesi, è possibile restituire il
 valore $1$ \lnnum{4} che indica che il successo del test.
 
 \subsection{Stima della cardinalità}
@@ -600,7 +600,7 @@ int bloomCard(bloom *bf) {
 Poiché un filtro scalabile è composto da una catena di filtri riempiti in sequenza, la stima
 della cardinalità è data dalla somma della cardinalità stimata in ciascun filtro, secondo 
 l'\autoref{eq:bloomcard}. Il ciclo \lnnum{1} scorre tutti i filtri della catena; per ciascun
-filtro, viene calcolata la densità $p$, evitando di dover contare i bit di tutti gli array: infatti
+filtro, viene calcolata la densità $p$, evitando di dover contare i bit di tutti gli array: infatti,
 nella funzione \cverb|bloomFilterAdd| (\autoref{lst:bloomFilterAdd}), è stato mantenuto un contatore
 dei bit impostati a $1$ nel campo \cverb|b| del filtro, ed è possibile quindi usarlo direttamente
 \lnnum{2}, rapportandolo al campo \cverb|bmax| corrispondente al numero di bit necessari a
@@ -615,7 +615,7 @@ $s = m/k$, approssimando all'intero più vicino e accumulando il numero di eleme
 
 Il codice visto nei precedenti listati implementa un filtro scalabile di Bloom ma è necessario
 implementare ancora i comandi proposti in \autoref{sec:patch:newcommands}. Il codice completo è
-disponibile in \autoref{sec:code:modredis} e in questa sezione verrà analizzato solo un comando a
+disponibile in \autoref{sec:code:modredis} e qui verrà analizzato solo un comando a
 titolo di esempio, \cverb|BFEXIST|, poiché una trattazione dettagliata richiederebbe di entrare nel
 merito anche delle numerose librerie e API interne di Redis.
 
@@ -636,14 +636,14 @@ void bfexistCommand(client *c) {
 La funzione \cverb|bfexistCommand| viene richiamata da Redis quando il comando \cverb|BFEXIST| viene
 inviato da un client (la registrazione di questa funzione nella tabella dei comandi è mostrata nel
 \autoref{lst:cmdtable}). L'oggetto \cverb|c| è una struttura che rappresenta la connessione con il
-client, e contiene anche informazioni sul comando in corso di esecuzione. Il motore di Redis si è
+client e contiene anche informazioni sul comando in corso di esecuzione. Il motore di Redis si è
 già occupato di dividere la linea di comando in \emph{token}, che sono disponibili nell'array di
-stringhe \cverb|c->argv[]|. Per il comando \cverb|BFEXIST| ci aspettiamo solo due argomento: la chiave
+stringhe \cverb|c->argv[]|. Il comando \cverb|BFEXIST| si aspetta quindi due argomenti: la chiave
 del filtro in \cverb|c->argv[0]| e l'elemento da ricercare in \cverb|c->argv[1]|.
 
 Il primo passo è quello di ricercare nel database se esiste già un oggetto corrispondente alla
 chiave \lnnum{1}. Viene utilizzata la funzione \cverb|lookupKeyReadOrReply|, la quale riceve
-tre argomenti: un riferimento al client \cverb|c|, la chiave da ricercare \cverb|c->argv[1]|, e 
+tre argomenti: un riferimento al client \cverb|c|, la chiave da ricercare \cverb|c->argv[1]| e 
 la risposta da inviare al client in caso la chiave non sia presente. Esiste anche in Redis una
 funzione più semplice \cverb|lookupKeyRead| che effettua solo la ricerca, senza preoccuparsi
 di eventualmente inviare una risposta al client, ma in questo caso utilizziamo la funzione
@@ -655,18 +655,18 @@ valore di risposta molto comune, Redis ne mette a disposizione una istanza già 
 così le allocazione e deallocazioni di memoria necessarie.
 
 La funzione \cverb|lookupKeyReadOrReply| effettua quindi una ricerca nella tabella hash
-rappresentante il database per la chiave specificata; in caso che la chiave non sia presente, invia
-al client il valore $0$ come risposta, e restituisce il valore \cverb|NULL| al chiamante. In questo
-caso, non è necessario fare più nulla ed è possibile quindi uscire direttamente dalla funzione.
+rappresentante il database per la chiave specificata; nel caso in cui la chiave non sia presente, invia
+al client il valore $0$ come risposta e restituisce il valore \cverb|NULL| al chiamante. In questo
+caso non è necessario fare più nulla ed è possibile quindi uscire direttamente dalla funzione.
 
 Se invece viene trovato un elemento nel database, è necessario verificare se sia del tipo
 giusto.\footnote{Per l'implementazione dei filtri di Bloom, è stato definito un nuovo identificatore
 di tipo di dato chiamato \ctexttt{OBJ\_BLOOM}. Tutti i tipi di strutture dati hanno una macro con
 prefisso \ctexttt{OBJ\_} che si espande ad un progressivo, definite nel file \ctexttt{server.h}.} La
-funzione \cverb|checkType| si occupa di fare questo controllo \lnnum{2}, e in caso negativo
+funzione \cverb|checkType| si occupa di fare questo controllo \lnnum{2} e in caso negativo
 prepara già un messaggio di errore e lo restituisce al client. Anche questa funzione infatti è
-pensata per essere usata nel contesto dell'implementazione di un comando e si occupa quindi non solo
-del test in sé ma anche di creare un messaggio di errore opportuno. Se la funzione restituisce
+pensata per essere usata nel contesto dell'implementazione di un comando e si occupa, quindi, non solo
+del test in sé, ma anche di creare un messaggio di errore opportuno. Se la funzione restituisce
 falso, non c'è altro da fare se non uscire.
 
 Se il tipo è corretto, possiamo finalmente accedere al dato in memoria, che sarà un'istanza della
@@ -744,15 +744,20 @@ Il quinto argomento e gli ultimi due (decimo ed undicesimo), impostati a \cverb|
 a campi che vengono usati dinamicamente e devono essere inizializzati sempre a $0$.
 
 Gli argomenti rimasti si occupano di specificare all'analizzatore sintattico quali argomenti del
-comando si riferiscono a chiavi del database. In particolare, il settimo, ottavo e nono argomento
-(impostati a \cverb|1,1,1| in \lnnum{2}) indicano rispettivamente che il primo argomento che è
-una chiave ha indice $1$, l'ultimo argomento che è una chiave ha indice $1$, e l'incremento da
-utilizzare per trovare tutte le chiavi tra la prima e l'ultima è $1$. In altre parole, questa
-tripletta consente in modo semplice di indicare quali argomenti sono chiavi se esse hanno una
-posizione fissa e sono disposte all'interno dell'array degli argomenti a intervalli regolari. Per
-gestire comandi con struttura più complessa, è possibile implementare un algoritmo di estrazione
-degli indici delle chiavi su misura, passando il puntatore alla funzione nel sesto argomento
-(impostato a \cverb|NULL| in \lnnum{2}).
+comando si riferiscano a chiavi del database. In particolare, il settimo, ottavo e nono argomento, 
+impostati a \cverb|1,1,1| in \lnnum{2}, indicano rispettivamente che: 
+
+\begin{enumerate*}[label={(\alph*)}]
+  \item il primo argomento che è una chiave ha indice $1$; 
+  \item l'ultimo argomento che è una chiave ha indice $1$;
+  \item l'incremento da utilizzare per trovare tutte le chiavi tra la prima e l'ultima è $1$. 
+\end{enumerate*}
+
+In altre parole, questa tripletta consente in modo semplice di indicare quali argomenti sono chiavi,
+ma solo se esse hanno una posizione fissa e sono disposte all'interno dell'array degli argomenti a
+intervalli regolari. Per gestire comandi con struttura più complessa è possibile implementare un
+algoritmo di estrazione degli indici delle chiavi su misura, passando il puntatore alla funzione nel
+sesto argomento (impostato a \cverb|NULL| in \lnnum{2}).
 
 \subsection{Test automatici}
 
@@ -789,7 +794,7 @@ correttezza dell'implementazione.
 
 La dimensione del primo filtro della catena, codificata nella costante \cverb|CONFIG_BLOOM_BASESIZE|
 vista nella \autoref{sec:patch:staticparms}, deve essere regolata in base ai risultati di utilizzo
-della memoria e velocità che si vogliono ottenere. Infatti, configurando un valore inutilmente
+della memoria e di velocità che si vogliono ottenere. Infatti, configurando un valore inutilmente
 piccolo, cresce logaritmicamente il numero di filtri nella catena a parità di elementi, aumentando
 il numero di bit da verificare in ogni test di appartenenza. Viceversa, configurando un valore
 troppo grosso, la memoria occupata alla creazione del filtro rischia di essere inutilizzata se
@@ -801,7 +806,7 @@ Redis (circa \SI{11}{\kibi\byte}) e la velocità di crescita che consente di rag
 di elementi con un catena di soli $11$ filtri e un totale di $141$ bit da consultare per ciascun
 test di appartenenza, come si vedrà nella \autoref{tbl:scalingbloomparms}.
 
-Un'opzione interessante per migliorare l'implementazione in futuro è quella di modificare la
+Un'opzione interessante da tenere in considerazione per migliorare l'implementazione in futuro è quella di modificare la
 codifica degli elementi quando la struttura dati contiene pochi elementi: infatti, sarebbe possibile
 utilizzare un vettore lineare, non probabilistico, contente i valori di hash a \SI{64}{bit} degli
 elementi inseriti, ed effettuare una ricerca lineare quando si richiede il test di appartenenza.
@@ -809,7 +814,7 @@ Vista la velocità dei moderni processori, questo test sarà probabilmente molto
 vettori contenenti pochi centinaia di elementi, consentendo quindi di risparmiare ancora più memoria
 per filtri molto piccoli. Questa capacità di cambiare rappresentazione interna al crescere della
 struttura dati è già utilizzata in Redis: per esempio, gli insiemi (\autoref{sec:redis:sets})
-sono implementati tramite vettori lineari fino a che il numero di elementi è inferiori a 512, e
+sono implementati tramite vettori lineari finché il numero di elementi è inferiori a 512 e
 solo a quel punto si trasformano in tabella hash.
 
 \subsection{Scelta della probabilità di falso positivo di default}
@@ -818,7 +823,7 @@ solo a quel punto si trasformano in tabella hash.
 La probabilità di falso positivo può essere configurata dall'utente durante la creazione del
 filtro, tramite il comando \cverb|BFADD|, ma è consigliabile comunque scegliere un default per
 semplificare l'uso della struttura dati sopratutto in fase di sviluppo e sperimentazione. Questo
-valore non è quindi tanto sensibile quanto un parametro statico perché la sua modifica è comunque
+valore non è quindi tanto sensibile quanto un parametro statico, dato che la sua modifica è comunque
 possibile senza dover modificare il codice sorgente.
 
 È stata fatta una analisi sperimentale dell'andamento del parametro del filtro all'interno
@@ -826,7 +831,7 @@ dell'intervallo $\interval{\SI{0.1}{\%}}{\SI{1}{\%}}$, in cui i valori sono suff
 da poter applicarsi a diversi scenari d'uso, ma non troppo piccoli da rischiare un numero eccessivo
 di funzioni di hash risultanti, con relativo incremento dei tempi di esecuzione degli algoritmi.
 Poiché tutti i parametri derivati si comportano linearmente, non ci sono singolarità su cui basare
-la scelta, e il valore \SI{0.3}{\%} è stato dunque selezionato in modo arbitrario.
+la scelta; il valore \SI{0.3}{\%} è stato dunque selezionato in modo arbitrario.
 
 Una possibile evoluzione di questo lavoro potrebbe essere quella di verificare diversi usi reali
 dei filtri di Bloom all'interno degli scenari applicativi descritti in \autoref{sec:bloom:scenari}, 

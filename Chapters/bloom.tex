@@ -10,19 +10,19 @@ Ci sono due principali famiglie di algoritmi probabilistici:
 \begin{itemize}
 	\medskip
 
-	\item Gli algoritmi detti ``Monte Carlo'', nei quali si effettua un campionamento casuale di
+	\item Gli algoritmi detti ``Montecarlo'', nei quali si effettua un campionamento casuale di
 	valori in uno spazio di ricerca, consentendo il calcolo approssimato entro una certa
-	probabilità. Il nome deriva dal Principato di Monte Carlo, conosciuto a livello mondiale come
-	meta per il gioco d'azzardo. Gli algoritmi di questo tipo permettono solitamente di bilanciare
-	il tempo di esecuzione con l'errore richiesto, poiché aumentando il numero di tentativi l'errore
-	scende. Un esempio di questi algoritmi sono i test di primalità (cioè i test per verificare se
-	un numero è primo) come il test di Fermat, nei quali si effettuano diversi controlli di una
-	condizione necessaria ma non sufficiente e ci si convince che il numero è primo dopo un
-	determinato numero di tentativi.
+	probabilità. Il nome deriva da Montecarlo, città principale del Principato di Monaco, conosciuta
+	a livello mondiale come meta per il gioco d'azzardo. Gli algoritmi di questo tipo permettono
+	solitamente di bilanciare il tempo di esecuzione con l'errore richiesto, poiché aumentando il
+	numero di tentativi l'errore scende. Un esempio di questi algoritmi sono i test di primalità
+	(cioè i test per verificare se un numero è primo) come il test di Fermat, nei quali si
+	effettuano diversi controlli di una condizione necessaria ma non sufficiente e ci si convince
+	che il numero è primo dopo un determinato numero di tentativi.
 
 	\item Gli algoritmi detti ``Las Vegas'', nei quali si utilizza la casualità durante l'algoritmo,
-	ma viene prodotto sempre un risultato esatto, oppure l'algoritmo fallisce esplicitamente
-	l'esecuzione. In questo caso dunque la componente casuale non è parte integrante della qualità
+	ma il risultato prodotto è sempre esatto, oppure l'algoritmo fallisce esplicitamente
+	l'esecuzione. In questo caso, dunque, la componente casuale non è parte integrante della qualità
 	risultato ottenuto, ma può influenzare il tempo d'esecuzione. Un esempio classico è l'algoritmo
 	di ordinamento ``Quicksort'' in cui la scelta del pivot da utilizzare ad ogni passaggio è
 	casuale, ma il risultato è sempre corretto. Il nome è stato proposto in \cite{lasvegas} per
@@ -30,7 +30,7 @@ Ci sono due principali famiglie di algoritmi probabilistici:
 \end{itemize}
 
 Nelle strutture dati, invece, l'utilizzo del caso permette la memorizzazione di un'informazione
-parziale, consentendo comunque di elaborarla almeno in parte ma con margini di errori
+parziale, consentendo comunque di elaborarla almeno in parte, ma con margini di errori
 accettabili. Si tratta tipicamente di strutture dati molto specialistiche, utili ad implementare un
 solo specifico algoritmo, poiché la perdita di informazione controllata è orientata a memorizzare il
 minimo indispensabile per lo specifico scenario d'uso, ma impedendo ovviamente delle operazioni che
@@ -62,11 +62,11 @@ Le operazioni principali che si possono effettuare su un insieme sono le seguent
 Alcune implementazioni offrono anche operazioni più avanzate legate alla teoria degli insiemi,
 come per esempio la differenza o la differenza simmetrica. 
 
-Un'implementazione classica di un'insieme prevede l'utilizzo di una tabella hash: l'inserimento di
-un elemento avviene calcolando un codice tramite una funzione hash, che viene usato poi per
-memorizzarlo all'interno della tabella, gestendo in modo opportuno le collisioni; il test di
-appartenenza può essere fatto così in modo efficiente effettuando una ricerca nella tabella hash.
-Entrambe queste operazioni, così implementate, richiedono quindi un tempo d'esecuzione ammortizzato
+Un'implementazione classica di un insieme prevede l'utilizzo di una tabella hash: l'inserimento di
+un elemento avviene calcolando un codice tramite una funzione hash. Il codice viene poi usato per
+memorizzare l'elemento all'interno della tabella, gestendo in modo opportuno le collisioni; il test
+di appartenenza può essere fatto così in modo efficiente effettuando una ricerca nella tabella hash.
+Entrambe queste operazioni, così implementate, richiedono quindi un tempo di esecuzione ammortizzato
 costante ($\mathcal{O}(1)$).
 
 Al contrario di un array associativo, un insieme non ha dati associati all'elemento stesso, ma
@@ -101,7 +101,7 @@ insiemi elencate precedentemente:
 	\item
 	\textbf{Inserimento}: è possibile inserire un elemento in un filtro, fino ad un numero massimo
 	di elementi calcolabile in base ai parametri del filtro stesso. I filtri non possono essere
-	infatti ridimensionati dopo la creazione e quando raggiungono il numero massimo di elementi,
+	infatti ridimensionati dopo la creazione: quando raggiungono la capacità massima,
 	l'aggiunta di ulteriori elementi, seppure tecnicamente possibile, aumenta esponenzialmente 
 	il margine di errore, rendendo di fatto il filtro inutilizzabile.
 
@@ -130,8 +130,8 @@ insiemi elencate precedentemente:
 	\textbf{Intersezione}: è possibile calcolare con precisione l'intersezione di due filtri, purché
 	siano creati con gli stessi parametri. Il filtro risultante è di qualità potenzialmente peggiore
 	di quello che si sarebbe potuto creare inserendo gli elementi dell'insieme intersezioni in un
-	filtro vuoto, ma se non si ha più accesso agli elementi può essere comunque un'operazione
-	utile.
+	filtro vuoto; se però non si ha più accesso a tutti gli elementi, può essere comunque
+	un'operazione utile.
 
 \end{itemize}
 
@@ -140,8 +140,8 @@ insiemi elencate precedentemente:
 
 I filtri di Bloom hanno conosciuto negli anni un'ampia adozione, in diversi scenari applicativi. 
 In linea generale, consentono di ottenere una rappresentazione compatta di un insieme di dati,
-che può essere usata sia come cache ad accesso veloce (in RAM) per un controllo preliminare
-di esistenza di un elemento, sia trasferita in modo efficiente via rete ad un altro nodo per
+che può essere usata sia come cache ad accesso veloce (in RAM), per un controllo preliminare
+di esistenza di un elemento, sia trasferita in modo efficiente via rete ad un altro nodo, per
 fornire una vista parziale di un set di dati.
 
 Un approfondimento degli scenari applicativi qui presentati può essere trovata in
@@ -161,7 +161,7 @@ a falso positivo venivano riportate al caso standard al termine del controllo ne
 
 Allo stesso modo, i filtri di Bloom vennero usati per i primi programmi di controllo ortografico
 negli anni 80. Era possibile infatti memorizzare una versione compatta di un dizionario di tutte le
-parole conosciute (complete anche tutte le forme verbali che possono essere costruite tramite
+parole conosciute (complete anche di tutte le forme verbali che possono essere costruite tramite
 algoritmo), ed utilizzarlo per effettuare il controllo; in questo caso, i falsi positivi
 corrispondevano a parole non esistenti che venivano erroneamente ignorate durante il controllo.
 Visto che all'epoca non era possibile distribuire l'intero dizionario, questa soluzione era un
@@ -170,9 +170,9 @@ compromesso accettabile.
 \subsection{Proxy Cache distribuita}
 
 In \cite{bloom-proxy}, viene introdotto uno dei primi casi di utilizzo dei filtri di Bloom per
-ottimizzare i trasferimenti di rete. Lo scenario prevedeva una rete di proxy web\footnote{Un
+ottimizzare i trasferimenti di rete. Lo scenario prevedeva una rete di proxy web,\footnote{Un
 \emph{proxy web} è un programma che veicola richieste HTTP da un client verso il server,
-intercettandole di fatto per scopi vari: caching, filtri, monitoraggio.}, che comunicavano tra loro.
+intercettandole di fatto per scopi vari: caching, filtri, monitoraggio.} che comunicavano tra loro.
 Nel momento in cui veniva effettuata una richiesta ad un proxy per una pagina web non presente nella
 cache, il proxy poteva comunicare con gli altri proxy della rete, chiedendo loro se qualcuno avesse
 nella propria cache la pagina richiesta, in modo da accedervi senza contattare il server d'origine.
@@ -182,7 +182,8 @@ tramite il quale ciascun proxy periodicamente pubblicava in broadcast un filtro 
 l'elenco dei siti memorizzati nella propria cache. Gli altri proxy memorizzavano il filtro e
 potevano usarlo per verificare se un sito era presente in cache senza causare traffico di rete. I
 falsi positivi corrispondevano dunque a richieste di rete potenzialmente inutili, ma in ogni caso
-una piccola frazione rispetto alla quantità di traffico generato in precedenza per ogni richiesta.
+rappresentanti una piccola frazione rispetto alla quantità di traffico generato in precedenza per
+ogni richiesta.
 
 
 \subsection{Google SafeBrowsing}
@@ -196,7 +197,7 @@ Google, infatti, mantiene sui propri server un enorme elenco di tipo \emph{black
 web (URL) considerate pericolose per gli utenti. L'elenco è in continua evoluzione: nuovi indirizzi
 vengono infatti aggiunti e rimossi con alta frequenza ogni ora.
 
-Un applicativo che volesse verificare la presenza di un sito all'interno dell'elenco potrebbe
+Un applicativo che voglia verificare la presenza di un sito all'interno dell'elenco potrebbe
 effettuare una interrogazione via API ai server di Google; il tempo di esecuzione di questo
 controllo comprende però almeno 1 \emph{roundtrip} di rete tra il client e il server, che può
 richiedere un tempo variabile a seconda della qualità della connessione Internet, ma può aumentare
@@ -208,17 +209,17 @@ dei siti.
 Scaricare l'intera lista di siti richiederebbe probabilmente molta banda, soprattutto per le
 numerose sincronizzazioni che sarebbero necessarie periodicamente. Vista l'alta volatilità della
 lista, infatti, sarebbe necessario effettuare sincronizzazioni molto spesso onde evitare di
-consultare una lista troppo vecchia, e questi aggiornamenti avrebbero impatti importanti
+consultare una lista troppo vecchia; inoltre, questi aggiornamenti avrebbero impatti importanti
 sull'utilizzo di banda Internet da parte del client.
 
 La soluzione che fu scelta inizialmente fu quella di affidarsi ad un filtro di Bloom: i server
-di Google infatti costruivano un filtro contenente tutte le URL presenti nella blacklist, e
+di Google infatti costruivano un filtro contenente tutte le URL presenti nella blacklist e
 trasferivano il filtro al client. Grazie alle proprietà dei filtri di Bloom, i dati da trasferire
 erano molto compatti, e potevano essere conservati in RAM anche sui dispositivi mobili.
 
 Ogni volta che l'utente navigava su un nuovo sito, il client verificava prima se l'indirizzo era
 presente nel filtro: nel caso più comune (sito non malevole), il filtro restituiva correttamente
-esito negativo, e il browser consentiva l'accesso all'utente senza nessun rallentamento. Solo nei
+esito negativo e il browser consentiva l'accesso all'utente senza nessun rallentamento. Solo nei
 casi in cui il filtro restituiva esito positivo, il client effettuava una chiamata alle API di
 Google per verificare se l'indirizzo fosse veramente malevolo o se si trattasse di un falso
 positivo; con parametri di creazione adeguati, era possibile fare in modo che questa chiamata
@@ -226,7 +227,7 @@ avvenisse pochissime volte nel corso di una navigazione normale, impattando cos�
 frequentemente possibile i tempi di apertura dei siti.
 
 Con il passare del tempo, la lista è cresciuta troppo, e di conseguenza il filtro ha iniziato ad
-avere dimensioni importanti; di conseguenza, è stato scelto di usare un'altra struttura dati
+avere dimensioni importanti; per questo motivo, è stato scelto di usare un'altra struttura dati
 probabilistica: gli insiemi di Golomb-Rice \cite{golomb,rice,golomb-rice}, che hanno una
 rappresentazione in memoria compressa, dunque più compatta, sebbene più lenta da utilizzare
 \cite{golomb-safebrowsing}.
@@ -247,11 +248,11 @@ proprie cache di contenuti che si ritiene verranno richiesti a breve dagli utent
 le CDN lavorano con una logica di rete peer-to-peer, trasferendo i dati da nodo a nodo. Per sincronizzare
 il contenuto del nodo $N1$ con il nodo $N2$, $N1$ invia a $N2$ un filtro di Bloom contentente
 l'elenco dei contenuti presenti nella propria cache. $N2$ può quindi utilizzare il filtro
-per individuare i contenuti che $N1$ non possiede, ed inviargieli. In caso di falso positivo,
+per individuare i contenuti che $N1$ non possiede ed inviargieli. In caso di falso positivo,
 un dato risulterà erroneamente posseduto da $N1$ e non verrà quindi inviato; trattandosi di una
 operazione di ottimizzazione del traffico, è sufficiente che non avvenga con frequenza troppo 
 elevata per non impattare sulle prestazioni: infatti $N1$ non avrà il dato disponibile all'arrivo
-della prima richiesta, e si occuperà di scaricarlo in quel momento. 
+della prima richiesta e si occuperà di scaricarlo in quel momento. 
 
 L'azienda Akamai (leader di mercato nel settore delle CDN) utilizza i filtri di Bloom anche per
 evitare di memorizzare contenuti richiesti una sola volta \cite{bloom-akamai}. Infatti ogni nodo
@@ -259,10 +260,10 @@ conserva un filtro di Bloom dei contenuti richiesti almeno una volta. Alla prima
 contenuto non è ancora presente nel filtro e viene aggiunto al filtro ma senza inserirne il
 contenuto nella cache del nodo. In questo modo, si evita di inserire in cache contenuti non popolari
 che possono utilizzare spazio meglio destinato a contenuti più richiesti. I falsi positivi
-corrispondono a contenuti richiesti la prima volta, ma che a causa dell'errore del test di appartenenza
-appaiono come già acceduti in passato; in questo caso, poiché la probabilità con cui questo
-evento avviene è bassa, l'ottimizzazione ha comunque successo e la maggior parte dei contenuti
-viene aggiunto alla cache solo al secondo accesso.
+corrispondono a contenuti richiesti la prima volta, ma che a causa dell'errore del test di
+appartenenza appaiono come già consultati in passato; in questo caso, poiché la probabilità con cui
+questo evento avviene è bassa, l'ottimizzazione ha comunque successo e la maggior parte dei
+contenuti viene aggiunto alla cache solo al secondo accesso.
 
 \subsection{Routing ottimale in reti P2P}
 
@@ -309,7 +310,7 @@ L'inserimento di un elemento $x$ (\autoref{alg:bloominsert}) avviene calcolando 
 hash $h_i(x)$ prestabilite sull'elemento (il numero delle funzioni $K$ è anch'esso un parametro del
 filtro). I $K$ valori risultanti $h_1(x), h_1(x), \dots , h_{K}(x)$ sono utilizzati per
 identificare singoli bit all'interno dell'array (per esempio, scegliendo il bit con indice $h_i(x)
-\bmod M$), e i bit così identificati vengono impostati a 1. Si noti che nessuna altra informazione
+\bmod M$); i bit così identificati vengono impostati a 1. Si noti che nessuna altra informazione
 sull'elemento viene memorizzata dentro il filtro.
 
 \begin{algorithm}
@@ -495,7 +496,7 @@ ricercano quando la funzione viene utilizzata in una tabella hash, cioè l'unifo
 determinismo. In particolare, non è strettamente necessario utilizzare una funzione crittografica di
 hash, che garantisce anche altre proprietà come la non reversibilità e la resistenza ad attacchi
 quali la collisione e la pre-immagine. Anche la velocità di esecuzione della funzione scelta deve
-essere tenuto in considerazione, e tipicamente le funzioni crittografiche di hash sono più lente
+essere tenuta in considerazione e tipicamente le funzioni crittografiche di hash sono più lente
 delle funzioni non crittografiche.\footnote{Bisogna però considerare ci sono scenari
 applicativi quali le CDN (viste nella \autoref{sec:bloomcdn}) in cui una funzione di hash che
 risultasse facilmente soggetta a ricerca di collisione potrebbe consentire attacchi di tipo
@@ -513,10 +514,10 @@ concatenazione). Di conseguenza, è possibile banalmente definire $h_i(msg) = h'
 così una famiglia di funzioni di hash, utilizzabili nel filtro.
 
 Questo approccio però richiede di eseguire la funzione di hash $K$ volte per ogni elemento che si
-vuole inserire nel filtro, usando ogni volta un seme differente, impattando quindi in modo
+vuole inserire nel filtro, usando ogni volta un seme diverso, incidendo quindi in modo
 misurabile sulla velocità di esecuzione al crescere di $K$. Una soluzione alternativa (proposta per
 la prima volta in \cite{bloom-doublehash}) è quella di utilizzare l'\autoref{alg:doublehash} di hash
-doppio, utilizzato comunemente come metodo per la risoluzione di collisioni nelle tabelle hash. In
+doppio, utilizzato comunemente come metodo per la risoluzione di collisioni nelle tabelle hash. In 
 termini matematici, date 2 funzioni di hash $h_a(x)$ e $h_b(x)$ (magari generate con un seme da una
 medesima funzione, come visto in precedenza) è possibile definire la seguente famiglia di funzioni:
 
@@ -612,7 +613,7 @@ che è possibile valutare quindi estraendo la densità $p$ del filtro da un semp
 dei bit impostati ad 1 in un dato momento.
 
 I grafici nella \autoref{fig:bloomerror} mostrano l'errore di calcolo della cardinalità
-effettuato in un filtro al crescere della densità, e al numero di funzioni di hash. Come si può
+effettuato in un filtro al crescere della densità e al numero di funzioni di hash. Come si può
 vedere, l'errore effettuato dalla stima non diverge anche per valori di densità elevati.
 
 \begin{figure}
@@ -666,7 +667,7 @@ e nel secondo filtro in input.
 \cverb|AND| bit a bit agli array, come descritto nell'\autoref{alg:bloomintersection}. In questo caso
 però il risultato non è ottimale: l'array risultante potrebbe contenere alcuni bit impostati a 1 che
 non risulterebbero tali se si fosse creato direttamente un filtro aggiungendo solo gli elementi
-facenti parte dell'intersezione, e di conseguenza la probabilità di falsi positivi risultante dal
+facenti parte dell'intersezione e di conseguenza la probabilità di falsi positivi risultante dal
 filtro intersezione è potenzialmente non ottimale.
 
 \begin{algorithm}
@@ -725,7 +726,7 @@ I filtri risultanti saranno i seguenti:
 dove ogni cella impostata a 1 viene identificata con una lettera che si riferisce all'elemento che
 l'ha impostata durante l'inserimento. 
 
-L'insieme unione è $\{ A, B \} \cup \{ A , C \} = \{ A, B, C \}$, e il filtro risultante
+L'insieme unione è $\{ A, B \} \cup \{ A , C \} = \{ A, B, C \}$ e il filtro risultante
 dall'operazione di \cverb|OR| bit a bit, come si può vedere, è ottimale poiché è lo stesso che
 avremmo ottenuto per inserimento diretto:
 
@@ -869,14 +870,14 @@ Vediamo ora due esempi di derivazione di parametri ottimali.
 		}
 	\end{minipage}
 
-	\caption{Andamento dei parametri ottimale in un filtro di \SI{64}{\mebi\byte}}
+	\caption{Andamento ottimale dei parametri in un filtro di \SI{64}{\mebi\byte}}
 \end{figure}
 
 \section{Filtri scalabili}
 \label{sec:bloomscalable}
 
 Uno dei problemi principali dei filtri così come originariamente progettati è che la struttura
-dati è definita staticamente, e dunque non è possibile espanderla dinamicamente in base al
+dati è definita staticamente e dunque non è possibile espanderla dinamicamente in base al
 numero di elementi che via via si rende necessario memorizzare. Questo limite rende complesso
 l'utilizzo in diversi scenari applicativi, poiché, volendo mantenere la probabilità di un falso
 positivo contenuta entro una soglia, è necessario spesso sovradimensionare il filtro a causa della 
