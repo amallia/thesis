@@ -1,0 +1,77 @@
+\RequirePackage{silence} % :-\
+    \WarningFilter{latexrelease}{Current format date selected}
+    \WarningFilter{scrreprt}{Usage of package `titlesec'}
+    \WarningFilter{scrreprt}{Activating an ugly workaround}
+    \WarningFilter{titlesec}{Non standard sectioning command detected}
+\documentclass[ oneside,openright,titlepage,numbers=noenddot,%1headlines,
+                headinclude,footinclude,cleardoublepage=empty,
+                BCOR=5mm,paper=a4,fontsize=11pt
+                ]{scrreprt}
+\input{classicthesis-config}
+\input{custom}
+
+\begin{document}
+\frenchspacing
+\raggedbottom
+\selectlanguage{italian}
+\pagestyle{plain}
+
+\setlength{\parindent}{0pt}
+\begin{titlepage}
+    \begin{addmargin}[-2cm]{-2cm}
+    \large
+    \hfill
+    \vfill
+
+    \begin{center}
+	    \begingroup
+    	        \includegraphics[scale=0.15]{img/LOGO}\\
+    	%           \spacedallcaps{\myUni} \\
+    	        \myFaculty \\
+    	        \myDegree \\
+    	        \vspace{0.5cm}
+    	        \vspace{0.5cm}
+	    \endgroup
+    \end{center}
+
+    \vfill
+
+	\begin{description}[labelwidth=10em,leftmargin=!,font={\normalfont\scshape\color{Maroon}}]
+		\item[Tesi] \myTitle
+		\item[Studente] Giovanni Bajo (\href{mailto:giovanni.bajo@stud.unifi.it}{giovanni.bajo@stud.unifi.it})
+		\item[Relatore] Donatella Merlini (\href{mailto:giovanni.bajo@stud.unifi.it}{donatella.merlini@unifi.it})
+    \end{description}
+
+    \vfill
+
+    \textsc{\color{Maroon}Abstract}
+
+    \medskip
+
+    Questa tesi presenta una modifica a Redis, un popolare database NoSQL, che introduce i filtri di
+    Bloom quale struttura dati aggiuntiva a quelle già presenti. In particolare, 
+    l'aggiunta è utile per arricchire il sempre crescente numero di strutture dati che Redis offre agli
+    utilizzatori come strumento di catalogazione dell'informazione.
+
+    \medskip
+
+    Nella parte iniziale, viene descritto il funzionamento e l'architettura di Redis, gli scenari 
+    applicativi principali in cui viene utilizzato, le strutture dati che offre, le funzionalità 
+    più avanzate e le caratteristiche di persistenza. Successivamente, si approfondiscono i filtri
+    di Bloom, studiandone gli scenari applicativi, le principali caratteristiche, gli algoritmi e 
+    analizzando nel dettaglio come scegliere i parametri che li definiscono.
+
+    \medskip
+
+    Infine, viene presentata la modifica che è stata fatta, descrivendone le scelte sia a livello di 
+    design sia a livello di implementazione. Quest'ultima è stata curata dal punto di vista delle 
+    performance e dell'uso della memoria, cercando di allinearsi alle richieste avanzate dall'autore di 
+    Redis durante i contatti diretti che ci sono stati. Il codice scritto rispecchia dunque tutti gli 
+    standard di qualità di Redis ed è potenzialmente integrabile nella base di codice.
+
+    \vfill
+\end{addmargin}
+\end{titlepage}
+
+
+\end{document}
