@@ -17,7 +17,7 @@ quelle già presenti. In particolare, l'aggiunta è utile per arricchire il
 sempre crescente numero di strutture dati che Redis offre agli utilizzatori
 come strumento di catalogazione dell'informazione.
 
-La tesi è articolata in cinque capitoli: oltre a questa introduzione, nel
+La tesi è articolata in cinque capitoli: oltre all'introduzione, nel
 secondo capitolo viene descritto il funzionamento e l'architettura di Redis,
 descrivendo il contesto scientifico e industriale che ne ha portato alla
 nascita, gli scenari applicativi principali in cui viene utilizzato, le
