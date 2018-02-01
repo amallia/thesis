@@ -11,8 +11,8 @@
 
 ### Abstract
 
-La tesi presenta una modifica a Redis, un popolare database NoSQL, con la
-quale vengono introdotti i filtri di Bloom quale struttura dati aggiuntiva a
+La tesi presenta una modifica a Redis, un popolare database NoSQL,
+introducendo i filtri di Bloom quale struttura dati aggiuntiva a
 quelle già presenti. In particolare, l'aggiunta è utile per arricchire il
 sempre crescente numero di strutture dati che Redis offre agli utilizzatori
 come strumento di catalogazione dell'informazione.
